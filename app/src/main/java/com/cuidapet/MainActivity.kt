@@ -1,0 +1,31 @@
+package com.cuidadopet
+
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import com.cuidadopet.ui.navigation.AppNavigation
+import com.cuidadopet.ui.theme.CuidadoPetTheme
+import dagger.hilt.android.AndroidEntryPoint
+
+@AndroidEntryPoint
+class MainActivity : ComponentActivity() {
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        // installSplashScreen() deve ser chamado ANTES de super.onCreate().
+        // Ele intercepta a tela de inicialização do sistema e aplica nosso tema splash
+        // (definido em themes.xml como Theme.CuidadoPet.Splash).
+        // A patinha fica visível enquanto o Hilt e o Room inicializam em background.
+        installSplashScreen()
+
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+
+        setContent {
+            CuidadoPetTheme {
+                AppNavigation()
+            }
+        }
+    }
+}

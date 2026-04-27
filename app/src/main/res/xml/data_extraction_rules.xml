@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Regras de extração de dados para Android 12+ (API >= 31).
+    Bloqueia cloud backup E transferência via cabo (device-to-device transfer)
+    para o banco de dados, fotos e preferências do app.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="database"   path="." />
+        <exclude domain="file"       path="photos" />
+        <exclude domain="sharedpref" path="." />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="database"   path="." />
+        <exclude domain="file"       path="photos" />
+        <exclude domain="sharedpref" path="." />
+    </device-transfer>
+</data-extraction-rules>

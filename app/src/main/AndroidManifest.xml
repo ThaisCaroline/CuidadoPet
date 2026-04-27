@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <application
+        android:name=".CuidadoPetApp"
+        android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.CuidadoPet">
+        <!-- BroadcastReceiver que recebe os alarmes de medicamento e exibe a notificação -->
+        <!-- exported=false: só o próprio app pode disparar este receiver -->
+        <receiver
+            android:name=".notification.MedicationAlarmReceiver"
+            android:exported="false" />
+
+        <!-- BroadcastReceiver que recebe os alarmes de refeição e exibe o lembrete -->
+        <receiver
+            android:name=".notification.MealAlarmReceiver"
+            android:exported="false" />
+
+        <!-- BootReceiver: reagenda todos os alarmes após o celular reiniciar.
+             exported=true é obrigatório para o sistema Android poder disparar o BOOT_COMPLETED.
+             Sem isso, os lembretes de medicamento e refeição somem após reinicialização. -->
+        <receiver
+            android:name=".notification.BootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- FileProvider: permite compartilhar PDFs gerados pelo app com outros apps (WhatsApp,
+             e-mail etc.) sem tornar os arquivos publicamente acessíveis no armazenamento.
+             authorities segue convenção <applicationId>.fileprovider
+             grantUriPermissions=true: concede acesso temporário ao app receptor -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_provider_paths" />
+        </provider>
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.CuidadoPet.Splash">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>

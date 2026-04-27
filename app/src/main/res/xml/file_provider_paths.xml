@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Define quais diretórios o FileProvider pode expor a outros apps.
+    O FileProvider é o componente do Android que permite compartilhar arquivos
+    privados (como PDFs gerados pelo app) com segurança — sem precisar torná-los
+    publicamente acessíveis no armazenamento do dispositivo.
+
+    cache-path: pasta de cache do app (getCacheDir()) — usada para PDFs temporários.
+    O Android pode limpar esta pasta quando precisar de espaço.
+-->
+<paths>
+    <!-- cache-path: pasta de cache — para PDFs gerados pelo relatório -->
+    <cache-path
+        name="relatorios"
+        path="relatorios/" />
+    <!-- files-path: armazenamento interno permanente — para fotos dos pets -->
+    <files-path
+        name="pet_photos"
+        path="photos/" />
+</paths>

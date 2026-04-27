@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Regras para backup automático do Android (API < 31).
+    Excluímos o banco de dados e as fotos dos pets — dados sensíveis que
+    pertencem ao dispositivo do usuário e não devem ser enviados para a nuvem.
+-->
+<full-backup-content>
+    <exclude domain="database" path="." />
+    <exclude domain="file"     path="photos" />
+    <exclude domain="sharedpref" path="." />
+</full-backup-content>

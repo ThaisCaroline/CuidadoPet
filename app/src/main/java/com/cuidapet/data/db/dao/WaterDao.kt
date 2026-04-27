@@ -24,6 +24,9 @@ interface WaterDao {
     @Update
     suspend fun updateWaterConfig(config: WaterConfigEntity)
 
+    @Query("DELETE FROM water_configs WHERE petId = :petId")
+    suspend fun deleteWaterConfig(petId: Long)
+
     // ─── Registros de ingestão ──────────────────────────────────────
 
     // Busca todos os registros de água de um pet em um dia específico

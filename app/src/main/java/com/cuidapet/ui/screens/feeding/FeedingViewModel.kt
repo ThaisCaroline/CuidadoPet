@@ -115,6 +115,13 @@ class FeedingViewModel @Inject constructor(
         }
     }
 
+    fun deletePlan(petId: Long) {
+        val planId = _state.value.plan?.id ?: return
+        viewModelScope.launch {
+            feedingRepository.deleteMealPlan(petId, planId)
+        }
+    }
+
     // Retorna o timestamp de meia-noite do dia de hoje.
     // Usado como chave de data nas consultas ao banco.
     private fun startOfDay(): Long {

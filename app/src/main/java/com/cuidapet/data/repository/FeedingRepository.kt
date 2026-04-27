@@ -46,6 +46,11 @@ class FeedingRepository @Inject constructor(
         }
     }
 
+    suspend fun deleteMealPlan(petId: Long, planId: Long) {
+        mealAlarmScheduler.cancelAllForPet(petId)
+        feedingDao.deleteMealPlan(planId)
+    }
+
     // ─── Refeições ──────────────────────────────────────────────────────────
 
     // Lista as refeições de um plano, ordenadas por horário (já garantido pelo DAO)

@@ -21,6 +21,7 @@ data class WaterConfigFormState(
     val remindersEnabled: Boolean = true,
     val isSaving: Boolean = false,
     val isSaved: Boolean = false,
+    val isDeleted: Boolean = false,
     val error: String? = null
 )
 
@@ -92,6 +93,13 @@ class WaterConfigFormViewModel @Inject constructor(
             } catch (e: Exception) {
                 _state.update { it.copy(isSaving = false, error = "Erro ao salvar: ${e.message}") }
             }
+        }
+    }
+
+    fun delete(petId: Long) {
+        viewModelScope.launch {
+            waterRepository.deleteWaterConfig(petId)
+            _state.update { it.copy(isDeleted = true) }
         }
     }
 

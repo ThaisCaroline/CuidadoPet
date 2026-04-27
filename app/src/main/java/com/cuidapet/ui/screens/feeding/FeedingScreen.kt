@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -24,6 +25,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -89,7 +91,8 @@ fun FeedingTabContent(
             DailySummaryCard(
                 plan = state.plan!!,
                 status = state.dailyStatus,
-                onConfigurePlan = onConfigurePlan
+                onConfigurePlan = onConfigurePlan,
+                onDeletePlan = { viewModel.deletePlan(petId) }
             )
         }
 
@@ -153,8 +156,28 @@ private fun NoPlanContent(
 private fun DailySummaryCard(
     plan: MealPlanEntity,
     status: FeedingStatus?,
-    onConfigurePlan: () -> Unit
+    onConfigurePlan: () -> Unit,
+    onDeletePlan: () -> Unit
 ) {
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Excluir plano alimentar?") },
+            text = { Text("O plano e todas as refeições configuradas serão removidos. Os registros do histórico serão mantidos.") },
+            confirmButton = {
+                Button(
+                    onClick = { showDeleteDialog = false; onDeletePlan() },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) { Text("Excluir") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) { Text("Cancelar") }
+            }
+        )
+    }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -171,13 +194,23 @@ private fun DailySummaryCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text("Resumo do dia", style = MaterialTheme.typography.titleSmall)
-                // Botão para editar o plano alimentar
-                FilledTonalButton(
-                    onClick = onConfigurePlan,
-                    contentPadding = ButtonDefaults.TextButtonContentPadding
-                ) {
-                    Icon(Icons.Default.Edit, contentDescription = null)
-                    Text(" Editar plano", style = MaterialTheme.typography.labelSmall)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    // Botão para editar o plano alimentar
+                    FilledTonalButton(
+                        onClick = onConfigurePlan,
+                        contentPadding = ButtonDefaults.TextButtonContentPadding
+                    ) {
+                        Icon(Icons.Default.Edit, contentDescription = null)
+                        Text(" Editar plano", style = MaterialTheme.typography.labelSmall)
+                    }
+                    // Botão para excluir o plano
+                    OutlinedButton(
+                        onClick = { showDeleteDialog = true },
+                        contentPadding = ButtonDefaults.TextButtonContentPadding,
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                    ) {
+                        Text("Excluir", style = MaterialTheme.typography.labelSmall)
+                    }
                 }
             }
 

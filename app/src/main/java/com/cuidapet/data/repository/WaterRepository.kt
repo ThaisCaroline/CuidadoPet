@@ -47,6 +47,11 @@ class WaterRepository @Inject constructor(
         }
     }
 
+    suspend fun deleteWaterConfig(petId: Long) {
+        cancelWaterReminder(petId)
+        waterDao.deleteWaterConfig(petId)
+    }
+
     // ─── Logs de ingestão ────────────────────────────────────────────────────
 
     // Registros de água de um pet em um dia específico

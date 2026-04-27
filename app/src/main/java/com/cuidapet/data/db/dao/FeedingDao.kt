@@ -33,6 +33,9 @@ interface FeedingDao {
     @Query("UPDATE meal_plans SET isActive = 0 WHERE petId = :petId")
     suspend fun deactivateAllMealPlans(petId: Long)
 
+    @Query("DELETE FROM meal_plans WHERE id = :planId")
+    suspend fun deleteMealPlan(planId: Long)
+
     // ─── Refeições ──────────────────────────────────────────────────
 
     // Busca todas as refeições do plano, ordenadas por horário

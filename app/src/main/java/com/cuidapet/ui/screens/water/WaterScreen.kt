@@ -248,7 +248,9 @@ private fun QuickAddButtons(onAdd: (Double) -> Unit) {
             ) {
                 Text(
                     "${ml.toInt()}ml",
-                    style = MaterialTheme.typography.labelSmall
+                    style = MaterialTheme.typography.labelSmall,
+                    maxLines = 1,
+                    softWrap = false
                 )
             }
         }

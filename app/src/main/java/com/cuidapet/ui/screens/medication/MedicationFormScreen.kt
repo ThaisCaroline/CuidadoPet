@@ -7,6 +7,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -66,7 +68,7 @@ private val DOSE_UNIT_OPTIONS = listOf(
     "comprimido", "cápsula", "ml", "mg", "g", "gota", "aplicação", "sachê", "UI"
 )
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun MedicationFormScreen(
     petId: Long,
@@ -397,7 +399,10 @@ fun MedicationFormScreen(
 
             // ── Orientação de administração ────────────────────────────────
             SectionLabel("Orientação de administração")
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
                 listOf(
                     "WITH_FOOD"  to "Com alimentação",
                     "FASTING"    to "Em jejum",

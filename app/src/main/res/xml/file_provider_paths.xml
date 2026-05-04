@@ -17,4 +17,8 @@
     <files-path
         name="pet_photos"
         path="photos/" />
+    <!-- files-path: fotos de observações de saúde -->
+    <files-path
+        name="health_photos"
+        path="health_photos/" />
 </paths>

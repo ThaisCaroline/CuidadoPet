@@ -41,3 +41,16 @@
 
 # ── Compose ───────────────────────────────────────────────────────────────────
 -dontwarn androidx.compose.**
+
+# ── Logs ──────────────────────────────────────────────────────────────────────
+# Remove todas as chamadas de Log.* no build de release.
+# -assumenosideeffects diz ao R8 que essas chamadas não têm efeito colateral,
+# então ele as elimina completamente do bytecode gerado.
+-assumenosideeffects class android.util.Log {
+    public static int v(...);
+    public static int d(...);
+    public static int i(...);
+    public static int w(...);
+    public static int e(...);
+    public static boolean isLoggable(java.lang.String, int);
+}

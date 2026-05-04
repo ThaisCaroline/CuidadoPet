@@ -18,6 +18,8 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Medication
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.NotificationsOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -146,6 +148,12 @@ private fun MedicationCard(
                     text     = medication.name,
                     style    = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.weight(1f)
+                )
+                Icon(
+                    imageVector = if (medication.reminderEnabled) Icons.Default.Notifications else Icons.Default.NotificationsOff,
+                    contentDescription = if (medication.reminderEnabled) "Lembrete ativo" else "Lembrete desativado",
+                    tint = if (medication.reminderEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                    modifier = Modifier.size(18.dp)
                 )
                 IconButton(onClick = onEdit, modifier = Modifier.size(36.dp)) {
                     Icon(Icons.Default.Edit, "Editar",

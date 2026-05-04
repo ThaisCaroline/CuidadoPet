@@ -3,6 +3,8 @@ package com.cuidadopet.ui.screens.feeding
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,6 +16,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -41,6 +44,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cuidadopet.data.db.entity.MealEntity
 import com.cuidadopet.data.db.entity.MealLogEntity
 import com.cuidadopet.data.db.entity.MealPlanEntity
+import com.cuidadopet.data.db.entity.SporadicMealLogEntity
 import com.cuidadopet.domain.FeedingStatus
 import com.cuidadopet.domain.toDisplayText
 import com.cuidadopet.ui.utils.adaptiveHorizontalPadding
@@ -90,6 +94,9 @@ fun FeedingTabContent(
         item {
             DailySummaryCard(
                 plan = state.plan!!,
+                meals = state.meals,
+                logs = state.logs,
+                sporadicLogs = state.sporadicLogs,
                 status = state.dailyStatus,
                 onConfigurePlan = onConfigurePlan,
                 onDeletePlan = { viewModel.deletePlan(petId) }
@@ -151,10 +158,13 @@ private fun NoPlanContent(
     }
 }
 
-// Card com o resumo do dia: tipo de alimento, meta de kcal, status geral
+// Card com o resumo do dia: tipo de alimento, meta de kcal, status geral e consumo real
 @Composable
 private fun DailySummaryCard(
     plan: MealPlanEntity,
+    meals: List<MealEntity>,
+    logs: Map<Long, MealLogEntity>,
+    sporadicLogs: List<SporadicMealLogEntity>,
     status: FeedingStatus?,
     onConfigurePlan: () -> Unit,
     onDeletePlan: () -> Unit
@@ -231,8 +241,9 @@ private fun DailySummaryCard(
 
             // Quantidade total em gramas, se definida
             plan.dailyQuantityGrams?.let {
+                val unit = meals.firstOrNull()?.quantityUnit ?: "g"
                 Text(
-                    "Quantidade: ${it.toInt()} g/dia",
+                    "Quantidade: ${it.toInt()} $unit/dia",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -253,6 +264,46 @@ private fun DailySummaryCard(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.error
                 )
+            }
+
+            // Consumo de hoje: plano + extras, agrupados por unidade
+            val planByUnit = meals
+                .groupBy { it.quantityUnit }
+                .mapValues { (_, mealsInUnit) ->
+                    mealsInUnit.sumOf { meal ->
+                        val log = logs[meal.id]
+                        if (log != null) meal.quantityGrams * log.eatenPercentage / 100.0 else 0.0
+                    }
+                }
+                .filter { it.value > 0 }
+
+            val sporadicByUnit = sporadicLogs
+                .filter { it.amountGrams != null }
+                .groupBy { it.amountUnit }
+                .mapValues { (_, entries) -> entries.sumOf { it.amountGrams ?: 0.0 } }
+
+            val allUnits = (planByUnit.keys + sporadicByUnit.keys).toSet()
+            if (allUnits.isNotEmpty()) {
+                HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                Text(
+                    "Consumo de hoje",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                allUnits.sorted().forEach { unit ->
+                    val planAmt   = planByUnit[unit]
+                    val extraAmt  = sporadicByUnit[unit]
+                    val totalAmt  = (planAmt ?: 0.0) + (extraAmt ?: 0.0)
+                    val line = when {
+                        planAmt != null && extraAmt != null ->
+                            "${planAmt.toInt()}$unit plano + ${extraAmt.toInt()}$unit extras = ${totalAmt.toInt()}$unit"
+                        planAmt != null ->
+                            "${planAmt.toInt()}$unit (plano)"
+                        else ->
+                            "${extraAmt!!.toInt()}$unit (extras)"
+                    }
+                    Text(line, style = MaterialTheme.typography.bodySmall)
+                }
             }
         }
     }
@@ -290,7 +341,7 @@ private fun MealCard(
                     Text(meal.timeOfDay, style = MaterialTheme.typography.titleMedium)
                     if (meal.quantityGrams > 0) {
                         Text(
-                            "${meal.quantityGrams.toInt()} g",
+                            "${meal.quantityGrams.toInt()} ${meal.quantityUnit}",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -317,12 +368,6 @@ private fun MealCard(
                             Text("Editar", style = MaterialTheme.typography.labelSmall)
                         }
                     }
-                } else if (log == null) {
-                    OutlinedButton(
-                        onClick = { expanded = true }
-                    ) {
-                        Text("Registrar")
-                    }
                 }
             }
 
@@ -346,6 +391,7 @@ private fun MealCard(
 }
 
 // Formulário inline para registrar o que o pet comeu em uma refeição
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun MealLogInput(
     initialPercentage: Int,
@@ -366,8 +412,8 @@ private fun MealLogInput(
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text("Quanto o pet comeu?", style = MaterialTheme.typography.labelMedium)
 
-        // Botões de porcentagem lado a lado
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        // Botões de porcentagem — FlowRow quebra para segunda linha se a tela for muito estreita
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             percentageOptions.forEach { pct ->
                 FilterChipCompact(
                     selected = selectedPct == pct,
@@ -441,7 +487,7 @@ private fun FilterChipCompact(
     androidx.compose.material3.FilterChip(
         selected = selected,
         onClick = onClick,
-        label = { Text(label, style = MaterialTheme.typography.labelSmall) }
+        label = { Text(label, style = MaterialTheme.typography.labelSmall, softWrap = false, maxLines = 1) }
     )
 }
 

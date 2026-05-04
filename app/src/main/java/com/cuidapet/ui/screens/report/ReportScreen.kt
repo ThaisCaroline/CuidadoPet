@@ -4,6 +4,8 @@ import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,12 +13,17 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -27,16 +34,22 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -45,6 +58,16 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
+import com.cuidadopet.data.db.entity.HealthPhotoEntity
+import com.cuidadopet.data.db.entity.MealLogEntity
+import com.cuidadopet.data.db.entity.MedicationLogEntity
+import com.cuidadopet.data.db.entity.WaterLogEntity
+import com.cuidadopet.data.db.entity.WeightRecordEntity
+import java.io.File
 import com.cuidadopet.domain.PetReport
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -127,9 +150,9 @@ fun ReportScreen(
 
             state.report != null -> {
                 ReportContent(
-                    report         = state.report!!,
-                    isPdfGenerating = state.isPdfGenerating,
-                    onShareText     = {
+                    report              = state.report!!,
+                    isPdfGenerating     = state.isPdfGenerating,
+                    onShareText         = {
                         val text   = viewModel.getShareText() ?: return@ReportContent
                         val intent = Intent(Intent.ACTION_SEND).apply {
                             type = "text/plain"
@@ -137,9 +160,17 @@ fun ReportScreen(
                         }
                         context.startActivity(Intent.createChooser(intent, "Compartilhar relatório"))
                     },
-                    onGeneratePdf = { viewModel.generatePdf() },
-                    onChangePeriod = { days -> viewModel.load(petId, days) },
-                    modifier      = Modifier.padding(innerPadding)
+                    onGeneratePdf       = { viewModel.generatePdf() },
+                    onChangePeriod      = { days -> viewModel.load(petId, days) },
+                    onUpdateMedicationLog = { viewModel.updateMedicationLog(it) },
+                    onDeleteMedicationLog = { viewModel.deleteMedicationLog(it) },
+                    onUpdateMealLog       = { viewModel.updateMealLog(it) },
+                    onDeleteMealLog       = { viewModel.deleteMealLog(it) },
+                    onUpdateWaterLog      = { viewModel.updateWaterLog(it) },
+                    onDeleteWaterLog      = { viewModel.deleteWaterLog(it) },
+                    onUpdateWeightRecord  = { viewModel.updateWeightRecord(it) },
+                    onDeleteWeightRecord  = { viewModel.deleteWeightRecord(it) },
+                    modifier            = Modifier.padding(innerPadding)
                 )
             }
 
@@ -158,6 +189,7 @@ fun ReportScreen(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun ReportContent(
     report: PetReport,
@@ -165,9 +197,57 @@ private fun ReportContent(
     onShareText: () -> Unit,
     onGeneratePdf: () -> Unit,
     onChangePeriod: (Int) -> Unit,
+    onUpdateMedicationLog: (MedicationLogEntity) -> Unit,
+    onDeleteMedicationLog: (Long) -> Unit,
+    onUpdateMealLog: (MealLogEntity) -> Unit,
+    onDeleteMealLog: (Long) -> Unit,
+    onUpdateWaterLog: (WaterLogEntity) -> Unit,
+    onDeleteWaterLog: (Long) -> Unit,
+    onUpdateWeightRecord: (WeightRecordEntity) -> Unit,
+    onDeleteWeightRecord: (Long) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val dateFmt = remember { SimpleDateFormat("dd/MM/yyyy", Locale.forLanguageTag("pt-BR")) }
+    val dateFmt  = remember { SimpleDateFormat("dd/MM/yyyy", Locale.forLanguageTag("pt-BR")) }
+    val timeFmt  = remember { SimpleDateFormat("dd/MM HH:mm", Locale.forLanguageTag("pt-BR")) }
+
+    var editingMedLog      by remember { mutableStateOf<MedicationLogEntity?>(null) }
+    var editingMealLog     by remember { mutableStateOf<Pair<MealLogEntity, String>?>(null) }
+    var editingWaterLog    by remember { mutableStateOf<WaterLogEntity?>(null) }
+    var editingWeightRecord by remember { mutableStateOf<WeightRecordEntity?>(null) }
+
+    editingMedLog?.let { log ->
+        EditMedicationLogDialog(
+            log       = log,
+            onConfirm = { updated -> onUpdateMedicationLog(updated); editingMedLog = null },
+            onDelete  = { onDeleteMedicationLog(log.id); editingMedLog = null },
+            onDismiss = { editingMedLog = null }
+        )
+    }
+    editingMealLog?.let { (log, label) ->
+        EditMealLogDialog(
+            log       = log,
+            mealLabel = label,
+            onConfirm = { updated -> onUpdateMealLog(updated); editingMealLog = null },
+            onDelete  = { onDeleteMealLog(log.id); editingMealLog = null },
+            onDismiss = { editingMealLog = null }
+        )
+    }
+    editingWaterLog?.let { log ->
+        EditWaterLogDialog(
+            log       = log,
+            onConfirm = { updated -> onUpdateWaterLog(updated); editingWaterLog = null },
+            onDelete  = { onDeleteWaterLog(log.id); editingWaterLog = null },
+            onDismiss = { editingWaterLog = null }
+        )
+    }
+    editingWeightRecord?.let { record ->
+        EditWeightDialog(
+            record    = record,
+            onConfirm = { updated -> onUpdateWeightRecord(updated); editingWeightRecord = null },
+            onDelete  = { onDeleteWeightRecord(record.id); editingWeightRecord = null },
+            onDismiss = { editingWeightRecord = null }
+        )
+    }
 
     Column(
         modifier = modifier
@@ -223,9 +303,31 @@ private fun ReportContent(
             if (report.activeMedications.isEmpty()) {
                 Text("Nenhum", style = MaterialTheme.typography.bodySmall)
             } else {
+                val timeFmt = remember { SimpleDateFormat("dd/MM HH:mm", Locale.forLanguageTag("pt-BR")) }
                 report.activeMedications.forEach { med ->
-                    Text("• ${med.name} — ${med.dose} ${med.doseUnit}",
-                        style = MaterialTheme.typography.bodySmall)
+                    Text(
+                        "• ${med.name} — ${med.dose} ${med.doseUnit}",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    val logsThisMed = report.medicationLogs
+                        .filter { it.medicationId == med.id }
+                        .sortedBy { it.scheduledAt }
+                    if (logsThisMed.isNotEmpty()) {
+                        logsThisMed.forEach { log ->
+                            val statusLabel = when (log.status) {
+                                "TAKEN"     -> "✓ Administrado"
+                                "NOT_TAKEN" -> "✗ Não administrado"
+                                "VOMITED"   -> "⚠ Administrado (vomitou)"
+                                else        -> "Pendente"
+                            }
+                            Text(
+                                "  ${timeFmt.format(Date(log.scheduledAt))} — $statusLabel  ✏",
+                                style    = MaterialTheme.typography.bodySmall,
+                                color    = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.clickable { editingMedLog = log }
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -252,33 +354,62 @@ private fun ReportContent(
             }
         }
 
-        SummaryCard(title = "Refeições administradas") {
-            if (report.mealLogs.isEmpty()) {
+        SummaryCard(title = "Alimentação no período") {
+            if (report.mealLogs.isEmpty() && report.sporadicLogs.isEmpty()) {
                 Text("Nenhuma refeição registrada no período.", style = MaterialTheme.typography.bodySmall)
             } else {
                 val mealsById = report.meals.associateBy { it.id }
-                report.mealLogs
-                    .sortedWith(compareBy({ it.date }, { mealsById[it.mealId]?.timeOfDay ?: "" }))
-                    .forEach { log ->
-                        val time   = mealsById[log.mealId]?.timeOfDay ?: "?"
-                        val status = when (log.appetiteStatus) {
-                            "ALL"     -> "Comeu tudo"
-                            "PARTIAL" -> "Parcial (${log.eatenPercentage}%)"
-                            "REFUSED" -> "Recusou"
-                            else      -> "${log.eatenPercentage}%"
-                        }
-                        Text(
-                            "• ${dateFmt.format(Date(log.date))}  $time — $status",
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                        if (!log.notes.isNullOrBlank()) {
+                if (report.mealLogs.isNotEmpty()) {
+                    report.mealLogs
+                        .sortedBy { it.date }
+                        .forEach { log ->
+                            val meal = mealsById[log.mealId]
+                            val qty  = meal?.let {
+                                "${(it.quantityGrams * log.eatenPercentage / 100.0).toInt()}${it.quantityUnit}"
+                            } ?: ""
+                            val appetiteStr = when (log.appetiteStatus) {
+                                "ALL"     -> "Comeu tudo"
+                                "PARTIAL" -> "Parcial"
+                                "REFUSED" -> "Recusou"
+                                else      -> log.appetiteStatus
+                            }
+                            val label = buildString {
+                                append(dateFmt.format(Date(log.date)))
+                                meal?.let { append(" — ${it.timeOfDay}") }
+                                if (qty.isNotBlank()) append(": $qty")
+                                append(" · $appetiteStr")
+                            }
                             Text(
-                                "  ${log.notes}",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                "$label  ✏",
+                                style    = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier.clickable {
+                                    editingMealLog = log to (meal?.timeOfDay ?: dateFmt.format(Date(log.date)))
+                                }
                             )
                         }
-                    }
+                }
+                if (report.sporadicLogs.isNotEmpty()) {
+                    Text(
+                        "Extras:",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    report.sporadicLogs
+                        .sortedBy { it.registeredAt }
+                        .groupBy { dateFmt.format(Date(it.registeredAt)) }
+                        .forEach { (date, logs) ->
+                            val byUnit = logs
+                                .filter { it.amountGrams != null }
+                                .groupBy { it.amountUnit }
+                                .mapValues { (_, e) -> e.sumOf { it.amountGrams ?: 0.0 } }
+                            val amounts = byUnit.entries.joinToString(" + ") { (u, v) -> "${v.toInt()}$u" }
+                            val extra = if (amounts.isNotBlank()) " ($amounts)" else ""
+                            Text(
+                                "$date — ${logs.size} extra(s)$extra",
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                }
             }
         }
 
@@ -286,16 +417,15 @@ private fun ReportContent(
             if (report.waterLogs.isEmpty()) {
                 Text("Nenhum registro.", style = MaterialTheme.typography.bodySmall)
             } else {
-                val byDay = report.waterLogs
+                report.waterLogs
                     .sortedBy { it.registeredAt }
-                    .groupBy { dateFmt.format(Date(it.registeredAt)) }
-                byDay.forEach { (date, logs) ->
-                    val total = logs.sumOf { it.amountMl }
-                    Text(
-                        "$date — ${total.toInt()} ml",
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
+                    .forEach { log ->
+                        Text(
+                            "${timeFmt.format(Date(log.registeredAt))} — ${log.amountMl.toInt()} ml  ✏",
+                            style    = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.clickable { editingWaterLog = log }
+                        )
+                    }
                 val grandTotal = report.waterLogs.sumOf { it.amountMl }
                 Text(
                     "Total: ${grandTotal.toInt()} ml",
@@ -306,10 +436,27 @@ private fun ReportContent(
         }
 
         SummaryCard(title = "Diário de saúde") {
-            Text(
-                "${report.healthEntries.size} registros no período",
-                style = MaterialTheme.typography.bodySmall
-            )
+            if (report.healthEntries.isEmpty()) {
+                Text("Nenhum registro no período.", style = MaterialTheme.typography.bodySmall)
+            } else {
+                val withNotes = report.healthEntries
+                    .filter { !it.observations.isNullOrBlank() }
+                    .sortedByDescending { it.registeredAt }
+                if (withNotes.isEmpty()) {
+                    Text(
+                        "${report.healthEntries.size} registros — sem anotações de texto.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                } else {
+                    withNotes.forEach { entry ->
+                        Text(
+                            "${dateFmt.format(Date(entry.registeredAt))} — ${entry.observations}",
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                }
+            }
         }
 
         SummaryCard(title = "Histórico de peso") {
@@ -319,9 +466,37 @@ private fun ReportContent(
                 report.weightRecords.sortedByDescending { it.date }.forEach { w ->
                     val note = if (!w.notes.isNullOrBlank()) " — ${w.notes}" else ""
                     Text(
-                        "${dateFmt.format(Date(w.date))}: ${w.weightKg} kg$note",
-                        style = MaterialTheme.typography.bodySmall
+                        "${dateFmt.format(Date(w.date))}: ${w.weightKg} kg$note  ✏",
+                        style    = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.clickable { editingWeightRecord = w }
                     )
+                }
+            }
+        }
+
+        // ── Fotos ────────────────────────────────────────────────────────────
+        if (report.photos.isNotEmpty()) {
+            SummaryCard(title = "Fotos registradas") {
+                val photosByDay = report.photos.groupBy { dateFmt.format(Date(it.entryDate)) }
+                photosByDay.forEach { (date, photos) ->
+                    Text(date, style = MaterialTheme.typography.labelMedium,
+                        modifier = Modifier.padding(bottom = 4.dp))
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    ) {
+                        photos.forEach { photo ->
+                            AsyncImage(
+                                model = File(photo.filePath),
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .size(72.dp)
+                                    .clip(RoundedCornerShape(6.dp)),
+                                contentScale = ContentScale.Crop
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -377,14 +552,199 @@ private fun ReportContent(
 // Se não houver dados, retorna hoje como ponto único.
 private fun actualDataDateRange(report: PetReport): Pair<Long, Long> {
     val timestamps = buildList {
-        report.mealLogs.forEach     { add(it.date) }
-        report.waterLogs.forEach    { add(it.registeredAt) }
+        report.mealLogs.forEach      { add(it.date) }
+        report.sporadicLogs.forEach  { add(it.registeredAt) }
+        report.waterLogs.forEach     { add(it.registeredAt) }
         report.healthEntries.forEach { add(it.registeredAt) }
         report.weightRecords.forEach { add(it.date) }
     }
     val now = System.currentTimeMillis()
     return if (timestamps.isEmpty()) now to now
     else timestamps.min() to timestamps.max()
+}
+
+@Composable
+private fun EditMedicationLogDialog(
+    log: MedicationLogEntity,
+    onConfirm: (MedicationLogEntity) -> Unit,
+    onDelete: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    var selectedStatus by remember { mutableStateOf(log.status ?: "TAKEN") }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Editar administração") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                listOf(
+                    "TAKEN"     to "Administrado",
+                    "NOT_TAKEN" to "Não administrado",
+                    "VOMITED"   to "Administrado (vomitou)"
+                ).forEach { (value, label) ->
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth().clickable { selectedStatus = value }
+                    ) {
+                        RadioButton(selected = selectedStatus == value, onClick = { selectedStatus = value })
+                        Text(label, style = MaterialTheme.typography.bodyMedium)
+                    }
+                }
+                HorizontalDivider(modifier = Modifier.padding(top = 4.dp))
+                TextButton(
+                    onClick = onDelete,
+                    colors  = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                    modifier = Modifier.fillMaxWidth()
+                ) { Text("Excluir registro") }
+            }
+        },
+        confirmButton = {
+            Button(onClick = { onConfirm(log.copy(status = selectedStatus)) }) { Text("Salvar") }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } }
+    )
+}
+
+@Composable
+private fun EditMealLogDialog(
+    log: MealLogEntity,
+    mealLabel: String,
+    onConfirm: (MealLogEntity) -> Unit,
+    onDelete: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    var selectedPct      by remember { mutableIntStateOf(log.eatenPercentage) }
+    var selectedAppetite by remember { mutableStateOf(log.appetiteStatus) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Editar refeição — $mealLabel") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Quanto comeu?", style = MaterialTheme.typography.labelMedium)
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    listOf(0, 25, 50, 75, 100).forEach { pct ->
+                        FilterChip(
+                            selected = selectedPct == pct,
+                            onClick  = {
+                                selectedPct = pct
+                                selectedAppetite = when (pct) { 100 -> "ALL"; 0 -> "REFUSED"; else -> "PARTIAL" }
+                            },
+                            label = { Text("$pct%", style = MaterialTheme.typography.labelSmall) }
+                        )
+                    }
+                }
+                Text("Apetite:", style = MaterialTheme.typography.labelMedium)
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    listOf("ALL" to "Tudo", "PARTIAL" to "Parcial", "REFUSED" to "Recusou").forEach { (v, l) ->
+                        FilterChip(
+                            selected = selectedAppetite == v,
+                            onClick  = { selectedAppetite = v },
+                            label    = { Text(l, style = MaterialTheme.typography.labelSmall) }
+                        )
+                    }
+                }
+                HorizontalDivider(modifier = Modifier.padding(top = 4.dp))
+                TextButton(
+                    onClick  = onDelete,
+                    colors   = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                    modifier = Modifier.fillMaxWidth()
+                ) { Text("Excluir registro") }
+            }
+        },
+        confirmButton = {
+            Button(onClick = { onConfirm(log.copy(eatenPercentage = selectedPct, appetiteStatus = selectedAppetite)) }) { Text("Salvar") }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } }
+    )
+}
+
+@Composable
+private fun EditWaterLogDialog(
+    log: WaterLogEntity,
+    onConfirm: (WaterLogEntity) -> Unit,
+    onDelete: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    var amountText by remember { mutableStateOf(log.amountMl.toInt().toString()) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Editar registro de água") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(
+                    value           = amountText,
+                    onValueChange   = { if (it.all { c -> c.isDigit() }) amountText = it },
+                    label           = { Text("Quantidade (ml)") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine      = true,
+                    modifier        = Modifier.fillMaxWidth()
+                )
+                HorizontalDivider()
+                TextButton(
+                    onClick  = onDelete,
+                    colors   = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                    modifier = Modifier.fillMaxWidth()
+                ) { Text("Excluir registro") }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    val amount = amountText.toDoubleOrNull() ?: return@Button
+                    onConfirm(log.copy(amountMl = amount))
+                }
+            ) { Text("Salvar") }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } }
+    )
+}
+
+@Composable
+private fun EditWeightDialog(
+    record: WeightRecordEntity,
+    onConfirm: (WeightRecordEntity) -> Unit,
+    onDelete: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    var weightText by remember { mutableStateOf(record.weightKg.toString()) }
+    var notes      by remember { mutableStateOf(record.notes ?: "") }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Editar pesagem") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(
+                    value           = weightText,
+                    onValueChange   = { weightText = it },
+                    label           = { Text("Peso (kg)") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    singleLine      = true,
+                    modifier        = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value         = notes,
+                    onValueChange = { notes = it },
+                    label         = { Text("Observações (opcional)") },
+                    singleLine    = true,
+                    modifier      = Modifier.fillMaxWidth()
+                )
+                HorizontalDivider()
+                TextButton(
+                    onClick  = onDelete,
+                    colors   = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                    modifier = Modifier.fillMaxWidth()
+                ) { Text("Excluir registro") }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    val kg = weightText.replace(",", ".").toDoubleOrNull() ?: return@Button
+                    onConfirm(record.copy(weightKg = kg, notes = notes.ifBlank { null }))
+                }
+            ) { Text("Salvar") }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } }
+    )
 }
 
 // Card genérico para cada seção do resumo

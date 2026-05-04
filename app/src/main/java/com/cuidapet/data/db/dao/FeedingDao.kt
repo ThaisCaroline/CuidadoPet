@@ -9,6 +9,7 @@ import com.cuidadopet.data.db.entity.MealEntity
 import com.cuidadopet.data.db.entity.MealLogEntity
 import com.cuidadopet.data.db.entity.MealPlanEntity
 import kotlinx.coroutines.flow.Flow
+import com.cuidadopet.data.db.entity.SporadicMealLogEntity
 
 // DAO unificado para tudo relacionado a alimentação:
 // plano alimentar, refeições individuais e registros diários
@@ -38,9 +39,21 @@ interface FeedingDao {
 
     // ─── Refeições ──────────────────────────────────────────────────
 
+    // Versão suspend (não-Flow) — usada em operações de escrita como setMealPlan
+    @Query("SELECT * FROM meal_plans WHERE petId = :petId AND isActive = 1 LIMIT 1")
+    suspend fun getActiveMealPlanOnce(petId: Long): MealPlanEntity?
+
     // Busca todas as refeições do plano, ordenadas por horário
     @Query("SELECT * FROM meals WHERE mealPlanId = :planId ORDER BY timeOfDay ASC")
     fun getMealsForPlan(planId: Long): Flow<List<MealEntity>>
+
+    // Versão suspend — usada para ler refeições antes de substituir o plano
+    @Query("SELECT * FROM meals WHERE mealPlanId = :planId ORDER BY timeOfDay ASC")
+    suspend fun getMealsForPlanOnce(planId: Long): List<MealEntity>
+
+    // Migra logs de um mealId antigo para um novo quando o plano é reconfigurado
+    @Query("UPDATE meal_logs SET mealId = :newMealId WHERE mealId = :oldMealId")
+    suspend fun reassignMealLogs(oldMealId: Long, newMealId: Long)
 
     // Busca todas as refeições de todos os planos do pet — usado no relatório para
     // resolver mealId de logs que pertencem a planos anteriores (já desativados)
@@ -69,6 +82,10 @@ interface FeedingDao {
     @Query("SELECT * FROM meal_logs WHERE mealId = :mealId AND date = :date LIMIT 1")
     fun getLogForMealOnDate(mealId: Long, date: Long): Flow<MealLogEntity?>
 
+    // Versão suspend (não-Flow) — usada em markMeal para leitura pontual
+    @Query("SELECT * FROM meal_logs WHERE mealId = :mealId AND date = :date LIMIT 1")
+    suspend fun getLogForMealOnDateOnce(mealId: Long, date: Long): MealLogEntity?
+
     // Busca todos os logs de um pet em um período — para o relatório
     @Query("""
         SELECT ml.* FROM meal_logs ml
@@ -89,4 +106,25 @@ interface FeedingDao {
 
     @Update
     suspend fun updateMealLog(log: MealLogEntity)
+
+    @Query("DELETE FROM meal_logs WHERE id = :logId")
+    suspend fun deleteMealLog(logId: Long)
+
+    // ─── Refeições esporádicas ──────────────────────────────────────
+
+    // Busca os registros extras do pet em um dia específico
+    @Query("SELECT * FROM sporadic_meal_logs WHERE petId = :petId AND registeredAt BETWEEN :dayStart AND :dayEnd ORDER BY registeredAt ASC")
+    fun getSporadicLogsForDay(petId: Long, dayStart: Long, dayEnd: Long): Flow<List<SporadicMealLogEntity>>
+
+    // Insere um registro de refeição esporádica
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertSporadicLog(log: SporadicMealLogEntity): Long
+
+    // Remove um registro esporádico pelo id
+    @Query("DELETE FROM sporadic_meal_logs WHERE id = :id")
+    suspend fun deleteSporadicLog(id: Long)
+
+    // Busca todos os registros esporádicos do pet em um período — para o relatório
+    @Query("SELECT * FROM sporadic_meal_logs WHERE petId = :petId AND registeredAt BETWEEN :start AND :end ORDER BY registeredAt ASC")
+    suspend fun getSporadicLogsForPeriodOnce(petId: Long, start: Long, end: Long): List<SporadicMealLogEntity>
 }

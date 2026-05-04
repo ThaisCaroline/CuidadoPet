@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.cuidadopet.data.db.entity.MealEntity
 import com.cuidadopet.data.db.entity.MealLogEntity
 import com.cuidadopet.data.db.entity.MealPlanEntity
+import com.cuidadopet.data.db.entity.SporadicMealLogEntity
 import com.cuidadopet.data.repository.FeedingRepository
 import com.cuidadopet.domain.EnergyCalculator
 import com.cuidadopet.domain.FeedingStatus
@@ -21,10 +22,11 @@ import javax.inject.Inject
 
 // Estado da aba de alimentação do dia
 data class FeedingUiState(
-    val plan: MealPlanEntity? = null,               // plano alimentar ativo
-    val meals: List<MealEntity> = emptyList(),      // refeições do plano
-    val logs: Map<Long, MealLogEntity> = emptyMap(),// logs de hoje: mealId → log
-    val dailyStatus: FeedingStatus? = null,         // resumo do dia (suficiente, abaixo, etc.)
+    val plan: MealPlanEntity? = null,
+    val meals: List<MealEntity> = emptyList(),
+    val logs: Map<Long, MealLogEntity> = emptyMap(),
+    val sporadicLogs: List<SporadicMealLogEntity> = emptyList(),
+    val dailyStatus: FeedingStatus? = null,
     val isLoading: Boolean = true
 )
 
@@ -53,20 +55,18 @@ class FeedingViewModel @Inject constructor(
                     return@collect
                 }
 
-                // Carrega as refeições e seus logs de hoje juntos
+                // Carrega as refeições, logs e extras de hoje juntos
                 combine(
                     feedingRepository.getMealsForPlan(plan.id),
-                    feedingRepository.getLogsForPetInPeriod(petId, todayMillis, todayMillis + 86_400_000L)
-                ) { meals, allLogs ->
-                    // Monta um mapa de mealId → log para acesso rápido na tela
+                    feedingRepository.getLogsForPetInPeriod(petId, todayMillis, todayMillis + 86_400_000L),
+                    feedingRepository.getSporadicLogsForDay(petId, todayMillis, todayMillis + 86_400_000L)
+                ) { meals, allLogs, sporadicLogs ->
                     val logsMap = allLogs.associateBy { it.mealId }
 
-                    // Calcula o status do dia com base nos logs existentes
                     val status = if (meals.isEmpty()) null else {
                         val percentages = meals.map { meal ->
                             logsMap[meal.id]?.eatenPercentage ?: 0
                         }
-                        // Média de porcentagem comida em todas as refeições do dia
                         val avg = percentages.average().toInt()
                         EnergyCalculator.evaluateDailyIntake(avg)
                     }
@@ -75,6 +75,7 @@ class FeedingViewModel @Inject constructor(
                         plan = plan,
                         meals = meals,
                         logs = logsMap,
+                        sporadicLogs = sporadicLogs,
                         dailyStatus = status,
                         isLoading = false
                     )

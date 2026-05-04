@@ -15,7 +15,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.AccessTime
+import com.cuidadopet.ui.utils.TimeInputField
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Button
@@ -39,8 +39,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.text.TextRange
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
@@ -156,7 +154,7 @@ fun MealPlanFormScreen(
             // ── Meta diária de ração ──────────────────────────────────────
             OutlinedTextField(
                 value = state.dailyQuantityGrams,
-                onValueChange = viewModel::updateDailyQuantity,
+                onValueChange = { viewModel.updateDailyQuantity(it.filter { c -> c.isDigit() }.take(5)) },
                 label = { Text("Meta diária de ração (${state.quantityUnit})") },
                 placeholder = { Text("Ex: 300") },
                 modifier = Modifier.fillMaxWidth(),
@@ -167,7 +165,7 @@ fun MealPlanFormScreen(
             // ── Meta calórica diária ──────────────────────────────────────
             OutlinedTextField(
                 value = state.dailyKcalTarget,
-                onValueChange = viewModel::updateDailyKcal,
+                onValueChange = { viewModel.updateDailyKcal(it.filter { c -> c.isDigit() }.take(5)) },
                 label = { Text("Meta calórica diária (opcional)") },
                 placeholder = { Text("Ex: 450") },
                 modifier = Modifier.fillMaxWidth(),
@@ -260,41 +258,25 @@ private fun MealEntryRow(
     canRemove: Boolean,
     unit: String = "g"
 ) {
-    var timeValue by remember { mutableStateOf(TextFieldValue(entry.time, TextRange(entry.time.length))) }
-    LaunchedEffect(entry.time) {
-        if (timeValue.text != entry.time) {
-            timeValue = TextFieldValue(entry.time, TextRange(entry.time.length))
-        }
-    }
-
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
-        OutlinedTextField(
-            value = timeValue,
-            onValueChange = { new ->
-                val formatted = if (new.text.length >= timeValue.text.length)
-                    autoFormatTime(new.text) else new.text
-                timeValue = TextFieldValue(formatted, TextRange(formatted.length))
-                onTimeChange(formatted)
-            },
-            label = { Text("Horário") },
-            placeholder = { Text("07:00") },
-            modifier = Modifier.weight(1f),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            singleLine = true,
-            leadingIcon = {
-                Icon(Icons.Default.AccessTime, contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant)
-            },
-            suffix = { Text("h") }
+        TimeInputField(
+            value = entry.time,
+            onValueChange = onTimeChange,
+            label = "Horário",
+            placeholder = "07:00",
+            modifier = Modifier.weight(1f)
         )
 
         OutlinedTextField(
             value = entry.quantityGrams,
-            onValueChange = onQuantityChange,
+            onValueChange = { new ->
+                val filtered = new.filter { it.isDigit() }.take(5)
+                onQuantityChange(filtered)
+            },
             label = { Text(if (unit == "ml") "Mililitros" else "Gramas") },
             placeholder = { Text("150") },
             modifier = Modifier.weight(1f),
@@ -316,16 +298,3 @@ private fun MealEntryRow(
     }
 }
 
-private fun autoFormatTime(raw: String): String {
-    if (Regex("""^\d{1,2}:\d{0,2}$""").matches(raw)) return raw
-    val digits = raw.filter { it.isDigit() }.take(4)
-    if (digits.isEmpty()) return ""
-    return when (digits.length) {
-        1    -> digits
-        2    -> if (digits[0].digitToInt() >= 3) "${digits[0]}:${digits[1]}"
-                else "${digits[0]}${digits[1]}:"
-        3    -> if (digits[0].digitToInt() >= 3) "${digits[0]}:${digits[1]}${digits[2]}"
-                else "${digits[0]}${digits[1]}:${digits[2]}"
-        else -> "${digits[0]}${digits[1]}:${digits[2]}${digits[3]}"
-    }
-}

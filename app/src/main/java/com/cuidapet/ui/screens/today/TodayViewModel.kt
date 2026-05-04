@@ -3,8 +3,8 @@ package com.cuidadopet.ui.screens.today
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cuidadopet.data.db.entity.MealEntity
+import com.cuidadopet.data.db.entity.SporadicMealLogEntity
 import com.cuidadopet.data.db.entity.MealLogEntity
-import kotlinx.coroutines.flow.first
 import com.cuidadopet.data.db.entity.MedicationEntity
 import com.cuidadopet.data.db.entity.MedicationLogEntity
 import com.cuidadopet.data.db.entity.WaterLogEntity
@@ -37,6 +37,7 @@ data class TodayMealItem(
 )
 
 data class TodayUiState(
+    val sporadicLogs: List<SporadicMealLogEntity> = emptyList(),
     val doses: List<TodayDoseItem>   = emptyList(),
     val meals: List<TodayMealItem>   = emptyList(),
     val waterTotalMl: Double         = 0.0,
@@ -100,6 +101,10 @@ class TodayViewModel @Inject constructor(
                     isLoading     = false
                 )
             }
+            .combine(feedingRepository.getSporadicLogsForDay(petId, dayStart, dayEnd)) { state, sporadic ->
+               state.copy(sporadicLogs = sporadic)
+            }
+
             .collect { newState -> _state.value = newState }
         }
     }
@@ -122,7 +127,7 @@ class TodayViewModel @Inject constructor(
     fun markMeal(meal: MealEntity, eatenPercentage: Int, appetiteStatus: String) {
         viewModelScope.launch {
             val date = startOfDay()
-            val existing = feedingRepository.getLogForMealOnDate(meal.id, date).first()
+            val existing = feedingRepository.getLogForMealOnDateOnce(meal.id, date)
             if (existing != null) {
                 feedingRepository.updateMealLog(
                     existing.copy(eatenPercentage = eatenPercentage, appetiteStatus = appetiteStatus,
@@ -174,57 +179,28 @@ class TodayViewModel @Inject constructor(
         return items.sortedBy { it.scheduledAt }
     }
 
-    // Calcula os timestamps de cada dose de um medicamento que caem no dia de hoje.
-    // A lógica varia dependendo do tipo de frequência do medicamento.
     private fun calculateDosesForDay(
         med: MedicationEntity,
         dayStart: Long,
         dayEnd: Long
-    ): List<Long> {
-        return when (med.frequencyType) {
+    ): List<Long> = DoseScheduler.calculateDosesForDay(med, dayStart, dayEnd)
 
-            // FIXED_TIMES: horários fixos do dia — ex: ["08:00","20:00"]
-            // Converte cada horário para o timestamp de hoje
-            "FIXED_TIMES" -> {
-                med.fixedTimes
-                    ?.removePrefix("[")?.removeSuffix("]")
-                    ?.split(",")
-                    ?.map { it.trim().removeSurrounding("\"") }
-                    ?.filter { it.isNotBlank() }
-                    ?.mapNotNull { time ->
-                        val parts = time.split(":").mapNotNull { it.toIntOrNull() }
-                        if (parts.size != 2) return@mapNotNull null
-                        val (h, m) = parts
-                        // Timestamp = início do dia + horas em ms + minutos em ms
-                        dayStart + h * 3_600_000L + m * 60_000L
-                    }
-                    ?: emptyList()
-            }
+    fun addSporadicMeal(petId: Long, description: String, amountValue: Double?, amountUnit: String) {
+        viewModelScope.launch {
+            feedingRepository.saveSporadicLog(
+                SporadicMealLogEntity(
+                    petId = petId,
+                    description = description.ifBlank { null },
+                    amountGrams = amountValue,
+                    amountUnit = amountUnit
+                )
+            )
+        }
+    }
 
-            // INTERVAL: a cada X horas — ex: a cada 8h desde o início do tratamento
-            // Calcula qual dose cai dentro do intervalo de hoje
-            "INTERVAL" -> {
-                val intervalMs = (med.frequencyHours ?: 24) * 3_600_000L
-                val doses = mutableListOf<Long>()
-
-                // Calcula o número de intervalos completos desde o início do tratamento
-                // até o começo de hoje — assim pulamos diretamente para doses relevantes
-                val elapsed   = dayStart - med.startDate
-                val skipCount = if (elapsed <= 0L) 0L else elapsed / intervalMs
-                var t         = med.startDate + skipCount * intervalMs
-
-                // Avança até a primeira dose >= dayStart (pode estar um intervalo atrás)
-                while (t < dayStart) t += intervalMs
-
-                // Coleta todas as doses que caem dentro do dia
-                while (t <= dayEnd) {
-                    doses.add(t)
-                    t += intervalMs
-                }
-                doses
-            }
-
-            else -> emptyList()
+    fun deleteSporadicMeal(id: Long) {
+        viewModelScope.launch {
+            feedingRepository.deleteSporadicLog(id)
         }
     }
 

@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -16,6 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -153,8 +155,28 @@ fun WeightHistoryScreen(
                     WeightRecordRow(
                         record         = record,
                         previousRecord = prevRecord,
+                        canDelete      = state.records.size > 1,
                         onDelete       = { viewModel.deleteRecord(record.id) }
                     )
+                }
+
+                if (state.records.size == 1) {
+                    Row(
+                        verticalAlignment     = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Info,
+                            contentDescription = null,
+                            tint     = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Text(
+                            "O histórico precisa ter ao menos um registro.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
 
@@ -227,6 +249,7 @@ private fun WeightChart(
 private fun WeightRecordRow(
     record: WeightRecordEntity,
     previousRecord: WeightRecordEntity?,
+    canDelete: Boolean,
     onDelete: () -> Unit
 ) {
     val delta = if (previousRecord != null) record.weightKg - previousRecord.weightKg else null
@@ -275,9 +298,13 @@ private fun WeightRecordRow(
                 )
             }
 
-            IconButton(onClick = onDelete) {
-                Icon(Icons.Default.Delete, contentDescription = "Remover",
-                    tint = MaterialTheme.colorScheme.error)
+            IconButton(onClick = onDelete, enabled = canDelete) {
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = "Remover",
+                    tint = if (canDelete) MaterialTheme.colorScheme.error
+                           else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                )
             }
         }
     }

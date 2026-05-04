@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import com.cuidadopet.R
 
 // BroadcastReceiver que recebe os alarmes de refeição e exibe a notificação.
 // Funciona igual ao MedicationAlarmReceiver, mas para lembretes de horário de refeição.
@@ -41,7 +42,7 @@ class MealAlarmReceiver : BroadcastReceiver() {
         // Monta a notificação com ícone, título e texto
         val quantityText = if (quantity > 0) " (${quantity.toInt()}g)" else ""
         val notification = NotificationCompat.Builder(context, NotificationChannels.CHANNEL_MEALS)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle("Hora de alimentar $petName 🍽️")
             .setContentText("Refeição das $time$quantityText")
             .setPriority(NotificationCompat.PRIORITY_HIGH)

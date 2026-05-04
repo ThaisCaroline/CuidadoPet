@@ -53,8 +53,15 @@ interface HealthDao {
     @Query("SELECT * FROM weight_records WHERE petId = :petId ORDER BY date DESC, id DESC LIMIT 1")
     fun getLatestWeight(petId: Long): Flow<WeightRecordEntity?>
 
+    // Busca o registro de peso de um dia específico — usado na sincronização do savePet
+    @Query("SELECT * FROM weight_records WHERE petId = :petId AND date = :date LIMIT 1")
+    suspend fun getWeightRecordForDate(petId: Long, date: Long): WeightRecordEntity?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertWeightRecord(record: WeightRecordEntity): Long
+
+    @Update
+    suspend fun updateWeightRecord(record: WeightRecordEntity)
 
     @Query("DELETE FROM weight_records WHERE id = :recordId")
     suspend fun deleteWeightRecord(recordId: Long)

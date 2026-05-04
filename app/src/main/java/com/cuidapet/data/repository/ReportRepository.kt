@@ -15,23 +15,24 @@ class ReportRepository @Inject constructor(
     private val medicationRepository: MedicationRepository,
     private val feedingRepository: FeedingRepository,
     private val waterRepository: WaterRepository,
-    private val healthRepository: HealthRepository
+    private val healthRepository: HealthRepository,
+    private val photoRepository: HealthPhotoRepository
 ) {
 
     // Coleta todos os dados do pet para o período informado e retorna o PetReport.
     // suspend = deve ser chamado dentro de uma coroutine (o ViewModel faz isso).
     // .first() pega o valor atual do Flow e cancela a coleta — é uma consulta pontual,
     // não um listener reativo. Perfeito para gerar um relatório snapshot.
-    suspend fun buildReport(petId: Long, periodDays: Int = 7): PetReport {
+    suspend fun buildReport(petId: Long, periodDays: Int = 7): PetReport? {
         // Define o intervalo: de meia-noite de `periodDays` dias atrás até agora
         val endDate   = System.currentTimeMillis()
         val startDate = startOfDayMinus(periodDays)
 
-        val pet = petRepository.getPetById(petId).first()
-            ?: error("Pet $petId não encontrado")
+        val pet = petRepository.getPetById(petId).first() ?: return null
 
         // Medicamentos ativos (independente de período — são os que estão em uso agora)
         val meds = medicationRepository.getActiveMedications(petId).first()
+        val medLogs = medicationRepository.getLogsForPetInPeriod(petId, startDate, endDate).first()
 
         // Plano alimentar ativo
         val plan = feedingRepository.getActiveMealPlan(petId).first()
@@ -42,6 +43,9 @@ class ReportRepository @Inject constructor(
         // Logs de refeição no período
         val mealLogs = feedingRepository.getLogsForPetInPeriod(petId, startDate, endDate).first()
 
+        // Extras esporádicos no período
+        val sporadicLogs = feedingRepository.getSporadicLogsForPeriod(petId, startDate, endDate)
+
         // Logs de água no período
         val waterLogs = waterRepository.getLogsForPeriod(petId, startDate, endDate).first()
 
@@ -51,17 +55,22 @@ class ReportRepository @Inject constructor(
         // Todo o histórico de peso — útil para ver tendência além do período selecionado
         val weightRecords = healthRepository.getAllWeightRecords(petId).first()
 
+        val photos = photoRepository.getForPeriod(petId, startDate, endDate)
+
         return PetReport(
-            pet              = pet,
-            periodStart      = startDate,
-            periodEnd        = endDate,
+            pet               = pet,
+            periodStart       = startDate,
+            periodEnd         = endDate,
             activeMedications = meds,
-            mealPlan         = plan,
-            meals            = meals,
-            mealLogs         = mealLogs,
-            waterLogs        = waterLogs,
-            healthEntries    = healthEntries,
-            weightRecords    = weightRecords
+            medicationLogs    = medLogs,
+            mealPlan          = plan,
+            meals             = meals,
+            mealLogs          = mealLogs,
+            sporadicLogs      = sporadicLogs,
+            waterLogs         = waterLogs,
+            healthEntries     = healthEntries,
+            weightRecords     = weightRecords,
+            photos            = photos
         )
     }
 

@@ -65,4 +65,7 @@ class MedicationRepository @Inject constructor(
 
     suspend fun updateLog(log: MedicationLogEntity) =
         medicationDao.updateLog(log)
+
+    suspend fun deleteLog(logId: Long) =
+        medicationDao.deleteLog(logId)
 }

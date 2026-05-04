@@ -15,7 +15,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -176,13 +175,17 @@ class PetFormViewModel @Inject constructor(
                 petRepository.insertPet(pet)
             }
 
-            // Sincroniza o peso com o histórico (evita duplicata no mesmo dia)
+            // Sincroniza o peso com o histórico do dia atual.
+            // Usa query direta (não Flow) para evitar leitura de cache reativo.
+            // Se já existe um registro para hoje, atualiza o peso; caso contrário, cria.
             val today = startOfDay()
-            val records = healthRepository.getAllWeightRecords(petId).first()
-            if (records.none { it.date == today }) {
+            val existing = healthRepository.getWeightRecordForDate(petId, today)
+            if (existing == null) {
                 healthRepository.saveWeightRecord(
                     WeightRecordEntity(petId = petId, date = today, weightKg = weight)
                 )
+            } else if (existing.weightKg != weight) {
+                healthRepository.updateWeightRecord(existing.copy(weightKg = weight))
             }
 
             _uiState.update { it.copy(isLoading = false, isSaved = true) }

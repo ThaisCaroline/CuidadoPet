@@ -32,8 +32,10 @@ data class MealEntity(
     // Usamos String para simplicidade — não precisamos de cálculos de tempo aqui
     val timeOfDay: String,
 
-    // Quantidade desta refeição em gramas
-    // Nem sempre é dailyQuantityGrams / número de refeições —
-    // o tutor pode querer distribuir de forma irregular (mais à noite, menos de manhã)
-    val quantityGrams: Double
+    // Quantidade desta refeição — o valor numérico
+    val quantityGrams: Double,
+
+    // Unidade da quantidade: "g" (gramas) ou "ml" (mililitros)
+    @androidx.room.ColumnInfo(defaultValue = "g")
+    val quantityUnit: String = "g"
 )

@@ -21,7 +21,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.AlertDialog
@@ -52,14 +51,13 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.text.TextRange
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.cuidadopet.ui.utils.adaptiveHorizontalPadding
+import com.cuidadopet.ui.utils.TimeInputField
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -82,13 +80,6 @@ fun MedicationFormScreen(
 
     var doseUnitExpanded by remember { mutableStateOf(false) }
     var showNotifDialog by remember { mutableStateOf(false) }
-    var intervalStartTimeValue by remember { mutableStateOf(TextFieldValue("")) }
-    LaunchedEffect(uiState.intervalStartTime) {
-        if (intervalStartTimeValue.text != uiState.intervalStartTime) {
-            val t = uiState.intervalStartTime
-            intervalStartTimeValue = TextFieldValue(t, TextRange(t.length))
-        }
-    }
 
     // Lançador para solicitar permissão de notificação; salva após resultado
     val notifPermLauncher = rememberLauncherForActivityResult(
@@ -289,31 +280,18 @@ fun MedicationFormScreen(
             if (uiState.frequencyType == "INTERVAL") {
                 OutlinedTextField(
                     value = uiState.frequencyHours,
-                    onValueChange = viewModel::onFrequencyHoursChange,
+                    onValueChange = { viewModel.onFrequencyHoursChange(it.filter { c -> c.isDigit() }.take(3)) },
                     label = { Text("Intervalo entre doses *") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     suffix = { Text("horas") }
                 )
-                OutlinedTextField(
-                    value = intervalStartTimeValue,
-                    onValueChange = { new ->
-                        val formatted = if (new.text.length >= intervalStartTimeValue.text.length)
-                            autoFormatTime(new.text) else new.text
-                        intervalStartTimeValue = TextFieldValue(formatted, TextRange(formatted.length))
-                        viewModel.onIntervalStartTimeChange(formatted)
-                    },
-                    label = { Text("Horário da primeira dose (opcional)") },
-                    placeholder = { Text("08:00") },
+                TimeInputField(
+                    value = uiState.intervalStartTime,
+                    onValueChange = viewModel::onIntervalStartTimeChange,
+                    label = "Horário da primeira dose (opcional)",
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    leadingIcon = {
-                        Icon(Icons.Default.AccessTime, contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                    },
-                    suffix = { Text("h") },
                     supportingText = {
                         Text(
                             "Se não informado, o primeiro alarme é agendado a partir de agora.",
@@ -327,33 +305,15 @@ fun MedicationFormScreen(
             if (uiState.frequencyType == "FIXED_TIMES") {
                 uiState.fixedTimes.forEachIndexed { index, time ->
                     key(index) {
-                        var timeValue by remember { mutableStateOf(TextFieldValue(time, TextRange(time.length))) }
-                        LaunchedEffect(time) {
-                            if (timeValue.text != time) {
-                                timeValue = TextFieldValue(time, TextRange(time.length))
-                            }
-                        }
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            OutlinedTextField(
-                                value = timeValue,
-                                onValueChange = { new ->
-                                    val formatted = autoFormatTime(new.text)
-                                    timeValue = TextFieldValue(formatted, TextRange(formatted.length))
-                                    viewModel.onFixedTimeChange(index, formatted)
-                                },
-                                label = { Text("Horário ${index + 1}") },
-                                modifier = Modifier.weight(1f),
-                                singleLine = true,
-                                placeholder = { Text("08:00") },
-                                leadingIcon = {
-                                    Icon(Icons.Default.AccessTime, contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                                },
-                                suffix = { Text("h") },
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                            TimeInputField(
+                                value = time,
+                                onValueChange = { viewModel.onFixedTimeChange(index, it) },
+                                label = "Horário ${index + 1}",
+                                modifier = Modifier.weight(1f)
                             )
                             if (uiState.fixedTimes.size > 1) {
                                 IconButton(onClick = { viewModel.removeFixedTime(index) }) {
@@ -388,7 +348,7 @@ fun MedicationFormScreen(
             if (!uiState.isContinuous) {
                 OutlinedTextField(
                     value = uiState.durationDays,
-                    onValueChange = viewModel::onDurationDaysChange,
+                    onValueChange = { viewModel.onDurationDaysChange(it.filter { c -> c.isDigit() }.take(3)) },
                     label = { Text("Duração *") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
@@ -465,16 +425,3 @@ private fun SectionLabel(text: String) {
     )
 }
 
-private fun autoFormatTime(raw: String): String {
-    if (Regex("""^\d{1,2}:\d{0,2}$""").matches(raw)) return raw
-    val digits = raw.filter { it.isDigit() }.take(4)
-    if (digits.isEmpty()) return ""
-    return when (digits.length) {
-        1    -> digits
-        2    -> if (digits[0].digitToInt() >= 3) "${digits[0]}:${digits[1]}"
-                else "${digits[0]}${digits[1]}:"
-        3    -> if (digits[0].digitToInt() >= 3) "${digits[0]}:${digits[1]}${digits[2]}"
-                else "${digits[0]}${digits[1]}:${digits[2]}"
-        else -> "${digits[0]}${digits[1]}:${digits[2]}${digits[3]}"
-    }
-}

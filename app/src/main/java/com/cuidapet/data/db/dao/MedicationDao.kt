@@ -73,4 +73,7 @@ interface MedicationDao {
 
     @Update
     suspend fun updateLog(log: MedicationLogEntity)
+
+    @Query("DELETE FROM medication_logs WHERE id = :logId")
+    suspend fun deleteLog(logId: Long)
 }

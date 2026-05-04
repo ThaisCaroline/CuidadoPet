@@ -73,13 +73,15 @@ class MealPlanFormViewModel @Inject constructor(
                 } else {
                     listOf(MealTimeEntry("07:00", ""), MealTimeEntry("19:00", ""))
                 }
+                val savedUnit = savedMeals.firstOrNull()?.quantityUnit ?: "g"
                 _state.update {
                     it.copy(
                         foodType = plan.foodType,
                         restrictions = plan.restrictions ?: "",
                         dailyQuantityGrams = plan.dailyQuantityGrams?.toInt()?.toString() ?: "",
                         dailyKcalTarget = plan.dailyKcalTarget?.toInt()?.toString() ?: "",
-                        meals = mealEntries
+                        meals = mealEntries,
+                        quantityUnit = savedUnit
                     )
                 }
             }
@@ -117,13 +119,16 @@ class MealPlanFormViewModel @Inject constructor(
     // Completa horários parciais: "8" → "8:00", "08:" → "08:00", "8:3" → "8:30"
     private fun normalizeTime(raw: String): String {
         val s = raw.trim()
-        return when {
+        val expanded = when {
             Regex("""^\d{1,2}:\d{2}$""").matches(s) -> s
             Regex("""^\d{1,2}:\d$""").matches(s)    -> "${s}0"
             Regex("""^\d{1,2}:$""").matches(s)      -> "${s}00"
             Regex("""^\d{1,2}$""").matches(s)       -> "$s:00"
             else -> s
         }
+        val parts = expanded.split(":")
+        return if (parts.size == 2) "${parts[0].padStart(2, '0')}:${parts[1]}" else expanded
+
     }
 
     private fun autoFormatTime(raw: String): String {
@@ -207,7 +212,8 @@ class MealPlanFormViewModel @Inject constructor(
                     MealEntity(
                         mealPlanId = 0L,  // substituído no repositório
                         timeOfDay = entry.time,
-                        quantityGrams = entry.quantityGrams.toDoubleOrNull() ?: 0.0
+                        quantityGrams = entry.quantityGrams.toDoubleOrNull() ?: 0.0,
+                        quantityUnit = s.quantityUnit
                     )
                 }
 

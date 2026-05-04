@@ -1,6 +1,7 @@
 package com.cuidadopet.notification
 
 import android.app.PendingIntent
+import com.cuidadopet.R
 import android.content.Context
 import android.content.Intent
 import androidx.core.app.NotificationCompat
@@ -59,7 +60,7 @@ class WaterReminderWorker(
         val targetText = if (targetMl > 0) " (meta: ${targetMl.toInt()} ml/dia)" else ""
 
         val notification = NotificationCompat.Builder(context, NotificationChannels.CHANNEL_WATER)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle("Hora de oferecer água para $petName")
             .setContentText("Lembre de hidratar seu pet$targetText")
             .setPriority(NotificationCompat.PRIORITY_HIGH)

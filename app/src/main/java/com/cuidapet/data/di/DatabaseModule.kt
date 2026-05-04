@@ -4,11 +4,17 @@ import android.content.Context
 import androidx.room.Room
 import com.cuidadopet.data.db.AppDatabase
 import com.cuidadopet.data.db.MIGRATION_1_2
+import com.cuidadopet.data.db.MIGRATION_2_3
+import com.cuidadopet.data.db.MIGRATION_3_4
+import com.cuidadopet.data.db.MIGRATION_4_5
+import com.cuidadopet.data.db.MIGRATION_5_6
+import com.cuidadopet.data.db.MIGRATION_6_7
 import com.cuidadopet.data.security.DatabaseKeyManager
 import net.sqlcipher.database.SQLiteDatabase
 import net.sqlcipher.database.SupportFactory
 import com.cuidadopet.data.db.dao.FeedingDao
 import com.cuidadopet.data.db.dao.HealthDao
+import com.cuidadopet.data.db.dao.HealthPhotoDao
 import com.cuidadopet.data.db.dao.MedicationDao
 import com.cuidadopet.data.db.dao.PetDao
 import com.cuidadopet.data.db.dao.WaterDao
@@ -49,7 +55,7 @@ object DatabaseModule {
             "cuidadopet_database"
         )
             .openHelperFactory(factory)
-            .addMigrations(MIGRATION_1_2)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
             .build()
     }
 
@@ -76,6 +82,10 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun provideHealthDao(database: AppDatabase): HealthDao = database.healthDao()
+
+    @Provides
+    @Singleton
+    fun provideHealthPhotoDao(database: AppDatabase): HealthPhotoDao = database.healthPhotoDao()
 
     // MealAlarmScheduler precisa do Context para acessar o AlarmManager do sistema
     @Provides

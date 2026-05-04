@@ -7,11 +7,10 @@
     <!-- Tema da Splash Screen — exibido pelo sistema enquanto o app está iniciando.
          postSplashScreenTheme: tema aplicado logo depois que a splash desaparece.
          windowSplashScreenBackground: cor de fundo da splash (teal do app).
-         windowSplashScreenAnimatedIcon: ícone centralizado na splash (patinha branca). -->
+         windowSplashScreenAnimatedIcon: ícone centralizado na splash (ícone do Canva). -->
     <style name="Theme.CuidadoPet.Splash" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/splash_background</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
-        <item name="windowSplashScreenIconBackgroundColor">@color/splash_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_foreground</item>
         <item name="postSplashScreenTheme">@style/Theme.CuidadoPet</item>
     </style>
 

@@ -58,9 +58,9 @@ android {
         }
         release {
             // isMinifyEnabled remove código não utilizado (reduz tamanho do APK/AAB)
-            isMinifyEnabled   = true
+            isMinifyEnabled   = false
             // isShrinkResources remove recursos não referenciados (imagens, layouts etc.)
-            isShrinkResources = true
+            isShrinkResources = false
             signingConfig     = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -79,6 +79,10 @@ android {
     buildFeatures {
         compose = true
     }
+}
+
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
 }
 
 dependencies {
@@ -133,6 +137,8 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+    androidTestImplementation(libs.room.testing)
+    androidTestImplementation(libs.kotlinx.coroutines.test)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 }

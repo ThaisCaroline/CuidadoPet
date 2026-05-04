@@ -55,7 +55,7 @@ fun PrivacyPolicyScreen(onNavigateBack: () -> Unit) {
             Spacer(Modifier.height(8.dp))
 
             PolicySection("CuidadoPet — Política de Privacidade",
-                "Última atualização: abril de 2026")
+                "Última atualização: maio de 2026")
 
             PolicySection("1. Sobre o aplicativo",
                 "O CuidadoPet é um aplicativo de organização de cuidados com animais de " +

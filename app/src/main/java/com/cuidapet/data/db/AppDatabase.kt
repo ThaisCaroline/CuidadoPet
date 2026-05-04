@@ -4,6 +4,7 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import com.cuidadopet.data.db.dao.FeedingDao
 import com.cuidadopet.data.db.dao.HealthDao
+import com.cuidadopet.data.db.dao.HealthPhotoDao
 import com.cuidadopet.data.db.dao.MedicationDao
 import com.cuidadopet.data.db.dao.PetDao
 import com.cuidadopet.data.db.dao.WaterDao
@@ -16,7 +17,9 @@ import com.cuidadopet.data.db.entity.MedicationLogEntity
 import com.cuidadopet.data.db.entity.PetEntity
 import com.cuidadopet.data.db.entity.WaterConfigEntity
 import com.cuidadopet.data.db.entity.WaterLogEntity
+import com.cuidadopet.data.db.entity.HealthPhotoEntity
 import com.cuidadopet.data.db.entity.WeightRecordEntity
+import com.cuidadopet.data.db.entity.SporadicMealLogEntity
 
 // @Database é a anotação que define o banco de dados Room.
 //
@@ -39,10 +42,12 @@ import com.cuidadopet.data.db.entity.WeightRecordEntity
         WaterConfigEntity::class,
         WaterLogEntity::class,
         HealthEntryEntity::class,
-        WeightRecordEntity::class
+        SporadicMealLogEntity::class,
+        WeightRecordEntity::class,
+        HealthPhotoEntity::class
     ],
-    version = 2,
-    exportSchema = false
+    version = 7,
+    exportSchema = true
 )
 // RoomDatabase é a classe base que o Room exige.
 // abstract porque o Room gera a implementação real — você nunca instancia AppDatabase diretamente.
@@ -56,4 +61,5 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun feedingDao(): FeedingDao
     abstract fun waterDao(): WaterDao
     abstract fun healthDao(): HealthDao
+    abstract fun healthPhotoDao(): HealthPhotoDao
 }

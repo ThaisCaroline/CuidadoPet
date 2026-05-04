@@ -11,11 +11,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -23,7 +27,9 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.foundation.text.KeyboardOptions
@@ -59,6 +65,7 @@ fun TodayTabContent(
     LaunchedEffect(petId) { viewModel.load(petId) }
 
     val state by viewModel.state.collectAsStateWithLifecycle()
+    var showSporadicDialog by remember { mutableStateOf(false) }
 
     if (state.isLoading) {
         Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -105,6 +112,70 @@ fun TodayTabContent(
             }
         }
 
+        // ── Refeições esporádicas ─────────────────────────────────────────────
+        val timeFmt = remember { SimpleDateFormat("HH:mm", Locale.forLanguageTag("pt-BR")) }
+        state.sporadicLogs.forEach { log ->
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+            ) {
+                Row(
+                    modifier = Modifier.padding(12.dp).fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            timeFmt.format(Date(log.registeredAt)),
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            log.description ?: "Petisco",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        if (log.amountGrams != null) {
+                            Text(
+                                "${log.amountGrams.toInt()}${log.amountUnit}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        IconButton(onClick = { viewModel.deleteSporadicMeal(log.id) }) {
+                            Icon(
+                                Icons.Default.Delete,
+                                contentDescription = "Remover extra",
+                                tint = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        TextButton(
+            onClick = { showSporadicDialog = true },
+            modifier = Modifier.align(Alignment.Start)
+        ) {
+            Icon(Icons.Default.Restaurant, contentDescription = null)
+            Spacer(Modifier.width(4.dp))
+            Text("+ Extra")
+        }
+
+        if (showSporadicDialog) {
+            SporadicMealDialog(
+                onConfirm = { desc, amount, unit ->
+                    viewModel.addSporadicMeal(petId, desc, amount, unit)
+                    showSporadicDialog = false
+                },
+                onDismiss = { showSporadicDialog = false }
+            )
+        }
+
         // ── Hidratação do dia ─────────────────────────────────────────────────
         SectionHeader("Hidratação hoje")
 
@@ -128,15 +199,17 @@ private fun DoseCard(
     val timeFmt = remember { SimpleDateFormat("HH:mm", Locale.forLanguageTag("pt-BR")) }
     var showDialog by remember { mutableStateOf(false) }
 
-    val status    = item.log?.status
-    val isPending = status == null
-    val isTaken   = status == "TAKEN"
+    val status     = item.log?.status
+    val isPending  = status == null
+    val isTaken    = status == "TAKEN"
+    val isVomited  = status == "VOMITED"
 
     // Cor de fundo do card reflete o status da dose
     val containerColor = when {
-        isTaken            -> MaterialTheme.colorScheme.tertiaryContainer
+        isTaken               -> MaterialTheme.colorScheme.tertiaryContainer
         status == "NOT_TAKEN" -> MaterialTheme.colorScheme.errorContainer
-        else               -> MaterialTheme.colorScheme.surfaceVariant
+        isVomited             -> Color(0xFFFFF8E1)   // âmbar claro — dose problemática
+        else                  -> MaterialTheme.colorScheme.surfaceVariant
     }
 
     Card(
@@ -169,10 +242,18 @@ private fun DoseCard(
 
             // Ícone / label de status
             when {
-                isTaken -> Icon(Icons.Default.Check, contentDescription = "Administrado",
-                    tint = MaterialTheme.colorScheme.tertiary, modifier = Modifier.size(24.dp))
-                status == "NOT_TAKEN" -> Icon(Icons.Default.Close, contentDescription = "Não administrado",
-                    tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(24.dp))
+                isTaken -> Icon(
+                    Icons.Default.Check, contentDescription = "Administrado",
+                    tint = MaterialTheme.colorScheme.tertiary, modifier = Modifier.size(24.dp)
+                )
+                status == "NOT_TAKEN" -> Icon(
+                    Icons.Default.Close, contentDescription = "Não administrado",
+                    tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(24.dp)
+                )
+                isVomited -> Icon(
+                    Icons.Default.Warning, contentDescription = "Vomitou após a dose",
+                    tint = Color(0xFFF57F17), modifier = Modifier.size(24.dp)
+                )
                 else -> Text(
                     "A REGISTRAR",
                     style = MaterialTheme.typography.labelSmall,
@@ -187,24 +268,69 @@ private fun DoseCard(
         AlertDialog(
             onDismissRequest = { showDialog = false },
             title            = { Text("${item.medication.name} — ${timeFmt.format(Date(item.scheduledAt))}") },
-            text             = { Text("O que aconteceu com esta dose?") },
-            confirmButton = {
-                Button(onClick = { onMark("TAKEN"); showDialog = false }) {
-                    Icon(Icons.Default.Check, null, modifier = Modifier.size(16.dp))
-                    Text("  Administrou")
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    val formLabel = when (item.medication.form) {
+                        "ORAL"       -> "Oral"
+                        "TOPICAL"    -> "Tópico"
+                        "INJECTABLE" -> "Injetável"
+                        "EYE_DROP"   -> "Colírio"
+                        else         -> "Outro"
+                    }
+                    Text(
+                        "${item.medication.dose} ${item.medication.doseUnit} · $formLabel",
+                        style      = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+
+                    val guidelineText = when (item.medication.administrationGuideline) {
+                        "WITH_FOOD"  -> "Administrar com alimento"
+                        "FASTING"    -> "Administrar em jejum"
+                        "WITH_WATER" -> "Diluir em água"
+                        "OTHER"      -> item.medication.guidelineDetail
+                        else         -> null
+                    }
+                    if (!guidelineText.isNullOrBlank()) {
+                        Text(
+                            guidelineText,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+
+                    if (!item.medication.observations.isNullOrBlank()) {
+                        Text(
+                            "Obs: ${item.medication.observations}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.secondary
+                        )
+                    }
+
+                    Spacer(Modifier.height(4.dp))
+                    HorizontalDivider()
+                    Spacer(Modifier.height(2.dp))
+
+                    Text("O que aconteceu com esta dose?", style = MaterialTheme.typography.bodyMedium)
+
+                    Spacer(Modifier.height(2.dp))
+                    Button(
+                        onClick  = { onMark("TAKEN"); showDialog = false },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.Check, null, modifier = Modifier.size(16.dp))
+                        Text("  Administrou")
+                    }
+                    OutlinedButton(
+                        onClick  = { onMark("VOMITED"); showDialog = false },
+                        modifier = Modifier.fillMaxWidth()
+                    ) { Text("Administrou e vomitou") }
+                    TextButton(
+                        onClick  = { onMark("NOT_TAKEN"); showDialog = false },
+                        modifier = Modifier.fillMaxWidth()
+                    ) { Text("Não administrou") }
                 }
             },
-            dismissButton = {
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    OutlinedButton(
-                        onClick = { onMark("VOMITED"); showDialog = false },
-                        colors  = ButtonDefaults.outlinedButtonColors()
-                    ) { Text("Administrou e vomitou") }
-                    TextButton(onClick = { onMark("NOT_TAKEN"); showDialog = false }) {
-                        Text("Não administrou")
-                    }
-                }
-            }
+            confirmButton = {}
         )
     }
 }
@@ -220,8 +346,12 @@ private fun MealCard(
     val percentage = item.log?.eatenPercentage
     var showDialog by remember { mutableStateOf(false) }
 
-    val containerColor = if (isLogged) MaterialTheme.colorScheme.tertiaryContainer
-                         else          MaterialTheme.colorScheme.surfaceVariant
+    val containerColor = when {
+        !isLogged                       -> MaterialTheme.colorScheme.surfaceVariant
+        (percentage ?: 0) == 0         -> MaterialTheme.colorScheme.errorContainer  // recusou
+        (percentage ?: 0) <= 25        -> Color(0xFFFFF8E1)                          // comeu pouco
+        else                           -> MaterialTheme.colorScheme.tertiaryContainer
+    }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -241,15 +371,20 @@ private fun MealCard(
                     color      = MaterialTheme.colorScheme.primary
                 )
                 Text(
-                    "${item.meal.quantityGrams}g",
+                    "${item.meal.quantityGrams}${item.meal.quantityUnit}",
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
             if (isLogged && percentage != null) {
+                val textColor = when {
+                    percentage == 0  -> MaterialTheme.colorScheme.error
+                    percentage <= 25 -> Color(0xFFF57F17)
+                    else             -> MaterialTheme.colorScheme.tertiary
+                }
                 Text(
-                    "$percentage% comido",
+                    if (percentage == 0) "Recusou" else "$percentage% comido",
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.tertiary
+                    color = textColor
                 )
             } else {
                 Text(
@@ -264,7 +399,7 @@ private fun MealCard(
     if (showDialog) {
         AlertDialog(
             onDismissRequest = { showDialog = false },
-            title = { Text("${item.meal.timeOfDay} — ${item.meal.quantityGrams}g") },
+            title = { Text("${item.meal.timeOfDay} — ${item.meal.quantityGrams}${item.meal.quantityUnit}") },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text("Como foi esta refeição?", style = MaterialTheme.typography.bodyMedium)
@@ -299,9 +434,17 @@ private fun WaterCard(
     targetMl: Double?,
     onAdd: (Double) -> Unit
 ) {
+    val waterProgress = if (targetMl != null && targetMl > 0) totalMl / targetMl else null
+    val waterContainerColor = when {
+        waterProgress == null       -> MaterialTheme.colorScheme.surfaceVariant  // sem meta
+        totalMl == 0.0              -> MaterialTheme.colorScheme.errorContainer  // não bebeu nada
+        waterProgress < 0.5         -> Color(0xFFFFF8E1)                          // bebeu pouco
+        else                        -> MaterialTheme.colorScheme.tertiaryContainer
+    }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors   = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        colors   = CardDefaults.cardColors(containerColor = waterContainerColor)
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -358,13 +501,18 @@ private fun WaterCard(
             // Botões de adição rápida
             Text("Registrar:", style = MaterialTheme.typography.labelSmall)
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                listOf(50.0, 100.0, 150.0, 200.0).forEach { ml ->
+                listOf(10.0, 20.0, 30.0, 40.0, 50.0).forEach { ml ->
                     OutlinedButton(
                         onClick        = { onAdd(ml) },
                         modifier       = Modifier.weight(1f),
-                        contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                            horizontal = 4.dp, vertical = 8.dp
+                        )
                     ) {
-                        Text("+${ml.toInt()}", style = MaterialTheme.typography.labelSmall)
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text("${ml.toInt()}", style = MaterialTheme.typography.labelSmall)
+                            Text("ml",           style = MaterialTheme.typography.labelSmall)
+                        }
                     }
                 }
             }
@@ -422,5 +570,62 @@ private fun EmptySection(text: String) {
         text,
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant
+    )
+}
+@Composable
+private fun SporadicMealDialog(
+    onConfirm: (String, Double?, String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var description by remember { mutableStateOf("") }
+    var amount by remember { mutableStateOf("") }
+    var unit by remember { mutableStateOf("g") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Registrar extra") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(
+                    value = description,
+                    onValueChange = { description = it },
+                    label = { Text("Descrição (opcional)") },
+                    placeholder = { Text("Ex: petisco") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedTextField(
+                        value = amount,
+                        onValueChange = { amount = it.filter { c -> c.isDigit() || c == '.' } },
+                        label = { Text("Quantidade (opcional)") },
+                        placeholder = { Text("Ex: 30") },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                    )
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        listOf("g", "ml").forEach { option ->
+                            androidx.compose.material3.FilterChip(
+                                selected = unit == option,
+                                onClick = { unit = option },
+                                label = { Text(option, style = MaterialTheme.typography.labelSmall) }
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(onClick = { onConfirm(description, amount.toDoubleOrNull(), unit) }) {
+                Text("Salvar")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancelar") }
+        }
     )
 }

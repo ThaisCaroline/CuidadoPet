@@ -36,6 +36,11 @@ data class WaterConfigEntity(
     // Ex: 3 = lembrete a cada 3 horas
     val reminderIntervalHours: Int = 3,
 
+    // Horário de início dos lembretes no formato "HH:mm"
+    // Ex: "13:00" → primeiro lembrete às 13h, depois 15h, 17h... (com intervalo 2h)
+    @androidx.room.ColumnInfo(defaultValue = "08:00")
+    val reminderStartTime: String = "08:00",
+
     // Se os lembretes estão ativos ou silenciados
     val remindersEnabled: Boolean = true,
 

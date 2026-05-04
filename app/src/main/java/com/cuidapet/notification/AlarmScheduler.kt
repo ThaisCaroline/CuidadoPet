@@ -94,12 +94,22 @@ class AlarmScheduler @Inject constructor(
         triggerAtMillis: Long
     ) {
         // Monta o Intent com todos os dados que o receiver vai precisar
+        // Os campos de frequência são necessários para que o receiver reagende o próximo alarme
         val intent = Intent(context, MedicationAlarmReceiver::class.java).apply {
             putExtra(MedicationAlarmReceiver.EXTRA_MEDICATION_ID,   medication.id)
             putExtra(MedicationAlarmReceiver.EXTRA_MEDICATION_NAME, medication.name)
             putExtra(MedicationAlarmReceiver.EXTRA_PET_NAME,        petName)
             putExtra(MedicationAlarmReceiver.EXTRA_DOSE,            medication.dose)
             putExtra(MedicationAlarmReceiver.EXTRA_DOSE_UNIT,       medication.doseUnit)
+            putExtra(MedicationAlarmReceiver.EXTRA_PET_ID,          medication.petId)
+            putExtra(MedicationAlarmReceiver.EXTRA_FORM,            medication.form)
+            putExtra(MedicationAlarmReceiver.EXTRA_FREQUENCY_TYPE,  medication.frequencyType)
+            putExtra(MedicationAlarmReceiver.EXTRA_FREQUENCY_HOURS, medication.frequencyHours ?: -1)
+            putExtra(MedicationAlarmReceiver.EXTRA_FIXED_TIMES,     medication.fixedTimes ?: "")
+            putExtra(MedicationAlarmReceiver.EXTRA_START_DATE,      medication.startDate)
+            putExtra(MedicationAlarmReceiver.EXTRA_END_DATE,        medication.endDate ?: -1L)
+            putExtra(MedicationAlarmReceiver.EXTRA_IS_CONTINUOUS,   medication.isContinuous)
+            putExtra(MedicationAlarmReceiver.EXTRA_REMINDER_ENABLED,medication.reminderEnabled)
         }
 
         val pendingIntent = PendingIntent.getBroadcast(
@@ -141,6 +151,7 @@ class AlarmScheduler @Inject constructor(
             .map { it.trim().removeSurrounding("\"") }
             .filter { it.isNotBlank() }
     }
+
 
     // Calcula o próximo timestamp futuro para um horário fixo como "08:00"
     // Se "08:00" já passou hoje, retorna o "08:00" de amanhã

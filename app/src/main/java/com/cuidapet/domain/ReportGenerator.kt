@@ -1,6 +1,8 @@
 package com.cuidadopet.domain
 
 import android.content.Context
+import com.cuidadopet.data.db.entity.HealthPhotoEntity
+import com.cuidadopet.data.db.entity.MedicationLogEntity
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Typeface
@@ -11,6 +13,7 @@ import com.cuidadopet.data.db.entity.MealLogEntity
 import com.cuidadopet.data.db.entity.MealPlanEntity
 import com.cuidadopet.data.db.entity.MedicationEntity
 import com.cuidadopet.data.db.entity.PetEntity
+import com.cuidadopet.data.db.entity.SporadicMealLogEntity
 import com.cuidadopet.data.db.entity.WaterLogEntity
 import com.cuidadopet.data.db.entity.WeightRecordEntity
 import java.io.File
@@ -26,12 +29,15 @@ data class PetReport(
     val periodStart: Long,
     val periodEnd: Long,
     val activeMedications: List<MedicationEntity>,
+    val medicationLogs: List<MedicationLogEntity>,
     val mealPlan: MealPlanEntity?,
     val meals: List<MealEntity>,
     val mealLogs: List<MealLogEntity>,
+    val sporadicLogs: List<SporadicMealLogEntity>,
     val waterLogs: List<WaterLogEntity>,
     val healthEntries: List<HealthEntryEntity>,
-    val weightRecords: List<WeightRecordEntity>
+    val weightRecords: List<WeightRecordEntity>,
+    val photos: List<HealthPhotoEntity>
 )
 
 // Gera relatórios em texto (WhatsApp/e-mail) e PDF (impressão/arquivo).
@@ -70,6 +76,7 @@ object ReportGenerator {
         if (report.activeMedications.isEmpty()) {
             sb.appendLine("Nenhum medicamento ativo.")
         } else {
+            val timeFmt = SimpleDateFormat("dd/MM HH:mm", Locale.forLanguageTag("pt-BR"))
             report.activeMedications.forEach { med ->
                 sb.appendLine("• ${med.name} — ${med.dose} ${med.doseUnit}")
                 val freq = if (med.frequencyType == "INTERVAL")
@@ -78,6 +85,21 @@ object ReportGenerator {
                     "  Horários: ${med.fixedTimes?.cleanJson() ?: ""}"
                 sb.appendLine(freq)
                 if (!med.observations.isNullOrBlank()) sb.appendLine("  ${med.observations}")
+                val logsThisMed = report.medicationLogs
+                    .filter { it.medicationId == med.id }
+                    .sortedBy { it.scheduledAt }
+                if (logsThisMed.isNotEmpty()) {
+                    sb.appendLine("  _Administrações no período:_")
+                    logsThisMed.forEach { log ->
+                        val statusLabel = when (log.status) {
+                            "TAKEN"     -> "Administrado"
+                            "NOT_TAKEN" -> "Não administrado"
+                            "VOMITED"   -> "Administrado (vomitou)"
+                            else        -> "Pendente"
+                        }
+                        sb.appendLine("    ${timeFmt.format(Date(log.scheduledAt))} — $statusLabel")
+                    }
+                }
             }
         }
         sb.appendLine()
@@ -91,19 +113,37 @@ object ReportGenerator {
             sb.appendLine("$foodLabel${if (report.mealPlan.dailyQuantityGrams != null) " · ${report.mealPlan.dailyQuantityGrams!!.toInt()}g/dia" else ""}")
             if (!report.mealPlan.restrictions.isNullOrBlank()) sb.appendLine("Restrições: ${report.mealPlan.restrictions}")
         }
-        if (report.mealLogs.isEmpty()) {
+        if (report.mealLogs.isEmpty() && report.sporadicLogs.isEmpty()) {
             sb.appendLine("Nenhuma refeição registrada no período.")
         } else {
             val mealsById = report.meals.associateBy { it.id }
-            sb.appendLine("Refeições administradas:")
-            report.mealLogs
-                .sortedWith(compareBy({ it.date }, { mealsById[it.mealId]?.timeOfDay ?: "" }))
-                .forEach { log ->
-                    val time   = mealsById[log.mealId]?.timeOfDay ?: "?"
-                    val status = appetiteLabel(log.appetiteStatus, log.eatenPercentage)
-                    val notes  = if (!log.notes.isNullOrBlank()) " · ${log.notes}" else ""
-                    sb.appendLine("  ${dateFmt.format(Date(log.date))} $time — $status$notes")
-                }
+            if (report.mealLogs.isNotEmpty()) {
+                report.mealLogs
+                    .sortedBy { it.date }
+                    .groupBy { dateFmt.format(Date(it.date)) }
+                    .forEach { (date, logs) ->
+                        val unit = logs.firstOrNull()?.let { mealsById[it.mealId]?.quantityUnit } ?: "g"
+                        val total = logs.sumOf { log ->
+                            (mealsById[log.mealId]?.quantityGrams ?: 0.0) * log.eatenPercentage / 100.0
+                        }
+                        sb.appendLine("  $date - ${total.toInt()}$unit plano")
+                    }
+            }
+            if (report.sporadicLogs.isNotEmpty()) {
+                sb.appendLine("Extras:")
+                report.sporadicLogs
+                    .sortedBy { it.registeredAt }
+                    .groupBy { dateFmt.format(Date(it.registeredAt)) }
+                    .forEach { (date, logs) ->
+                        val byUnit = logs
+                            .filter { it.amountGrams != null }
+                            .groupBy { it.amountUnit }
+                            .mapValues { (_, e) -> e.sumOf { it.amountGrams ?: 0.0 } }
+                        val amounts = byUnit.entries.joinToString(" + ") { (u, v) -> "${v.toInt()}$u" }
+                        val extra = if (amounts.isNotBlank()) " ($amounts)" else ""
+                        sb.appendLine("  $date - ${logs.size} extra(s)$extra")
+                    }
+            }
         }
         sb.appendLine()
 
@@ -148,6 +188,17 @@ object ReportGenerator {
             sb.appendLine("*⚖️ Últimas pesagens*")
             report.weightRecords.takeLast(5).forEach { w ->
                 sb.appendLine("• ${dateFmt.format(Date(w.date))}: ${w.weightKg} kg${if (!w.notes.isNullOrBlank()) " (${w.notes})" else ""}")
+            }
+            sb.appendLine()
+        }
+
+        // Fotos
+        if (report.photos.isNotEmpty()) {
+            val photosByDay = report.photos.groupBy { dateFmt.format(Date(it.entryDate)) }
+            sb.appendLine("*📷 Fotos registradas*")
+            photosByDay.forEach { (date, photos) ->
+                val n = photos.size
+                sb.appendLine("  $date — $n ${if (n == 1) "foto" else "fotos"} (disponível no app)")
             }
             sb.appendLine()
         }
@@ -218,12 +269,30 @@ object ReportGenerator {
             }
         }
 
-        // Desenha uma linha de texto na posição y atual e avança y
+        // Desenha texto com quebra de linha automática — textos longos não passam da borda
         fun text(txt: String, paint: Paint, indent: Float = 0f) {
+            val maxWidth = usable - indent
             val lh = paint.textSize * 1.45f
-            breakPageIfNeeded(lh)
-            canvas.drawText(txt, ml + indent, y + paint.textSize, paint)
-            y += lh
+            val words = txt.split(" ")
+            var line = ""
+            for (word in words) {
+                val candidate = if (line.isEmpty()) word else "$line $word"
+                if (paint.measureText(candidate) <= maxWidth) {
+                    line = candidate
+                } else {
+                    if (line.isNotEmpty()) {
+                        breakPageIfNeeded(lh)
+                        canvas.drawText(line, ml + indent, y + paint.textSize, paint)
+                        y += lh
+                    }
+                    line = word
+                }
+            }
+            if (line.isNotEmpty()) {
+                breakPageIfNeeded(lh)
+                canvas.drawText(line, ml + indent, y + paint.textSize, paint)
+                y += lh
+            }
         }
 
         // Desenha separador horizontal + título de seção
@@ -263,6 +332,7 @@ object ReportGenerator {
         if (report.activeMedications.isEmpty()) {
             text("Nenhum medicamento ativo.", paintBody)
         } else {
+            val timeFmtPdf = SimpleDateFormat("dd/MM HH:mm", Locale.forLanguageTag("pt-BR"))
             report.activeMedications.forEach { med ->
                 text("• ${med.name}   ${med.dose} ${med.doseUnit}", paintBody)
                 val freq = if (med.frequencyType == "INTERVAL")
@@ -271,6 +341,21 @@ object ReportGenerator {
                     "Horários: ${med.fixedTimes?.cleanJson() ?: ""}"
                 text(freq, paintSmall, 12f)
                 if (!med.observations.isNullOrBlank()) text("Obs: ${med.observations}", paintSmall, 12f)
+                val logsThisMed = report.medicationLogs
+                    .filter { it.medicationId == med.id }
+                    .sortedBy { it.scheduledAt }
+                if (logsThisMed.isNotEmpty()) {
+                    text("Administrações no período:", paintSmall, 12f)
+                    logsThisMed.forEach { log ->
+                        val statusLabel = when (log.status) {
+                            "TAKEN"     -> "Administrado"
+                            "NOT_TAKEN" -> "Não administrado"
+                            "VOMITED"   -> "Administrado (vomitou)"
+                            else        -> "Pendente"
+                        }
+                        text("${timeFmtPdf.format(Date(log.scheduledAt))} — $statusLabel", paintSmall, 24f)
+                    }
+                }
             }
         }
 
@@ -283,19 +368,37 @@ object ReportGenerator {
             text("Tipo: ${foodTypeLabel(plan.foodType)}${if (plan.dailyQuantityGrams != null) "   ${plan.dailyQuantityGrams!!.toInt()}g/dia" else ""}", paintBody)
             if (!plan.restrictions.isNullOrBlank()) text("Restrições: ${plan.restrictions}", paintSmall)
         }
-        if (report.mealLogs.isEmpty()) {
+        if (report.mealLogs.isEmpty() && report.sporadicLogs.isEmpty()) {
             text("Nenhuma refeição registrada no período.", paintSmall)
         } else {
-            text("Refeições administradas:", paintBody)
             val mealsById = report.meals.associateBy { it.id }
-            report.mealLogs
-                .sortedWith(compareBy({ it.date }, { mealsById[it.mealId]?.timeOfDay ?: "" }))
-                .forEach { log ->
-                    val time   = mealsById[log.mealId]?.timeOfDay ?: "?"
-                    val status = appetiteLabel(log.appetiteStatus, log.eatenPercentage)
-                    val notes  = if (!log.notes.isNullOrBlank()) " · ${log.notes}" else ""
-                    text("${dateFmt.format(Date(log.date))} $time — $status$notes", paintSmall, 12f)
-                }
+            if (report.mealLogs.isNotEmpty()) {
+                report.mealLogs
+                    .sortedBy { it.date }
+                    .groupBy { dateFmt.format(Date(it.date)) }
+                    .forEach { (date, logs) ->
+                        val unit = logs.firstOrNull()?.let { mealsById[it.mealId]?.quantityUnit } ?: "g"
+                        val total = logs.sumOf { log ->
+                            (mealsById[log.mealId]?.quantityGrams ?: 0.0) * log.eatenPercentage / 100.0
+                        }
+                        text("$date - ${total.toInt()}$unit plano", paintSmall, 12f)
+                    }
+            }
+            if (report.sporadicLogs.isNotEmpty()) {
+                text("Extras:", paintSmall)
+                report.sporadicLogs
+                    .sortedBy { it.registeredAt }
+                    .groupBy { dateFmt.format(Date(it.registeredAt)) }
+                    .forEach { (date, logs) ->
+                        val byUnit = logs
+                            .filter { it.amountGrams != null }
+                            .groupBy { it.amountUnit }
+                            .mapValues { (_, e) -> e.sumOf { it.amountGrams ?: 0.0 } }
+                        val amounts = byUnit.entries.joinToString(" + ") { (u, v) -> "${v.toInt()}$u" }
+                        val extra = if (amounts.isNotBlank()) " ($amounts)" else ""
+                        text("$date - ${logs.size} extra(s)$extra", paintSmall, 12f)
+                    }
+            }
         }
 
         // ── Hidratação ────────────────────────────────────────────────────────
@@ -339,6 +442,17 @@ object ReportGenerator {
             }
         }
 
+        // ── Fotos ────────────────────────────────────────────────────────────
+        if (report.photos.isNotEmpty()) {
+            val timeFmtPdf = SimpleDateFormat("dd/MM/yyyy", Locale.forLanguageTag("pt-BR"))
+            section("Fotos registradas")
+            val photosByDay = report.photos.groupBy { timeFmtPdf.format(Date(it.entryDate)) }
+            photosByDay.forEach { (date, photos) ->
+                val n = photos.size
+                text("• $date — $n ${if (n == 1) "foto" else "fotos"} (disponível no app)", paintBody)
+            }
+        }
+
         // ── Rodapé ────────────────────────────────────────────────────────────
         breakPageIfNeeded(50f)
         y += 14f
@@ -372,8 +486,9 @@ object ReportGenerator {
     // Intervalo real dos dados — evita exibir "01/01 a 26/04" quando só há dados de hoje
     private fun actualDataPeriod(report: PetReport): Pair<Long, Long> {
         val timestamps = buildList {
-            report.mealLogs.forEach     { add(it.date) }
-            report.waterLogs.forEach    { add(it.registeredAt) }
+            report.mealLogs.forEach      { add(it.date) }
+            report.sporadicLogs.forEach  { add(it.registeredAt) }
+            report.waterLogs.forEach     { add(it.registeredAt) }
             report.healthEntries.forEach { add(it.registeredAt) }
             report.weightRecords.forEach { add(it.date) }
         }

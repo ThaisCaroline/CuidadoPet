@@ -1,5 +1,6 @@
 package com.cuidadopet.ui.screens.home
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -42,8 +43,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.cuidadopet.R
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cuidadopet.data.db.entity.PetEntity
@@ -85,14 +92,37 @@ fun HomeScreen(
         )
     }
 
+    Box(modifier = Modifier.fillMaxSize()) {
+        Image(
+            painter            = painterResource(R.drawable.home_background),
+            contentDescription = null,
+            modifier           = Modifier.fillMaxSize(),
+            contentScale       = ContentScale.Crop,
+            alignment          = Alignment.BottomCenter,
+            alpha              = 0.75f
+        )
+
     Scaffold(
+        containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        text = "CuidadoPet",
-                        style = MaterialTheme.typography.titleLarge
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Image(
+                            painter = painterResource(R.mipmap.ic_launcher_foreground),
+                            contentDescription = null,
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                        )
+                        Text(
+                            text = "CuidadoPet",
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                    }
                 },
                 actions = {
                     var menuExpanded by remember { mutableStateOf(false) }
@@ -140,6 +170,7 @@ fun HomeScreen(
             )
         }
     }
+    } // Box
 }
 
 @Composable

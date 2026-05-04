@@ -52,7 +52,7 @@ import com.cuidadopet.ui.utils.adaptiveHorizontalPadding
 // Formata um timestamp para exibir só a hora — ex: "14:30"
 private val hourFormat = SimpleDateFormat("HH:mm", Locale.forLanguageTag("pt-BR"))
 
-private val quickAmounts = listOf(10.0, 25.0, 50.0, 100.0, 150.0)
+private val quickAmounts = listOf(10.0, 20.0, 30.0, 40.0, 50.0)
 
 // Aba "Água" do dashboard — mostra o total bebido hoje, barra de progresso e histórico
 @Composable
@@ -243,15 +243,16 @@ private fun QuickAddButtons(onAdd: (Double) -> Unit) {
     ) {
         quickAmounts.forEach { ml ->
             FilledTonalButton(
-                onClick = { onAdd(ml) },
-                modifier = Modifier.weight(1f)
-            ) {
-                Text(
-                    "${ml.toInt()}ml",
-                    style = MaterialTheme.typography.labelSmall,
-                    maxLines = 1,
-                    softWrap = false
+                onClick        = { onAdd(ml) },
+                modifier       = Modifier.weight(1f),
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                    horizontal = 4.dp, vertical = 8.dp
                 )
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("${ml.toInt()}", style = MaterialTheme.typography.labelSmall)
+                    Text("ml",           style = MaterialTheme.typography.labelSmall)
+                }
             }
         }
     }

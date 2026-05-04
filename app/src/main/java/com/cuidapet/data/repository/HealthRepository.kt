@@ -46,8 +46,14 @@ class HealthRepository @Inject constructor(
     fun getLatestWeight(petId: Long): Flow<WeightRecordEntity?> =
         healthDao.getLatestWeight(petId)
 
+    suspend fun getWeightRecordForDate(petId: Long, date: Long): WeightRecordEntity? =
+        healthDao.getWeightRecordForDate(petId, date)
+
     suspend fun saveWeightRecord(record: WeightRecordEntity): Long =
         healthDao.insertWeightRecord(record)
+
+    suspend fun updateWeightRecord(record: WeightRecordEntity) =
+        healthDao.updateWeightRecord(record)
 
     suspend fun deleteWeightRecord(recordId: Long) =
         healthDao.deleteWeightRecord(recordId)

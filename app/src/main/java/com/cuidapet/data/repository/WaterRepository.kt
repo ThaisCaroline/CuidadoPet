@@ -11,6 +11,7 @@ import com.cuidadopet.data.db.entity.WaterLogEntity
 import com.cuidadopet.notification.WaterReminderWorker
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import java.util.Calendar
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -75,6 +76,9 @@ class WaterRepository @Inject constructor(
     suspend fun addWaterLog(log: WaterLogEntity): Long =
         waterDao.insertLog(log)
 
+    suspend fun updateWaterLog(log: WaterLogEntity) =
+        waterDao.updateLog(log)
+
     // Remove um registro (caso o tutor tenha errado o valor)
     suspend fun deleteWaterLog(logId: Long) =
         waterDao.deleteLog(logId)
@@ -84,32 +88,58 @@ class WaterRepository @Inject constructor(
     // Agenda um lembrete periódico de água para o pet.
     // O WorkManager garante que o lembrete seja disparado mesmo após o app ser fechado.
     private fun scheduleWaterReminder(config: WaterConfigEntity, petName: String) {
-        // Dados passados para o worker — ele precisa saber o nome do pet e a meta
         val inputData = Data.Builder()
             .putString(WaterReminderWorker.KEY_PET_NAME,  petName)
             .putLong(WaterReminderWorker.KEY_PET_ID,      config.petId)
             .putDouble(WaterReminderWorker.KEY_TARGET_ML, config.dailyTargetMl)
             .build()
 
-        // PeriodicWorkRequest: repete a cada X horas indefinidamente
-        // O WorkManager garante que o mínimo é 15 minutos (limite do Android)
         val intervalHours = config.reminderIntervalHours.toLong().coerceAtLeast(1L)
+        val initialDelay  = calcInitialDelayMs(config.reminderStartTime, intervalHours)
 
         val workRequest = PeriodicWorkRequestBuilder<WaterReminderWorker>(
             repeatInterval = intervalHours,
             repeatIntervalTimeUnit = TimeUnit.HOURS
         )
+            .setInitialDelay(initialDelay, TimeUnit.MILLISECONDS)
             .setInputData(inputData)
             .addTag(WaterReminderWorker.workTag(config.petId))
             .build()
 
-        // REPLACE: cancela o lembrete anterior e cria um novo com os dados atualizados
-        // Útil quando o tutor muda o intervalo nas configurações
         workManager.enqueueUniquePeriodicWork(
-            WaterReminderWorker.workTag(config.petId),  // nome único por pet
+            WaterReminderWorker.workTag(config.petId),
             ExistingPeriodicWorkPolicy.REPLACE,
             workRequest
         )
+    }
+
+    // Calcula quantos ms faltam até a próxima ocorrência do lembrete.
+    // Exemplo: início=13:00, intervalo=2h, agora=14:30 → próxima=15:00 → delay=30min
+    private fun calcInitialDelayMs(startTime: String, intervalHours: Long): Long {
+        val parts   = startTime.split(":")
+        val hour    = parts.getOrNull(0)?.toIntOrNull() ?: 8
+        val minute  = parts.getOrNull(1)?.toIntOrNull() ?: 0
+
+        val now = System.currentTimeMillis()
+        val intervalMs = intervalHours * 3_600_000L
+
+        // Âncora = horário de início configurado hoje
+        val anchor = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, hour)
+            set(Calendar.MINUTE, minute)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }.timeInMillis
+
+        // Se o horário já passou, avança pelo número mínimo de intervalos para ficar no futuro
+        var next = anchor
+        if (next <= now) {
+            val elapsed        = now - next
+            val intervalsToSkip = (elapsed + intervalMs - 1) / intervalMs  // divisão com teto
+            next += intervalsToSkip * intervalMs
+        }
+
+        return (next - now).coerceAtLeast(0L)
     }
 
     // Cancela os lembretes de água de um pet — chamado quando remindersEnabled = false

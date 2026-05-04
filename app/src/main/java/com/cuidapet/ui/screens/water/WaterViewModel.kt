@@ -36,12 +36,13 @@ class WaterViewModel @Inject constructor(
     val state: StateFlow<WaterUiState> = _state.asStateFlow()
 
     // Timestamps do início e fim do dia atual para consultas ao banco
-    private val dayStart: Long = startOfDay()
-    private val dayEnd: Long   = dayStart + 86_400_000L - 1L  // 23:59:59.999
+
 
     // Carrega a configuração e os logs de hoje.
     // Chamado quando a aba "Água" é aberta no dashboard.
     fun loadWaterData(petId: Long) {
+        val dayStart = startOfDay() // pega o horário atual e zera horas/minutos/segundos/milissegundos — ou seja, retorna o timestamp da meia-noite de hoje (ex: 29/04/2026 00:00:00.000).
+        val dayEnd   = dayStart + 86_400_000L - 1L //  86_400_000L - 1L 86_400_000 é o total de milissegundos em 24 horas (24h × 60min × 60s × 1000ms). Então dayEnd = meia-noite de hoje + 24h - 1ms = 29/04/2026 23:59:59.999. O -1L evita que pegue o primeiro milissegundo do dia seguinte.
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
 

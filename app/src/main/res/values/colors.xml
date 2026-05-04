@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Cor de fundo da splash screen — mesma cor primária do app -->
-    <color name="splash_background">#FFFFFF</color>
+    <color name="splash_background">#3AACB8</color>
 </resources>

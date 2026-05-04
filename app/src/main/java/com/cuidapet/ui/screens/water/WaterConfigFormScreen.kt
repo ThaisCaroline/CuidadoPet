@@ -44,8 +44,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.cuidadopet.ui.utils.adaptiveHorizontalPadding
+import com.cuidadopet.ui.utils.TimeInputField
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -123,7 +125,7 @@ fun WaterConfigFormScreen(
             // ── Meta diária ──────────────────────────────────────────────
             OutlinedTextField(
                 value = state.dailyTargetMl,
-                onValueChange = viewModel::updateTargetMl,
+                onValueChange = { viewModel.updateTargetMl(it.filter { c -> c.isDigit() }.take(5)) },
                 label = { Text("Meta diária de água (ml)") },
                 placeholder = { Text("Ex: 300") },
                 modifier = Modifier.fillMaxWidth(),
@@ -154,21 +156,53 @@ fun WaterConfigFormScreen(
                 )
             }
 
-            // Campo de intervalo — só exibido quando os lembretes estão ativos
+            // Campos de intervalo e horário de início — só exibidos com lembretes ativos
             if (state.remindersEnabled) {
                 OutlinedTextField(
                     value = state.reminderIntervalHours,
-                    onValueChange = viewModel::updateReminderInterval,
+                    onValueChange = { viewModel.updateReminderInterval(it.filter { c -> c.isDigit() }.take(2)) },
                     label = { Text("Lembrar a cada (horas)") },
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     suffix = { Text("h") },
                     supportingText = {
                         Text(
-                            "Ex: 3 = lembrete a cada 3 horas. Mínimo recomendado: 2h.",
+                            "Ex: 2 = lembrete a cada 2 horas. Mínimo recomendado: 2h.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                    }
+                )
+
+                // Campo de horário de início — âncora do primeiro lembrete do dia
+                TimeInputField(
+                    value = state.reminderStartTime,
+                    onValueChange = viewModel::updateReminderStartTime,
+                    label = "Horário de início dos lembretes",
+                    modifier = Modifier.fillMaxWidth(),
+                    supportingText = {
+                        val interval = state.reminderIntervalHours.toIntOrNull() ?: 0
+                        val start    = state.reminderStartTime
+                        if (interval > 0 && start.matches(Regex("""\d{1,2}:\d{2}"""))) {
+                            val parts  = start.split(":")
+                            val h      = parts[0].toIntOrNull() ?: 0
+                            val m      = parts[1].toIntOrNull() ?: 0
+                            val times  = (0 until (24 / interval)).map { i ->
+                                val totalMin = h * 60 + m + i * interval * 60
+                                "%02d:%02d".format((totalMin / 60) % 24, totalMin % 60)
+                            }
+                            Text(
+                                "Lembretes: ${times.take(5).joinToString(", ")}${if (times.size > 5) "..." else ""}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        } else {
+                            Text(
+                                "Ex: 13:00 com intervalo 2h → lembretes às 13h, 15h, 17h...",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 )
             }

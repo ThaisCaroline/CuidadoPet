@@ -62,6 +62,9 @@ interface WaterDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertLog(log: WaterLogEntity): Long
 
+    @Update
+    suspend fun updateLog(log: WaterLogEntity)
+
     // Remove um registro específico — caso o tutor tenha digitado errado
     @Query("DELETE FROM water_logs WHERE id = :logId")
     suspend fun deleteLog(logId: Long)

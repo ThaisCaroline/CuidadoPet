@@ -18,6 +18,12 @@ interface WaterDao {
     @Query("SELECT * FROM water_configs WHERE petId = :petId LIMIT 1")
     fun getWaterConfig(petId: Long): Flow<WaterConfigEntity?>
 
+    @Query("SELECT * FROM water_configs")
+    suspend fun getAllConfigsForBackup(): List<WaterConfigEntity>
+
+    @Query("SELECT * FROM water_logs")
+    suspend fun getAllWaterLogsForBackup(): List<WaterLogEntity>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertWaterConfig(config: WaterConfigEntity): Long
 

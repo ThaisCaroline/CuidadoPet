@@ -61,6 +61,12 @@
 # BroadcastReceivers referenciados no AndroidManifest precisam ser preservados
 -keep class com.cuidadopet.notification.** { *; }
 
+# ── Gson ──────────────────────────────────────────────────────────────────────
+-keep class com.google.gson.** { *; }
+-dontwarn com.google.gson.**
+# Mantém as classes de backup para serialização Gson em builds release
+-keep class com.cuidadopet.data.backup.** { *; }
+
 # ── Logs ──────────────────────────────────────────────────────────────────────
 # Remove todas as chamadas de Log.* no build de release.
 # -assumenosideeffects diz ao R8 que essas chamadas não têm efeito colateral,

@@ -23,6 +23,18 @@ interface FeedingDao {
     @Query("SELECT * FROM meal_plans WHERE petId = :petId AND isActive = 1 LIMIT 1")
     fun getActiveMealPlan(petId: Long): Flow<MealPlanEntity?>
 
+    @Query("SELECT * FROM meal_plans")
+    suspend fun getAllMealPlansForBackup(): List<MealPlanEntity>
+
+    @Query("SELECT * FROM meals")
+    suspend fun getAllMealsForBackup(): List<MealEntity>
+
+    @Query("SELECT * FROM meal_logs")
+    suspend fun getAllMealLogsForBackup(): List<MealLogEntity>
+
+    @Query("SELECT * FROM sporadic_meal_logs")
+    suspend fun getAllSporadicLogsForBackup(): List<SporadicMealLogEntity>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertMealPlan(plan: MealPlanEntity): Long
 

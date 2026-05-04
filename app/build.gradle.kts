@@ -18,8 +18,8 @@ android {
         applicationId = "com.cuidadopet"
         minSdk = 26
         targetSdk = 36
-        versionCode = 4
-        versionName = "1.0.3"
+        versionCode = 5
+        versionName = "1.0.4"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -132,6 +132,9 @@ dependencies {
     implementation(libs.sqlcipher)
     implementation(libs.sqlite.ktx)
     implementation(libs.security.crypto)
+
+    // Gson — serialização JSON para backup/restauração de dados
+    implementation(libs.gson)
 
     // Testes
     testImplementation(libs.junit)

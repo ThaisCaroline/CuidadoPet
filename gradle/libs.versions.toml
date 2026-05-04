@@ -21,6 +21,7 @@ splashscreen = "1.0.1"
 sqlcipher = "4.5.4"
 securityCrypto = "1.1.0-alpha06"
 sqliteKtx = "2.4.0"
+gson = "2.10.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -68,6 +69,8 @@ sqlcipher = { group = "net.zetetic", name = "android-database-sqlcipher", versio
 sqlite-ktx = { group = "androidx.sqlite", name = "sqlite-ktx", version.ref = "sqliteKtx" }
 # Security Crypto — EncryptedSharedPreferences respaldado pelo Android Keystore
 security-crypto = { group = "androidx.security", name = "security-crypto", version.ref = "securityCrypto" }
+# Gson — serialização JSON para backup
+gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

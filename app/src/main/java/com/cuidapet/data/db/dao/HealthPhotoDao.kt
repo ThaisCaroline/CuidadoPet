@@ -16,6 +16,9 @@ interface HealthPhotoDao {
     @Query("SELECT * FROM health_photos WHERE petId = :petId AND entryDate BETWEEN :start AND :end ORDER BY entryDate ASC, id ASC")
     suspend fun getForPeriod(petId: Long, start: Long, end: Long): List<HealthPhotoEntity>
 
+    @Query("SELECT * FROM health_photos")
+    suspend fun getAllForBackup(): List<HealthPhotoEntity>
+
     @Insert
     suspend fun insert(photo: HealthPhotoEntity): Long
 

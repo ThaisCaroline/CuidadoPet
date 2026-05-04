@@ -63,7 +63,8 @@ import com.cuidadopet.ui.utils.isTablet
 fun HomeScreen(
     onAddPetClick: () -> Unit,
     onPetClick: (Long) -> Unit,
-    onPrivacyPolicy: () -> Unit = {}
+    onPrivacyPolicy: () -> Unit = {},
+    onSettings: () -> Unit = {}
 ) {
     val viewModel: HomeViewModel = hiltViewModel()
     val pets by viewModel.pets.collectAsStateWithLifecycle()
@@ -134,6 +135,10 @@ fun HomeScreen(
                         expanded         = menuExpanded,
                         onDismissRequest = { menuExpanded = false }
                     ) {
+                        DropdownMenuItem(
+                            text    = { Text("Configurações") },
+                            onClick = { menuExpanded = false; onSettings() }
+                        )
                         DropdownMenuItem(
                             text    = { Text("Política de privacidade") },
                             onClick = { menuExpanded = false; onPrivacyPolicy() }

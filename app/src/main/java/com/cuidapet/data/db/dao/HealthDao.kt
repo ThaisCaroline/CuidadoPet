@@ -32,6 +32,12 @@ interface HealthDao {
         endDate: Long
     ): Flow<List<HealthEntryEntity>>
 
+    @Query("SELECT * FROM health_entries")
+    suspend fun getAllEntriesForBackup(): List<HealthEntryEntity>
+
+    @Query("SELECT * FROM weight_records")
+    suspend fun getAllWeightRecordsForBackup(): List<WeightRecordEntity>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertEntry(entry: HealthEntryEntity): Long
 

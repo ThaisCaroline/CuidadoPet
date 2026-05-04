@@ -14,6 +14,7 @@ import com.cuidadopet.ui.screens.medication.MedicationFormScreen
 import com.cuidadopet.ui.screens.pet.PetFormScreen
 import com.cuidadopet.ui.screens.health.HealthEntryFormScreen
 import com.cuidadopet.ui.screens.settings.PrivacyPolicyScreen
+import com.cuidadopet.ui.screens.settings.SettingsScreen
 import com.cuidadopet.ui.screens.health.WeightHistoryScreen
 import com.cuidadopet.ui.screens.report.ReportScreen
 import com.cuidadopet.ui.screens.water.WaterConfigFormScreen
@@ -30,6 +31,7 @@ object Routes {
     const val WEIGHT_HISTORY = "weight_history/{petId}" // histórico de peso
     const val REPORT         = "report/{petId}"          // relatório do pet
     const val PRIVACY_POLICY = "privacy_policy"           // política de privacidade
+    const val SETTINGS       = "settings"                  // configurações / backup
 
     // Funções auxiliares para montar rotas com parâmetros reais
     fun petForm(petId: Long? = null)  = if (petId != null) "pet_form?petId=$petId" else "pet_form"
@@ -60,13 +62,19 @@ fun AppNavigation(
             HomeScreen(
                 onAddPetClick      = { navController.navigate(Routes.petForm()) },
                 onPetClick         = { petId -> navController.navigate(Routes.dashboard(petId)) },
-                onPrivacyPolicy    = { navController.navigate(Routes.PRIVACY_POLICY) }
+                onPrivacyPolicy    = { navController.navigate(Routes.PRIVACY_POLICY) },
+                onSettings         = { navController.navigate(Routes.SETTINGS) }
             )
         }
 
         // ── Política de privacidade ───────────────────────────────────────
         composable(Routes.PRIVACY_POLICY) {
             PrivacyPolicyScreen(onNavigateBack = { navController.popBackStack() })
+        }
+
+        // ── Configurações / Backup ────────────────────────────────────────
+        composable(Routes.SETTINGS) {
+            SettingsScreen(onNavigateBack = { navController.popBackStack() })
         }
 
         // ── Cadastro / Edição de pet ─────────────────────────────────────

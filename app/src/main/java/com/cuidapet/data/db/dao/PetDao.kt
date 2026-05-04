@@ -38,6 +38,9 @@ interface PetDao {
     // OnConflictStrategy.REPLACE: se tentar inserir um pet com id já existente,
     // substitui o existente em vez de dar erro.
     // Retorna o id gerado para o novo pet.
+    @Query("SELECT * FROM pets")
+    suspend fun getAllOnce(): List<PetEntity>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(pet: PetEntity): Long
 

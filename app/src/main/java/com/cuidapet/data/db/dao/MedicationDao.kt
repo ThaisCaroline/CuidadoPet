@@ -24,6 +24,12 @@ interface MedicationDao {
     @Query("SELECT * FROM medications WHERE id = :medicationId")
     fun getMedicationById(medicationId: Long): Flow<MedicationEntity?>
 
+    @Query("SELECT * FROM medications")
+    suspend fun getAllForBackup(): List<MedicationEntity>
+
+    @Query("SELECT * FROM medication_logs")
+    suspend fun getAllLogsForBackup(): List<MedicationLogEntity>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertMedication(medication: MedicationEntity): Long
 

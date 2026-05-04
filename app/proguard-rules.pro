@@ -42,6 +42,25 @@
 # ── Compose ───────────────────────────────────────────────────────────────────
 -dontwarn androidx.compose.**
 
+# ── SQLCipher ─────────────────────────────────────────────────────────────────
+-keep class net.sqlcipher.** { *; }
+-keep class net.sqlcipher.database.** { *; }
+-dontwarn net.sqlcipher.**
+
+# ── Security Crypto ───────────────────────────────────────────────────────────
+-keep class androidx.security.crypto.** { *; }
+-dontwarn androidx.security.crypto.**
+
+# ── Google Tink (dependência interna do Security Crypto) ──────────────────────
+# Anotações do errorprone são usadas apenas em tempo de compilação — não existem
+# em runtime e podem ser ignoradas com segurança pelo R8
+-dontwarn com.google.errorprone.annotations.**
+-dontwarn com.google.crypto.tink.**
+
+# ── Notification receivers e Workers do app ───────────────────────────────────
+# BroadcastReceivers referenciados no AndroidManifest precisam ser preservados
+-keep class com.cuidadopet.notification.** { *; }
+
 # ── Logs ──────────────────────────────────────────────────────────────────────
 # Remove todas as chamadas de Log.* no build de release.
 # -assumenosideeffects diz ao R8 que essas chamadas não têm efeito colateral,

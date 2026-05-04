@@ -58,9 +58,8 @@ android {
         }
         release {
             // isMinifyEnabled remove código não utilizado (reduz tamanho do APK/AAB)
-            isMinifyEnabled   = false
-            // isShrinkResources remove recursos não referenciados (imagens, layouts etc.)
-            isShrinkResources = false
+            isMinifyEnabled   = true
+            isShrinkResources = true
             signingConfig     = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),

@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Medication
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.NotificationsOff
 import androidx.compose.material3.AlertDialog
@@ -29,6 +30,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SuggestionChip
+import androidx.compose.material3.SuggestionChipDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -44,6 +47,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cuidadopet.data.db.entity.MedicationEntity
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun MedicationListScreen(
@@ -195,6 +201,45 @@ private fun MedicationCard(
             Text("$badge • $frequencyText",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.primary)
+
+            Spacer(Modifier.height(2.dp))
+
+            val fmt = SimpleDateFormat("dd/MM/yyyy", Locale("pt", "BR"))
+            val dateRangeText = if (medication.isContinuous) {
+                "Desde ${fmt.format(Date(medication.startDate))}"
+            } else if (medication.endDate != null) {
+                "${fmt.format(Date(medication.startDate))} → ${fmt.format(Date(medication.endDate))}"
+            } else null
+
+            if (dateRangeText != null) {
+                Text(dateRangeText,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+
+            val isExpired = !medication.isContinuous &&
+                medication.endDate != null &&
+                medication.endDate < System.currentTimeMillis()
+
+            if (isExpired) {
+                Spacer(Modifier.height(6.dp))
+                SuggestionChip(
+                    onClick = {},
+                    label = { Text("Concluído", style = MaterialTheme.typography.labelSmall) },
+                    icon = {
+                        Icon(
+                            Icons.Default.CheckCircle,
+                            contentDescription = null,
+                            modifier = Modifier.size(14.dp)
+                        )
+                    },
+                    colors = SuggestionChipDefaults.suggestionChipColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        labelColor     = MaterialTheme.colorScheme.onSecondaryContainer,
+                        iconContentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                )
+            }
         }
     }
 }

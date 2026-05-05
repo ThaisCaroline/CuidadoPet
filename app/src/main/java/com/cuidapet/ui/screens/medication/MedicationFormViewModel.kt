@@ -32,7 +32,8 @@ data class MedicationFormState(
     val reminderEnabled: Boolean = true,
     val isLoading: Boolean = false,
     val isSaved: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val originalStartDate: Long? = null
 )
 
 @HiltViewModel
@@ -84,7 +85,8 @@ class MedicationFormViewModel @Inject constructor(
                         guideline         = med.administrationGuideline,
                         guidelineDetail   = med.guidelineDetail ?: "",
                         observations      = med.observations ?: "",
-                        reminderEnabled   = med.reminderEnabled
+                        reminderEnabled   = med.reminderEnabled,
+                        originalStartDate = med.startDate
                     )
                 }
             }
@@ -249,10 +251,11 @@ class MedicationFormViewModel @Inject constructor(
             // Busca o nome do pet para personalizar a notificação
             val petName = petRepository.getPetById(petId).first()?.name ?: "seu pet"
 
-            val startDate = if (state.frequencyType == "INTERVAL" && state.intervalStartTime.isNotBlank())
-                parseStartTime(state.intervalStartTime)
-            else
-                System.currentTimeMillis()
+            val startDate = when {
+                existingMedicationId != null && state.originalStartDate != null -> state.originalStartDate
+                state.frequencyType == "INTERVAL" && state.intervalStartTime.isNotBlank() -> parseStartTime(state.intervalStartTime)
+                else -> System.currentTimeMillis()
+            }
             val endDate = if (state.isContinuous) null
                           else startDate + (state.durationDays.toLongOrNull() ?: 7) * 24 * 60 * 60 * 1000L
 

@@ -46,7 +46,6 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -65,6 +64,7 @@ import coil.compose.AsyncImage
 import com.cuidadopet.data.db.entity.HealthPhotoEntity
 import com.cuidadopet.data.db.entity.MealLogEntity
 import com.cuidadopet.data.db.entity.MedicationLogEntity
+import com.cuidadopet.data.db.entity.SporadicMealLogEntity
 import com.cuidadopet.data.db.entity.WaterLogEntity
 import com.cuidadopet.data.db.entity.WeightRecordEntity
 import java.io.File
@@ -73,6 +73,20 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import com.cuidadopet.ui.utils.adaptiveHorizontalPadding
+
+private data class FoodDayEditState(
+    val day: String,
+    val totalGrams: Double,
+    val unit: String,
+    val mealLogs: List<MealLogEntity>,
+    val sporadicLogs: List<SporadicMealLogEntity>
+)
+
+private data class WaterDayEditState(
+    val day: String,
+    val totalMl: Int,
+    val logs: List<WaterLogEntity>
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -162,14 +176,12 @@ fun ReportScreen(
                     },
                     onGeneratePdf       = { viewModel.generatePdf() },
                     onChangePeriod      = { days -> viewModel.load(petId, days) },
-                    onUpdateMedicationLog = { viewModel.updateMedicationLog(it) },
-                    onDeleteMedicationLog = { viewModel.deleteMedicationLog(it) },
-                    onUpdateMealLog       = { viewModel.updateMealLog(it) },
-                    onDeleteMealLog       = { viewModel.deleteMealLog(it) },
-                    onUpdateWaterLog      = { viewModel.updateWaterLog(it) },
-                    onDeleteWaterLog      = { viewModel.deleteWaterLog(it) },
-                    onUpdateWeightRecord  = { viewModel.updateWeightRecord(it) },
-                    onDeleteWeightRecord  = { viewModel.deleteWeightRecord(it) },
+                    onUpdateMedicationLog    = { viewModel.updateMedicationLog(it) },
+                    onDeleteMedicationLog    = { viewModel.deleteMedicationLog(it) },
+                    onUpdateFoodDailyTotal   = { ml, sl, t -> viewModel.updateFoodDailyTotal(ml, sl, t) },
+                    onUpdateWaterDailyTotal  = { logs, t -> viewModel.updateWaterDailyTotal(logs, t) },
+                    onUpdateWeightRecord     = { viewModel.updateWeightRecord(it) },
+                    onDeleteWeightRecord     = { viewModel.deleteWeightRecord(it) },
                     modifier            = Modifier.padding(innerPadding)
                 )
             }
@@ -199,10 +211,8 @@ private fun ReportContent(
     onChangePeriod: (Int) -> Unit,
     onUpdateMedicationLog: (MedicationLogEntity) -> Unit,
     onDeleteMedicationLog: (Long) -> Unit,
-    onUpdateMealLog: (MealLogEntity) -> Unit,
-    onDeleteMealLog: (Long) -> Unit,
-    onUpdateWaterLog: (WaterLogEntity) -> Unit,
-    onDeleteWaterLog: (Long) -> Unit,
+    onUpdateFoodDailyTotal: (List<MealLogEntity>, List<SporadicMealLogEntity>, Double) -> Unit,
+    onUpdateWaterDailyTotal: (List<WaterLogEntity>, Double) -> Unit,
     onUpdateWeightRecord: (WeightRecordEntity) -> Unit,
     onDeleteWeightRecord: (Long) -> Unit,
     modifier: Modifier = Modifier
@@ -210,9 +220,9 @@ private fun ReportContent(
     val dateFmt  = remember { SimpleDateFormat("dd/MM/yyyy", Locale.forLanguageTag("pt-BR")) }
     val timeFmt  = remember { SimpleDateFormat("dd/MM HH:mm", Locale.forLanguageTag("pt-BR")) }
 
-    var editingMedLog      by remember { mutableStateOf<MedicationLogEntity?>(null) }
-    var editingMealLog     by remember { mutableStateOf<Pair<MealLogEntity, String>?>(null) }
-    var editingWaterLog    by remember { mutableStateOf<WaterLogEntity?>(null) }
+    var editingMedLog       by remember { mutableStateOf<MedicationLogEntity?>(null) }
+    var editingFoodDay      by remember { mutableStateOf<FoodDayEditState?>(null) }
+    var editingWaterDay     by remember { mutableStateOf<WaterDayEditState?>(null) }
     var editingWeightRecord by remember { mutableStateOf<WeightRecordEntity?>(null) }
 
     editingMedLog?.let { log ->
@@ -223,21 +233,18 @@ private fun ReportContent(
             onDismiss = { editingMedLog = null }
         )
     }
-    editingMealLog?.let { (log, label) ->
-        EditMealLogDialog(
-            log       = log,
-            mealLabel = label,
-            onConfirm = { updated -> onUpdateMealLog(updated); editingMealLog = null },
-            onDelete  = { onDeleteMealLog(log.id); editingMealLog = null },
-            onDismiss = { editingMealLog = null }
+    editingFoodDay?.let { state ->
+        EditFoodDayDialog(
+            state     = state,
+            onConfirm = { newTotal -> onUpdateFoodDailyTotal(state.mealLogs, state.sporadicLogs, newTotal); editingFoodDay = null },
+            onDismiss = { editingFoodDay = null }
         )
     }
-    editingWaterLog?.let { log ->
-        EditWaterLogDialog(
-            log       = log,
-            onConfirm = { updated -> onUpdateWaterLog(updated); editingWaterLog = null },
-            onDelete  = { onDeleteWaterLog(log.id); editingWaterLog = null },
-            onDismiss = { editingWaterLog = null }
+    editingWaterDay?.let { state ->
+        EditWaterDayDialog(
+            state     = state,
+            onConfirm = { newTotal -> onUpdateWaterDailyTotal(state.logs, newTotal); editingWaterDay = null },
+            onDismiss = { editingWaterDay = null }
         )
     }
     editingWeightRecord?.let { record ->
@@ -358,58 +365,41 @@ private fun ReportContent(
             if (report.mealLogs.isEmpty() && report.sporadicLogs.isEmpty()) {
                 Text("Nenhuma refeição registrada no período.", style = MaterialTheme.typography.bodySmall)
             } else {
-                val mealsById = report.meals.associateBy { it.id }
-                if (report.mealLogs.isNotEmpty()) {
-                    report.mealLogs
-                        .sortedBy { it.date }
-                        .forEach { log ->
-                            val meal = mealsById[log.mealId]
-                            val qty  = meal?.let {
-                                "${(it.quantityGrams * log.eatenPercentage / 100.0).toInt()}${it.quantityUnit}"
-                            } ?: ""
-                            val appetiteStr = when (log.appetiteStatus) {
-                                "ALL"     -> "Comeu tudo"
-                                "PARTIAL" -> "Parcial"
-                                "REFUSED" -> "Recusou"
-                                else      -> log.appetiteStatus
-                            }
-                            val label = buildString {
-                                append(dateFmt.format(Date(log.date)))
-                                meal?.let { append(" — ${it.timeOfDay}") }
-                                if (qty.isNotBlank()) append(": $qty")
-                                append(" · $appetiteStr")
-                            }
-                            Text(
-                                "$label  ✏",
-                                style    = MaterialTheme.typography.bodySmall,
-                                modifier = Modifier.clickable {
-                                    editingMealLog = log to (meal?.timeOfDay ?: dateFmt.format(Date(log.date)))
-                                }
-                            )
-                        }
-                }
-                if (report.sporadicLogs.isNotEmpty()) {
+                val mealsById     = report.meals.associateBy { it.id }
+                val mealsByDay    = report.mealLogs.sortedBy { it.date }
+                    .groupBy { dateFmt.format(Date(it.date)) }
+                val sporadicByDay = report.sporadicLogs.sortedBy { it.registeredAt }
+                    .groupBy { dateFmt.format(Date(it.registeredAt)) }
+                val orderedDays   = (report.mealLogs.map { it.date } + report.sporadicLogs.map { it.registeredAt })
+                    .sorted().map { dateFmt.format(Date(it)) }.distinct()
+
+                orderedDays.forEach { day ->
+                    val dayMealLogs     = mealsByDay[day] ?: emptyList()
+                    val daySporadicLogs = sporadicByDay[day] ?: emptyList()
+                    val mealTotal       = dayMealLogs.sumOf { log ->
+                        (mealsById[log.mealId]?.quantityGrams ?: 0.0) * log.eatenPercentage / 100.0
+                    }
+                    val dayTotal = mealTotal + daySporadicLogs.sumOf { it.amountGrams ?: 0.0 }
+                    val unit     = dayMealLogs.firstOrNull()?.let { mealsById[it.mealId]?.quantityUnit } ?: "g"
                     Text(
-                        "Extras:",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    report.sporadicLogs
-                        .sortedBy { it.registeredAt }
-                        .groupBy { dateFmt.format(Date(it.registeredAt)) }
-                        .forEach { (date, logs) ->
-                            val byUnit = logs
-                                .filter { it.amountGrams != null }
-                                .groupBy { it.amountUnit }
-                                .mapValues { (_, e) -> e.sumOf { it.amountGrams ?: 0.0 } }
-                            val amounts = byUnit.entries.joinToString(" + ") { (u, v) -> "${v.toInt()}$u" }
-                            val extra = if (amounts.isNotBlank()) " ($amounts)" else ""
-                            Text(
-                                "$date — ${logs.size} extra(s)$extra",
-                                style = MaterialTheme.typography.bodySmall
-                            )
+                        "$day: ${dayTotal.toInt()} $unit  ✏",
+                        style      = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier   = Modifier.clickable {
+                            editingFoodDay = FoodDayEditState(day, dayTotal, unit, dayMealLogs, daySporadicLogs)
                         }
+                    )
                 }
+
+                val grandTotal = report.mealLogs.sumOf { log ->
+                    (mealsById[log.mealId]?.quantityGrams ?: 0.0) * log.eatenPercentage / 100.0
+                } + report.sporadicLogs.sumOf { it.amountGrams ?: 0.0 }
+                Text(
+                    "Total: ${grandTotal.toInt()} g",
+                    style      = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color      = MaterialTheme.colorScheme.primary
+                )
             }
         }
 
@@ -419,18 +409,23 @@ private fun ReportContent(
             } else {
                 report.waterLogs
                     .sortedBy { it.registeredAt }
-                    .forEach { log ->
+                    .groupBy { dateFmt.format(Date(it.registeredAt)) }
+                    .forEach { (day, logs) ->
+                        val totalMl = logs.sumOf { it.amountMl }.toInt()
                         Text(
-                            "${timeFmt.format(Date(log.registeredAt))} — ${log.amountMl.toInt()} ml  ✏",
-                            style    = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.clickable { editingWaterLog = log }
+                            "$day: $totalMl ml  ✏",
+                            style      = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier   = Modifier.clickable {
+                                editingWaterDay = WaterDayEditState(day, totalMl, logs)
+                            }
                         )
                     }
-                val grandTotal = report.waterLogs.sumOf { it.amountMl }
                 Text(
-                    "Total: ${grandTotal.toInt()} ml",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.primary
+                    "Total: ${report.waterLogs.sumOf { it.amountMl }.toInt()} ml",
+                    style      = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color      = MaterialTheme.colorScheme.primary
                 )
             }
         }
@@ -605,94 +600,54 @@ private fun EditMedicationLogDialog(
 }
 
 @Composable
-private fun EditMealLogDialog(
-    log: MealLogEntity,
-    mealLabel: String,
-    onConfirm: (MealLogEntity) -> Unit,
-    onDelete: () -> Unit,
+private fun EditFoodDayDialog(
+    state: FoodDayEditState,
+    onConfirm: (Double) -> Unit,
     onDismiss: () -> Unit
 ) {
-    var selectedPct      by remember { mutableIntStateOf(log.eatenPercentage) }
-    var selectedAppetite by remember { mutableStateOf(log.appetiteStatus) }
+    var valueText by remember { mutableStateOf(state.totalGrams.toInt().toString()) }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Editar refeição — $mealLabel") },
+        title = { Text("Editar total — ${state.day}") },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Quanto comeu?", style = MaterialTheme.typography.labelMedium)
-                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    listOf(0, 25, 50, 75, 100).forEach { pct ->
-                        FilterChip(
-                            selected = selectedPct == pct,
-                            onClick  = {
-                                selectedPct = pct
-                                selectedAppetite = when (pct) { 100 -> "ALL"; 0 -> "REFUSED"; else -> "PARTIAL" }
-                            },
-                            label = { Text("$pct%", style = MaterialTheme.typography.labelSmall) }
-                        )
-                    }
-                }
-                Text("Apetite:", style = MaterialTheme.typography.labelMedium)
-                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    listOf("ALL" to "Tudo", "PARTIAL" to "Parcial", "REFUSED" to "Recusou").forEach { (v, l) ->
-                        FilterChip(
-                            selected = selectedAppetite == v,
-                            onClick  = { selectedAppetite = v },
-                            label    = { Text(l, style = MaterialTheme.typography.labelSmall) }
-                        )
-                    }
-                }
-                HorizontalDivider(modifier = Modifier.padding(top = 4.dp))
-                TextButton(
-                    onClick  = onDelete,
-                    colors   = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
-                    modifier = Modifier.fillMaxWidth()
-                ) { Text("Excluir registro") }
-            }
+            OutlinedTextField(
+                value           = valueText,
+                onValueChange   = { if (it.all { c -> c.isDigit() }) valueText = it },
+                label           = { Text("Total do dia (${state.unit})") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                singleLine      = true,
+                modifier        = Modifier.fillMaxWidth()
+            )
         },
         confirmButton = {
-            Button(onClick = { onConfirm(log.copy(eatenPercentage = selectedPct, appetiteStatus = selectedAppetite)) }) { Text("Salvar") }
+            Button(onClick = { valueText.toDoubleOrNull()?.let { onConfirm(it) } }) { Text("Salvar") }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } }
     )
 }
 
 @Composable
-private fun EditWaterLogDialog(
-    log: WaterLogEntity,
-    onConfirm: (WaterLogEntity) -> Unit,
-    onDelete: () -> Unit,
+private fun EditWaterDayDialog(
+    state: WaterDayEditState,
+    onConfirm: (Double) -> Unit,
     onDismiss: () -> Unit
 ) {
-    var amountText by remember { mutableStateOf(log.amountMl.toInt().toString()) }
+    var valueText by remember { mutableStateOf(state.totalMl.toString()) }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Editar registro de água") },
+        title = { Text("Editar total — ${state.day}") },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(
-                    value           = amountText,
-                    onValueChange   = { if (it.all { c -> c.isDigit() }) amountText = it },
-                    label           = { Text("Quantidade (ml)") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    singleLine      = true,
-                    modifier        = Modifier.fillMaxWidth()
-                )
-                HorizontalDivider()
-                TextButton(
-                    onClick  = onDelete,
-                    colors   = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
-                    modifier = Modifier.fillMaxWidth()
-                ) { Text("Excluir registro") }
-            }
+            OutlinedTextField(
+                value           = valueText,
+                onValueChange   = { if (it.all { c -> c.isDigit() }) valueText = it },
+                label           = { Text("Total do dia (ml)") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                singleLine      = true,
+                modifier        = Modifier.fillMaxWidth()
+            )
         },
         confirmButton = {
-            Button(
-                onClick = {
-                    val amount = amountText.toDoubleOrNull() ?: return@Button
-                    onConfirm(log.copy(amountMl = amount))
-                }
-            ) { Text("Salvar") }
+            Button(onClick = { valueText.toDoubleOrNull()?.let { onConfirm(it) } }) { Text("Salvar") }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } }
     )

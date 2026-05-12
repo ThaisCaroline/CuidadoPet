@@ -132,6 +132,9 @@ interface FeedingDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSporadicLog(log: SporadicMealLogEntity): Long
 
+    @Update
+    suspend fun updateSporadicLog(log: SporadicMealLogEntity)
+
     // Remove um registro esporádico pelo id
     @Query("DELETE FROM sporadic_meal_logs WHERE id = :id")
     suspend fun deleteSporadicLog(id: Long)

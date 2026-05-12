@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cuidadopet.data.db.entity.MealLogEntity
 import com.cuidadopet.data.db.entity.MedicationLogEntity
+import com.cuidadopet.data.db.entity.SporadicMealLogEntity
 import com.cuidadopet.data.db.entity.WaterLogEntity
 import com.cuidadopet.data.db.entity.WeightRecordEntity
 import com.cuidadopet.data.repository.FeedingRepository
@@ -121,6 +122,66 @@ class ReportViewModel @Inject constructor(
         viewModelScope.launch {
             healthRepository.deleteWeightRecord(recordId)
             load(currentPetId, selectedDays)
+        }
+    }
+
+    fun updateWaterDailyTotal(logsForDay: List<WaterLogEntity>, newTotalMl: Double) {
+        val diff    = newTotalMl - logsForDay.sumOf { it.amountMl }
+        val lastLog = logsForDay.maxByOrNull { it.registeredAt } ?: return
+        val newAmount = lastLog.amountMl + diff
+        if (newAmount < 0) {
+            _state.update { it.copy(error = "O total não pode ser menor que as outras entradas do dia.") }
+            return
+        }
+        viewModelScope.launch {
+            waterRepository.updateWaterLog(lastLog.copy(amountMl = newAmount))
+            load(currentPetId, selectedDays)
+        }
+    }
+
+    fun updateFoodDailyTotal(
+        mealLogsForDay: List<MealLogEntity>,
+        sporadicLogsForDay: List<SporadicMealLogEntity>,
+        newTotalGrams: Double
+    ) {
+        val report    = _state.value.report ?: return
+        val mealsById = report.meals.associateBy { it.id }
+
+        val currentTotal = mealLogsForDay.sumOf { log ->
+            (mealsById[log.mealId]?.quantityGrams ?: 0.0) * log.eatenPercentage / 100.0
+        } + sporadicLogsForDay.sumOf { it.amountGrams ?: 0.0 }
+
+        val diff         = newTotalGrams - currentTotal
+        val lastSporadic = sporadicLogsForDay.filter { it.amountGrams != null }
+            .maxByOrNull { it.registeredAt }
+
+        if (lastSporadic != null) {
+            val newAmount = (lastSporadic.amountGrams ?: 0.0) + diff
+            if (newAmount < 0) {
+                _state.update { it.copy(error = "O total não pode ser menor que as outras entradas do dia.") }
+                return
+            }
+            viewModelScope.launch {
+                feedingRepository.updateSporadicLog(lastSporadic.copy(amountGrams = newAmount))
+                load(currentPetId, selectedDays)
+            }
+        } else if (mealLogsForDay.isNotEmpty()) {
+            val lastMealLog = mealLogsForDay.last()
+            val meal        = mealsById[lastMealLog.mealId] ?: return
+            if (meal.quantityGrams <= 0) return
+            val othersTotal = mealLogsForDay.dropLast(1).sumOf { log ->
+                (mealsById[log.mealId]?.quantityGrams ?: 0.0) * log.eatenPercentage / 100.0
+            }
+            val targetForLast = newTotalGrams - othersTotal
+            if (targetForLast < 0) {
+                _state.update { it.copy(error = "O total não pode ser menor que as outras entradas do dia.") }
+                return
+            }
+            val newPct = ((targetForLast / meal.quantityGrams) * 100).toInt().coerceIn(0, 100)
+            viewModelScope.launch {
+                feedingRepository.updateMealLog(lastMealLog.copy(eatenPercentage = newPct))
+                load(currentPetId, selectedDays)
+            }
         }
     }
 

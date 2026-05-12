@@ -124,6 +124,9 @@ class FeedingRepository @Inject constructor(
     suspend fun saveSporadicLog(log: SporadicMealLogEntity): Long =
         feedingDao.insertSporadicLog(log)
 
+    suspend fun updateSporadicLog(log: SporadicMealLogEntity) =
+        feedingDao.updateSporadicLog(log)
+
     // Remove um registro esporádico
     suspend fun deleteSporadicLog(id: Long) =
         feedingDao.deleteSporadicLog(id)

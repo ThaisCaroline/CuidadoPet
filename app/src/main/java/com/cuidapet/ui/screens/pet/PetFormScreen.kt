@@ -31,6 +31,9 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -63,6 +66,17 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import java.io.File
 import com.cuidadopet.ui.utils.adaptiveHorizontalPadding
+
+private val speciesOptions = listOf(
+    "DOG"     to "Cachorro",
+    "CAT"     to "Gato",
+    "RABBIT"  to "Coelho",
+    "BIRD"    to "Pássaro",
+    "HAMSTER" to "Hamster",
+    "TURTLE"  to "Tartaruga",
+    "FISH"    to "Peixe",
+    "OTHER"   to "Outro"
+)
 
 private val clinicalStateLabels = mapOf(
     "ACTIVE_TREATMENT" to "Tratamento ativo",
@@ -213,13 +227,36 @@ fun PetFormScreen(
                 singleLine    = true
             )
 
-            Text("Espécie *", style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                FilterChip(selected = uiState.species == "DOG",
-                    onClick = { viewModel.onSpeciesChange("DOG") }, label = { Text("Cachorro") })
-                FilterChip(selected = uiState.species == "CAT",
-                    onClick = { viewModel.onSpeciesChange("CAT") }, label = { Text("Gato") })
+            var speciesExpanded by remember { mutableStateOf(false) }
+            val selectedSpeciesLabel = speciesOptions.firstOrNull { it.first == uiState.species }?.second ?: ""
+            ExposedDropdownMenuBox(
+                expanded = speciesExpanded,
+                onExpandedChange = { speciesExpanded = it }
+            ) {
+                OutlinedTextField(
+                    value = selectedSpeciesLabel,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Espécie *") },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = speciesExpanded) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .menuAnchor()
+                )
+                ExposedDropdownMenu(
+                    expanded = speciesExpanded,
+                    onDismissRequest = { speciesExpanded = false }
+                ) {
+                    speciesOptions.forEach { (code, label) ->
+                        DropdownMenuItem(
+                            text = { Text(label) },
+                            onClick = {
+                                viewModel.onSpeciesChange(code)
+                                speciesExpanded = false
+                            }
+                        )
+                    }
+                }
             }
 
             OutlinedTextField(

@@ -164,41 +164,42 @@ fun PetFormScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // Foto circular — mostra a foto atual ou um ícone placeholder
-                    Box(
-                        modifier = Modifier
-                            .size(96.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.surfaceVariant)
-                            .border(2.dp, MaterialTheme.colorScheme.outline, CircleShape)
-                            .clickable { showPhotoPickerDialog = true },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        if (uiState.photoPath != null) {
-                            // AsyncImage do Coil carrega a imagem de forma assíncrona
-                            // model pode receber String (caminho do arquivo) ou Uri
-                            AsyncImage(
-                                model             = File(uiState.photoPath),
-                                contentDescription = "Foto de ${uiState.name}",
-                                contentScale      = ContentScale.Crop,
-                                modifier          = Modifier.fillMaxSize()
-                            )
-                        } else {
-                            Icon(
-                                Icons.Default.Pets,
-                                contentDescription = "Adicionar foto",
-                                modifier           = Modifier.size(40.dp),
-                                tint               = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                        // Overlay de "adicionar foto" no canto inferior direito
+                    // Container externo — o clip do círculo fica no Box interno,
+                    // assim o overlay de câmera não é cortado pela máscara circular
+                    Box(modifier = Modifier.size(96.dp)) {
                         Box(
-                            modifier          = Modifier
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.surfaceVariant)
+                                .border(2.dp, MaterialTheme.colorScheme.outline, CircleShape)
+                                .clickable { showPhotoPickerDialog = true },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (uiState.photoPath != null) {
+                                AsyncImage(
+                                    model              = File(uiState.photoPath),
+                                    contentDescription = "Foto de ${uiState.name}",
+                                    contentScale       = ContentScale.Crop,
+                                    modifier           = Modifier.fillMaxSize()
+                                )
+                            } else {
+                                Icon(
+                                    Icons.Default.Pets,
+                                    contentDescription = "Adicionar foto",
+                                    modifier           = Modifier.size(40.dp),
+                                    tint               = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                        // Overlay fora do círculo clipeado — não sofre corte
+                        Box(
+                            modifier         = Modifier
                                 .align(Alignment.BottomEnd)
                                 .size(28.dp)
                                 .clip(CircleShape)
                                 .background(MaterialTheme.colorScheme.primary),
-                            contentAlignment  = Alignment.Center
+                            contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 Icons.Default.AddAPhoto,

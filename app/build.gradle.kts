@@ -137,7 +137,7 @@ dependencies {
     implementation(libs.gson)
 
     // Play In-App Updates — popup de atualização quando há nova versão na Play Store
-    implementation(libs.play.app.update.ktx)
+    implementation("com.google.android.play:app-update-ktx:2.1.0")
 
     // Testes
     testImplementation(libs.junit)

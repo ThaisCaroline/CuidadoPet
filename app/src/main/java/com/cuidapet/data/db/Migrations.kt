@@ -3,6 +3,28 @@ package com.cuidadopet.data.db
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
+val MIGRATION_7_8 = object : Migration(7, 8) {
+    override fun migrate(database: SupportSQLiteDatabase) {
+        database.execSQL("""
+            CREATE TABLE IF NOT EXISTS vaccines (
+                id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                petId INTEGER NOT NULL,
+                type TEXT NOT NULL,
+                name TEXT NOT NULL,
+                administeredAt INTEGER,
+                nextDueDate INTEGER,
+                notes TEXT,
+                reminderEnabled INTEGER NOT NULL DEFAULT 1,
+                createdAt INTEGER NOT NULL,
+                FOREIGN KEY (petId) REFERENCES pets(id) ON DELETE CASCADE
+            )
+        """)
+        database.execSQL(
+            "CREATE INDEX IF NOT EXISTS index_vaccines_petId ON vaccines(petId)"
+        )
+    }
+}
+
 val MIGRATION_6_7 = object : Migration(6, 7) {
     override fun migrate(database: SupportSQLiteDatabase) {
         database.execSQL("""

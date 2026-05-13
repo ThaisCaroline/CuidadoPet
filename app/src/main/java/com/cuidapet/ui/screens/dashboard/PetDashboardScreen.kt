@@ -15,6 +15,7 @@ import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Summarize
+import androidx.compose.material.icons.filled.Vaccines
 import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -73,6 +74,7 @@ fun PetDashboardScreen(
     onEditHealthEntry: (Long) -> Unit = {},
     onWeightHistory: () -> Unit = {},
     onReport: () -> Unit = {},
+    onVaccines: () -> Unit = {},
     viewModel: PetDashboardViewModel = hiltViewModel()
 ) {
     LaunchedEffect(petId) { viewModel.loadPet(petId) }
@@ -103,6 +105,10 @@ fun PetDashboardScreen(
                 actions = {
                     IconButton(onClick = { onEditPet(petId) }) {
                         Icon(Icons.Default.Edit, contentDescription = "Editar pet",
+                            tint = MaterialTheme.colorScheme.onPrimary)
+                    }
+                    IconButton(onClick = onVaccines) {
+                        Icon(Icons.Default.Vaccines, contentDescription = "Vacinas e vermífugos",
                             tint = MaterialTheme.colorScheme.onPrimary)
                     }
                     IconButton(onClick = onReport) {

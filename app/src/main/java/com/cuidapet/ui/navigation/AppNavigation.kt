@@ -17,6 +17,8 @@ import com.cuidadopet.ui.screens.settings.PrivacyPolicyScreen
 import com.cuidadopet.ui.screens.settings.SettingsScreen
 import com.cuidadopet.ui.screens.health.WeightHistoryScreen
 import com.cuidadopet.ui.screens.report.ReportScreen
+import com.cuidadopet.ui.screens.vaccine.VaccineFormScreen
+import com.cuidadopet.ui.screens.vaccine.VaccineListScreen
 import com.cuidadopet.ui.screens.water.WaterConfigFormScreen
 
 // Todas as rotas do app centralizadas aqui
@@ -32,6 +34,8 @@ object Routes {
     const val REPORT         = "report/{petId}"          // relatório do pet
     const val PRIVACY_POLICY = "privacy_policy"           // política de privacidade
     const val SETTINGS       = "settings"                  // configurações / backup
+    const val VACCINE_LIST   = "vaccine_list/{petId}"
+    const val VACCINE_FORM   = "vaccine_form/{petId}?vaccineId={vaccineId}"
 
     // Funções auxiliares para montar rotas com parâmetros reais
     fun petForm(petId: Long? = null)  = if (petId != null) "pet_form?petId=$petId" else "pet_form"
@@ -46,6 +50,10 @@ object Routes {
         else "health_entry/$petId"
     fun weightHistory(petId: Long)    = "weight_history/$petId"
     fun report(petId: Long)           = "report/$petId"
+    fun vaccineList(petId: Long)      = "vaccine_list/$petId"
+    fun vaccineForm(petId: Long, vaccineId: Long? = null) =
+        if (vaccineId != null) "vaccine_form/$petId?vaccineId=$vaccineId"
+        else "vaccine_form/$petId"
 }
 
 @Composable
@@ -108,7 +116,39 @@ fun AppNavigation(
                 onNewHealthEntry     = { navController.navigate(Routes.healthEntry(petId)) },
                 onEditHealthEntry    = { navController.navigate(Routes.healthEntry(petId, it)) },
                 onWeightHistory      = { navController.navigate(Routes.weightHistory(petId)) },
-                onReport             = { navController.navigate(Routes.report(petId)) }
+                onReport             = { navController.navigate(Routes.report(petId)) },
+                onVaccines           = { navController.navigate(Routes.vaccineList(petId)) }
+            )
+        }
+
+        // ── Lista de vacinas e vermífugos ─────────────────────────────────────
+        composable(
+            route = Routes.VACCINE_LIST,
+            arguments = listOf(navArgument("petId") { type = NavType.LongType })
+        ) { entry ->
+            val petId = entry.arguments!!.getLong("petId")
+            VaccineListScreen(
+                petId          = petId,
+                onNavigateBack = { navController.popBackStack() },
+                onAddVaccine   = { navController.navigate(Routes.vaccineForm(petId)) },
+                onEditVaccine  = { vaccineId -> navController.navigate(Routes.vaccineForm(petId, vaccineId)) }
+            )
+        }
+
+        // ── Formulário de vacina / vermífugo ──────────────────────────────────
+        composable(
+            route = Routes.VACCINE_FORM,
+            arguments = listOf(
+                navArgument("petId")    { type = NavType.LongType },
+                navArgument("vaccineId"){ type = NavType.LongType; defaultValue = -1L }
+            )
+        ) { entry ->
+            val petId     = entry.arguments!!.getLong("petId")
+            val vaccineId = entry.arguments!!.getLong("vaccineId").takeIf { it != -1L }
+            VaccineFormScreen(
+                petId          = petId,
+                vaccineId      = vaccineId,
+                onNavigateBack = { navController.popBackStack() }
             )
         }
 

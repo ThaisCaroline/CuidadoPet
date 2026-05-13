@@ -7,6 +7,7 @@ import com.cuidadopet.data.db.dao.HealthDao
 import com.cuidadopet.data.db.dao.HealthPhotoDao
 import com.cuidadopet.data.db.dao.MedicationDao
 import com.cuidadopet.data.db.dao.PetDao
+import com.cuidadopet.data.db.dao.VaccineDao
 import com.cuidadopet.data.db.dao.WaterDao
 import com.cuidadopet.data.db.entity.HealthEntryEntity
 import com.cuidadopet.data.db.entity.MealEntity
@@ -15,6 +16,7 @@ import com.cuidadopet.data.db.entity.MealPlanEntity
 import com.cuidadopet.data.db.entity.MedicationEntity
 import com.cuidadopet.data.db.entity.MedicationLogEntity
 import com.cuidadopet.data.db.entity.PetEntity
+import com.cuidadopet.data.db.entity.VaccineEntity
 import com.cuidadopet.data.db.entity.WaterConfigEntity
 import com.cuidadopet.data.db.entity.WaterLogEntity
 import com.cuidadopet.data.db.entity.HealthPhotoEntity
@@ -44,9 +46,10 @@ import com.cuidadopet.data.db.entity.SporadicMealLogEntity
         HealthEntryEntity::class,
         SporadicMealLogEntity::class,
         WeightRecordEntity::class,
-        HealthPhotoEntity::class
+        HealthPhotoEntity::class,
+        VaccineEntity::class
     ],
-    version = 7,
+    version = 8,
     exportSchema = true
 )
 // RoomDatabase é a classe base que o Room exige.
@@ -62,4 +65,5 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun waterDao(): WaterDao
     abstract fun healthDao(): HealthDao
     abstract fun healthPhotoDao(): HealthPhotoDao
+    abstract fun vaccineDao(): VaccineDao
 }

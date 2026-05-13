@@ -469,6 +469,44 @@ private fun ReportContent(
             }
         }
 
+        // ── Vacinas e Vermífugos ──────────────────────────────────────────────
+        if (report.lastVaccineDoses.isNotEmpty()) {
+            SummaryCard(title = "Vacinas e Vermífugos — última dose") {
+                val vaccines  = report.lastVaccineDoses.filter { it.type == "VACCINE" }
+                val dewormers = report.lastVaccineDoses.filter { it.type == "DEWORMER" }
+                if (vaccines.isNotEmpty()) {
+                    Text(
+                        "Vacinas:",
+                        style    = MaterialTheme.typography.labelMedium,
+                        modifier = Modifier.padding(bottom = 2.dp)
+                    )
+                    vaccines.forEach { v ->
+                        val date = v.administeredAt?.let { dateFmt.format(Date(it)) } ?: "—"
+                        val next = v.nextDueDate?.let { "  •  Próxima: ${dateFmt.format(Date(it))}" } ?: ""
+                        Text("${v.name} — $date$next", style = MaterialTheme.typography.bodySmall)
+                        if (!v.notes.isNullOrBlank())
+                            Text(v.notes, style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+                if (dewormers.isNotEmpty()) {
+                    Text(
+                        "Vermífugos:",
+                        style    = MaterialTheme.typography.labelMedium,
+                        modifier = Modifier.padding(top = 6.dp, bottom = 2.dp)
+                    )
+                    dewormers.forEach { v ->
+                        val date = v.administeredAt?.let { dateFmt.format(Date(it)) } ?: "—"
+                        val next = v.nextDueDate?.let { "  •  Próxima: ${dateFmt.format(Date(it))}" } ?: ""
+                        Text("${v.name} — $date$next", style = MaterialTheme.typography.bodySmall)
+                        if (!v.notes.isNullOrBlank())
+                            Text(v.notes, style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+            }
+        }
+
         // ── Fotos ────────────────────────────────────────────────────────────
         if (report.photos.isNotEmpty()) {
             SummaryCard(title = "Fotos registradas") {

@@ -16,7 +16,8 @@ class ReportRepository @Inject constructor(
     private val feedingRepository: FeedingRepository,
     private val waterRepository: WaterRepository,
     private val healthRepository: HealthRepository,
-    private val photoRepository: HealthPhotoRepository
+    private val photoRepository: HealthPhotoRepository,
+    private val vaccineRepository: VaccineRepository
 ) {
 
     // Coleta todos os dados do pet para o período informado e retorna o PetReport.
@@ -57,6 +58,8 @@ class ReportRepository @Inject constructor(
 
         val photos = photoRepository.getForPeriod(petId, startDate, endDate)
 
+        val lastVaccineDoses = vaccineRepository.getLastDosesPerVaccine(petId)
+
         return PetReport(
             pet               = pet,
             periodStart       = startDate,
@@ -70,7 +73,8 @@ class ReportRepository @Inject constructor(
             waterLogs         = waterLogs,
             healthEntries     = healthEntries,
             weightRecords     = weightRecords,
-            photos            = photos
+            photos            = photos,
+            lastVaccineDoses  = lastVaccineDoses
         )
     }
 

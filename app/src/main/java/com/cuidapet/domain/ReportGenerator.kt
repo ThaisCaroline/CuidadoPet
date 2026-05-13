@@ -3,6 +3,7 @@ package com.cuidadopet.domain
 import android.content.Context
 import com.cuidadopet.data.db.entity.HealthPhotoEntity
 import com.cuidadopet.data.db.entity.MedicationLogEntity
+import com.cuidadopet.data.db.entity.VaccineEntity
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Typeface
@@ -37,7 +38,8 @@ data class PetReport(
     val waterLogs: List<WaterLogEntity>,
     val healthEntries: List<HealthEntryEntity>,
     val weightRecords: List<WeightRecordEntity>,
-    val photos: List<HealthPhotoEntity>
+    val photos: List<HealthPhotoEntity>,
+    val lastVaccineDoses: List<VaccineEntity> = emptyList()
 )
 
 // Gera relatórios em texto (WhatsApp/e-mail) e PDF (impressão/arquivo).
@@ -182,6 +184,32 @@ object ReportGenerator {
                 sb.appendLine("  ... e mais ${report.healthEntries.size - 5} registros anteriores.")
         }
         sb.appendLine()
+
+        // Vacinas e Vermífugos
+        if (report.lastVaccineDoses.isNotEmpty()) {
+            val vaccines  = report.lastVaccineDoses.filter { it.type == "VACCINE" }
+            val dewormers = report.lastVaccineDoses.filter { it.type == "DEWORMER" }
+            sb.appendLine("*💉 Vacinas e Vermífugos — última dose*")
+            if (vaccines.isNotEmpty()) {
+                sb.appendLine("_Vacinas:_")
+                vaccines.forEach { v ->
+                    val date = v.administeredAt?.let { dateFmt.format(Date(it)) } ?: "—"
+                    val next = v.nextDueDate?.let { "  próxima: ${dateFmt.format(Date(it))}" } ?: ""
+                    sb.appendLine("• ${v.name} — $date$next")
+                    if (!v.notes.isNullOrBlank()) sb.appendLine("  ${v.notes}")
+                }
+            }
+            if (dewormers.isNotEmpty()) {
+                sb.appendLine("_Vermífugos:_")
+                dewormers.forEach { v ->
+                    val date = v.administeredAt?.let { dateFmt.format(Date(it)) } ?: "—"
+                    val next = v.nextDueDate?.let { "  próxima: ${dateFmt.format(Date(it))}" } ?: ""
+                    sb.appendLine("• ${v.name} — $date$next")
+                    if (!v.notes.isNullOrBlank()) sb.appendLine("  ${v.notes}")
+                }
+            }
+            sb.appendLine()
+        }
 
         // Peso
         if (report.weightRecords.isNotEmpty()) {
@@ -430,6 +458,31 @@ object ReportGenerator {
                 entry.painSigns?.let   { if (it != "NONE") text("Sinais de dor: ${painLabel(it)}", paintSmall, 12f) }
                 if (!entry.observations.isNullOrBlank()) text("Obs: ${entry.observations}", paintSmall, 12f)
                 y += 3f
+            }
+        }
+
+        // ── Vacinas e Vermífugos ──────────────────────────────────────────────
+        if (report.lastVaccineDoses.isNotEmpty()) {
+            section("Vacinas e Vermífugos — última dose")
+            val vaccines  = report.lastVaccineDoses.filter { it.type == "VACCINE" }
+            val dewormers = report.lastVaccineDoses.filter { it.type == "DEWORMER" }
+            if (vaccines.isNotEmpty()) {
+                text("Vacinas:", paintBody)
+                vaccines.forEach { v ->
+                    val date = v.administeredAt?.let { dateFmt.format(Date(it)) } ?: "—"
+                    val next = v.nextDueDate?.let { "   próxima: ${dateFmt.format(Date(it))}" } ?: ""
+                    text("• ${v.name} — $date$next", paintSmall, 12f)
+                    if (!v.notes.isNullOrBlank()) text("Obs: ${v.notes}", paintSmall, 24f)
+                }
+            }
+            if (dewormers.isNotEmpty()) {
+                text("Vermífugos:", paintBody)
+                dewormers.forEach { v ->
+                    val date = v.administeredAt?.let { dateFmt.format(Date(it)) } ?: "—"
+                    val next = v.nextDueDate?.let { "   próxima: ${dateFmt.format(Date(it))}" } ?: ""
+                    text("• ${v.name} — $date$next", paintSmall, 12f)
+                    if (!v.notes.isNullOrBlank()) text("Obs: ${v.notes}", paintSmall, 24f)
+                }
             }
         }
 

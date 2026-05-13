@@ -9,6 +9,7 @@ import com.cuidadopet.data.db.MIGRATION_3_4
 import com.cuidadopet.data.db.MIGRATION_4_5
 import com.cuidadopet.data.db.MIGRATION_5_6
 import com.cuidadopet.data.db.MIGRATION_6_7
+import com.cuidadopet.data.db.MIGRATION_7_8
 import com.cuidadopet.data.security.DatabaseKeyManager
 import net.sqlcipher.database.SQLiteDatabase
 import net.sqlcipher.database.SupportFactory
@@ -17,8 +18,10 @@ import com.cuidadopet.data.db.dao.HealthDao
 import com.cuidadopet.data.db.dao.HealthPhotoDao
 import com.cuidadopet.data.db.dao.MedicationDao
 import com.cuidadopet.data.db.dao.PetDao
+import com.cuidadopet.data.db.dao.VaccineDao
 import com.cuidadopet.data.db.dao.WaterDao
 import com.cuidadopet.data.repository.FeedingRepository
+import com.cuidadopet.data.repository.VaccineRepository
 import com.cuidadopet.data.repository.WaterRepository
 import com.cuidadopet.notification.MealAlarmScheduler
 import dagger.Module
@@ -27,6 +30,8 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
+
+
 
 // @Module indica ao Hilt que esta classe é um "manual de instruções":
 // ela ensina o Hilt como criar objetos que não podem ser anotados diretamente
@@ -55,7 +60,7 @@ object DatabaseModule {
             "cuidadopet_database"
         )
             .openHelperFactory(factory)
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
             .build()
     }
 
@@ -86,6 +91,10 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun provideHealthPhotoDao(database: AppDatabase): HealthPhotoDao = database.healthPhotoDao()
+
+    @Provides
+    @Singleton
+    fun provideVaccineDao(database: AppDatabase): VaccineDao = database.vaccineDao()
 
     // MealAlarmScheduler precisa do Context para acessar o AlarmManager do sistema
     @Provides

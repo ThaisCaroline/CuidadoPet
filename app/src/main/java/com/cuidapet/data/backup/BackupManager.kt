@@ -38,6 +38,12 @@ class BackupManager @Inject constructor(
 ) {
     private val gson: Gson = GsonBuilder().serializeNulls().create()
 
+    companion object {
+        private const val MAX_ZIP_ENTRIES = 1_000          // máximo de arquivos no ZIP
+        private const val MAX_ENTRY_BYTES = 30L * 1024 * 1024   // 30 MB por arquivo
+        private const val MAX_TOTAL_BYTES = 150L * 1024 * 1024  // 150 MB total
+    }
+
     suspend fun exportBackup(): File = withContext(Dispatchers.IO) {
         val timestamp = System.currentTimeMillis()
         val tempDir = File(context.cacheDir, "backups/tmp_$timestamp").also { it.mkdirs() }
@@ -122,12 +128,39 @@ class BackupManager @Inject constructor(
         try {
             context.contentResolver.openInputStream(uri)?.use { input ->
                 ZipInputStream(BufferedInputStream(input)).use { zip ->
-                    var entry = zip.nextEntry
+                    val tempCanonical = tempDir.canonicalPath
+                    var entryCount   = 0
+                    var totalBytes   = 0L
+                    var entry        = zip.nextEntry
+
                     while (entry != null) {
+                        entryCount++
+                        if (entryCount > MAX_ZIP_ENTRIES)
+                            throw IOException("Backup inválido: número de arquivos excede o limite.")
+
                         if (!entry.isDirectory) {
-                            val outFile = File(tempDir, entry.name)
+                            // Zip Slip: garante que o arquivo extraído fica dentro de tempDir
+                            val outFile = File(tempDir, entry.name).canonicalFile
+                            if (!outFile.canonicalPath.startsWith(tempCanonical + File.separator))
+                                throw IOException("Backup inválido: caminho suspeito detectado.")
+
                             outFile.parentFile?.mkdirs()
-                            outFile.outputStream().use { zip.copyTo(it) }
+
+                            // Limite por arquivo e total
+                            var fileBytes = 0L
+                            outFile.outputStream().use { out ->
+                                val buf = ByteArray(8192)
+                                var read: Int
+                                while (zip.read(buf).also { read = it } != -1) {
+                                    fileBytes  += read
+                                    totalBytes += read
+                                    if (fileBytes > MAX_ENTRY_BYTES)
+                                        throw IOException("Backup inválido: arquivo muito grande.")
+                                    if (totalBytes > MAX_TOTAL_BYTES)
+                                        throw IOException("Backup inválido: tamanho total excede o limite.")
+                                    out.write(buf, 0, read)
+                                }
+                            }
                         }
                         zip.closeEntry()
                         entry = zip.nextEntry
@@ -139,6 +172,7 @@ class BackupManager @Inject constructor(
             if (!jsonFile.exists()) throw IOException("Arquivo inválido: data.json não encontrado")
 
             val backup = gson.fromJson(jsonFile.readText(), BackupData::class.java)
+                ?: throw IOException("Arquivo inválido: dados corrompidos ou formato desconhecido.")
 
             // Ordem respeitando as foreign keys: pets primeiro, depois dependentes
             val petPhotosDir = File(context.filesDir, "photos").also { it.mkdirs() }

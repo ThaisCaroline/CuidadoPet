@@ -9,32 +9,56 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cuidadopet.ui.navigation.AppNavigation
 import com.cuidadopet.ui.theme.CuidadoPetTheme
+import com.google.android.play.core.appupdate.AppUpdateManager
+import com.google.android.play.core.appupdate.AppUpdateManagerFactory
+import com.google.android.play.core.appupdate.AppUpdateOptions
+import com.google.android.play.core.install.InstallStateUpdatedListener
+import com.google.android.play.core.install.model.AppUpdateType
+import com.google.android.play.core.install.model.InstallStatus
+import com.google.android.play.core.install.model.UpdateAvailability
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.MutableStateFlow
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        // installSplashScreen() deve ser chamado ANTES de super.onCreate().
-        // Ele intercepta a tela de inicialização do sistema e aplica nosso tema splash
-        // (definido em themes.xml como Theme.CuidadoPet.Splash).
-        // A patinha fica visível enquanto o Hilt e o Room inicializam em background.
-        installSplashScreen()
+    private lateinit var appUpdateManager: AppUpdateManager
+    private val updateDownloaded = MutableStateFlow(false)
 
+    private val installStateListener = InstallStateUpdatedListener { state ->
+        if (state.installStatus() == InstallStatus.DOWNLOADED) {
+            updateDownloaded.value = true
+        }
+    }
+
+    private val updateLauncher = registerForActivityResult(
+        ActivityResultContracts.StartIntentSenderForResult()
+    ) { /* flexible update: o resultado não precisa de tratamento especial */ }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
+        appUpdateManager = AppUpdateManagerFactory.create(this)
+        appUpdateManager.registerListener(installStateListener)
+        checkForUpdate()
+
         setContent {
             CuidadoPetTheme {
-                // Android 13+ exige que a permissão de notificação seja pedida em runtime.
-                // Sem isso, nenhuma notificação é exibida mesmo com o canal configurado.
                 val notificationPermissionLauncher = rememberLauncherForActivityResult(
                     ActivityResultContracts.RequestPermission()
-                ) { /* o sistema exibe o diálogo — não precisamos tratar o resultado aqui */ }
+                ) { }
 
                 LaunchedEffect(Unit) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
@@ -46,6 +70,54 @@ class MainActivity : ComponentActivity() {
                 }
 
                 AppNavigation()
+
+                val downloaded by updateDownloaded.collectAsStateWithLifecycle()
+                if (downloaded) {
+                    AlertDialog(
+                        onDismissRequest = {},
+                        title = { Text("Atualização pronta") },
+                        text  = { Text("Uma nova versão foi baixada. Reinicie o app para aplicar a atualização.") },
+                        confirmButton = {
+                            Button(onClick = { appUpdateManager.completeUpdate() }) {
+                                Text("Reiniciar agora")
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { updateDownloaded.value = false }) {
+                                Text("Depois")
+                            }
+                        }
+                    )
+                }
+            }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Caso o download já tenha concluído em segundo plano antes de abrir o app
+        appUpdateManager.appUpdateInfo.addOnSuccessListener { info ->
+            if (info.installStatus() == InstallStatus.DOWNLOADED) {
+                updateDownloaded.value = true
+            }
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        appUpdateManager.unregisterListener(installStateListener)
+    }
+
+    private fun checkForUpdate() {
+        appUpdateManager.appUpdateInfo.addOnSuccessListener { info ->
+            if (info.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE &&
+                info.isUpdateTypeAllowed(AppUpdateType.FLEXIBLE)
+            ) {
+                appUpdateManager.startUpdateFlowForResult(
+                    info,
+                    updateLauncher,
+                    AppUpdateOptions.newBuilder(AppUpdateType.FLEXIBLE).build()
+                )
             }
         }
     }

@@ -136,6 +136,9 @@ dependencies {
     // Gson — serialização JSON para backup/restauração de dados
     implementation(libs.gson)
 
+    // Play In-App Updates — popup de atualização quando há nova versão na Play Store
+    implementation(libs.play.app.update.ktx)
+
     // Testes
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

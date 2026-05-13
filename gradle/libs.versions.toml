@@ -22,6 +22,7 @@ sqlcipher = "4.5.4"
 securityCrypto = "1.1.0-alpha06"
 sqliteKtx = "2.4.0"
 gson = "2.10.1"
+playAppUpdate = "2.1.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -71,6 +72,8 @@ sqlite-ktx = { group = "androidx.sqlite", name = "sqlite-ktx", version.ref = "sq
 security-crypto = { group = "androidx.security", name = "security-crypto", version.ref = "securityCrypto" }
 # Gson — serialização JSON para backup
 gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
+# Play In-App Updates — notifica o usuário quando há atualização disponível na Play Store
+play-app-update-ktx = { group = "com.google.android.play", name = "app-update-ktx", version.ref = "playAppUpdate" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

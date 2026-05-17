@@ -12,6 +12,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.Calendar
+import java.util.TimeZone
 import javax.inject.Inject
 
 data class VaccineFormUiState(
@@ -59,14 +61,24 @@ class VaccineFormViewModel @Inject constructor(
         }
     }
 
-    fun onTypeChange(type: String)              = _uiState.update { it.copy(type = type) }
-    fun onNameChange(name: String)              = _uiState.update { it.copy(name = name) }
-    fun onIsAdministeredChange(v: Boolean)      = _uiState.update { it.copy(isAdministered = v, administeredAt = if (v) (it.administeredAt ?: System.currentTimeMillis()) else null) }
-    fun onAdministeredAtChange(ms: Long?)       = _uiState.update { it.copy(administeredAt = ms) }
-    fun onNextDueDateChange(ms: Long?)          = _uiState.update { it.copy(nextDueDate = ms) }
-    fun onNotesChange(notes: String)            = _uiState.update { it.copy(notes = notes) }
-    fun onReminderEnabledChange(v: Boolean)     = _uiState.update { it.copy(reminderEnabled = v) }
-    fun clearError()                            = _uiState.update { it.copy(errorMessage = null) }
+    fun onTypeChange(type: String)          = _uiState.update { it.copy(type = type) }
+    fun onNameChange(name: String)          = _uiState.update { it.copy(name = name) }
+    fun onIsAdministeredChange(v: Boolean)  = _uiState.update { it.copy(isAdministered = v, administeredAt = if (v) (it.administeredAt ?: System.currentTimeMillis()) else null) }
+    fun onAdministeredAtChange(ms: Long?)   = _uiState.update { it.copy(administeredAt = ms?.let { normalizeToLocalMidnight(it) }) }
+    fun onNextDueDateChange(ms: Long?)      = _uiState.update { it.copy(nextDueDate = ms?.let { normalizeToLocalMidnight(it) }) }
+    fun onNotesChange(notes: String)        = _uiState.update { it.copy(notes = notes) }
+    fun onReminderEnabledChange(v: Boolean) = _uiState.update { it.copy(reminderEnabled = v) }
+    fun clearError()                        = _uiState.update { it.copy(errorMessage = null) }
+
+    // DatePickerDialog retorna UTC midnight; converte para meia-noite no fuso local para evitar exibir dia anterior
+    private fun normalizeToLocalMidnight(utcMs: Long): Long {
+        val utcCal = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
+        utcCal.timeInMillis = utcMs
+        val local = Calendar.getInstance()
+        local.set(utcCal.get(Calendar.YEAR), utcCal.get(Calendar.MONTH), utcCal.get(Calendar.DAY_OF_MONTH), 0, 0, 0)
+        local.set(Calendar.MILLISECOND, 0)
+        return local.timeInMillis
+    }
 
     fun save(existingId: Long?) {
         val state = _uiState.value

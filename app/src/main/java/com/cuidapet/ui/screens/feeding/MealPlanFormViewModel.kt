@@ -20,16 +20,17 @@ import javax.inject.Inject
 // Cada campo é uma String para facilitar o binding com os TextFields —
 // a conversão para Double acontece apenas ao salvar.
 data class MealPlanFormState(
-    val petName: String = "",                  // nome do pet — carregado pelo ViewModel
-    val foodType: String = "DRY_KIBBLE",       // tipo de alimento selecionado
-    val restrictions: String = "",             // restrições em texto livre
-    val dailyQuantityGrams: String = "",       // gramas totais por dia (input do tutor)
-    val dailyKcalTarget: String = "",          // kcal/dia (calculado ou digitado)
-    val meals: List<MealTimeEntry> = listOf(   // lista de refeições com horário e quantidade
+    val petName: String = "",
+    val foodType: String = "DRY_KIBBLE",
+    val foodDetails: String = "",              // marca da ração, ingredientes da dieta, etc.
+    val restrictions: String = "",
+    val dailyQuantityGrams: String = "",
+    val dailyKcalTarget: String = "",
+    val meals: List<MealTimeEntry> = listOf(
         MealTimeEntry("07:00", ""),
         MealTimeEntry("19:00", "")
     ),
-    val quantityUnit: String = "g",        // "g" ou "ml"
+    val quantityUnit: String = "g",
     val isSaving: Boolean = false,
     val isSaved: Boolean = false,
     val error: String? = null
@@ -76,12 +77,13 @@ class MealPlanFormViewModel @Inject constructor(
                 val savedUnit = savedMeals.firstOrNull()?.quantityUnit ?: "g"
                 _state.update {
                     it.copy(
-                        foodType = plan.foodType,
-                        restrictions = plan.restrictions ?: "",
+                        foodType           = plan.foodType,
+                        foodDetails        = plan.foodDetails ?: "",
+                        restrictions       = plan.restrictions ?: "",
                         dailyQuantityGrams = plan.dailyQuantityGrams?.toInt()?.toString() ?: "",
-                        dailyKcalTarget = plan.dailyKcalTarget?.toInt()?.toString() ?: "",
-                        meals = mealEntries,
-                        quantityUnit = savedUnit
+                        dailyKcalTarget    = plan.dailyKcalTarget?.toInt()?.toString() ?: "",
+                        meals              = mealEntries,
+                        quantityUnit       = savedUnit
                     )
                 }
             }
@@ -92,6 +94,7 @@ class MealPlanFormViewModel @Inject constructor(
     // ─── Funções de atualização de campo ───────────────────────────────────
 
     fun updateFoodType(value: String)          = _state.update { it.copy(foodType = value) }
+    fun updateFoodDetails(value: String)       = _state.update { it.copy(foodDetails = value) }
     fun updateRestrictions(value: String)      = _state.update { it.copy(restrictions = value) }
     fun updateDailyQuantity(value: String)     = _state.update { it.copy(dailyQuantityGrams = value) }
     fun updateDailyKcal(value: String)         = _state.update { it.copy(dailyKcalTarget = value) }
@@ -198,12 +201,13 @@ class MealPlanFormViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val plan = MealPlanEntity(
-                    petId = petId,
-                    foodType = s.foodType,
-                    restrictions = s.restrictions.ifBlank { null },
-                    dailyKcalTarget = s.dailyKcalTarget.toDoubleOrNull(),
+                    petId              = petId,
+                    foodType           = s.foodType,
+                    foodDetails        = s.foodDetails.ifBlank { null },
+                    restrictions       = s.restrictions.ifBlank { null },
+                    dailyKcalTarget    = s.dailyKcalTarget.toDoubleOrNull(),
                     dailyQuantityGrams = s.dailyQuantityGrams.toDoubleOrNull(),
-                    isActive = true
+                    isActive           = true
                 )
 
                 // As refeições só terão mealPlanId real depois que o plano for inserido —

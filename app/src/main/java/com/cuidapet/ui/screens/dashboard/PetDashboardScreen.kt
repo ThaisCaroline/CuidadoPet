@@ -1,12 +1,14 @@
 package com.cuidadopet.ui.screens.dashboard
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
+import java.util.Calendar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
@@ -89,11 +91,20 @@ fun PetDashboardScreen(
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         PetAvatar(photoPath = pet?.photoPath, petName = pet?.name ?: "", size = 32.dp)
-                        Text(
-                            text  = "  ${pet?.name ?: "Carregando..."}",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onPrimary
-                        )
+                        Column {
+                            Text(
+                                text  = "  ${pet?.name ?: "Carregando..."}",
+                                style = MaterialTheme.typography.titleLarge,
+                                color = MaterialTheme.colorScheme.onPrimary
+                            )
+                            pet?.birthDate?.let { birthDateMs ->
+                                Text(
+                                    text  = "  ${petAgeLabel(birthDateMs)}",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
+                                )
+                            }
+                        }
                     }
                 },
                 navigationIcon = {
@@ -223,5 +234,22 @@ private fun DashboardTabContent(
             onWeightHistory = onWeightHistory,
             modifier        = modifier
         )
+    }
+}
+
+private fun petAgeLabel(birthDateMs: Long): String {
+    val birth = Calendar.getInstance().also { it.timeInMillis = birthDateMs }
+    val today = Calendar.getInstance()
+    var years  = today.get(Calendar.YEAR)  - birth.get(Calendar.YEAR)
+    var months = today.get(Calendar.MONTH) - birth.get(Calendar.MONTH)
+    if (months < 0) { years--; months += 12 }
+    if (today.get(Calendar.DAY_OF_MONTH) < birth.get(Calendar.DAY_OF_MONTH)) {
+        if (months == 0) { years--; months = 11 } else months--
+    }
+    return when {
+        years > 0 && months > 0 -> "$years ${if (years == 1) "ano" else "anos"} e $months ${if (months == 1) "mês" else "meses"}"
+        years > 0               -> "$years ${if (years == 1) "ano" else "anos"}"
+        months > 0              -> "$months ${if (months == 1) "mês" else "meses"}"
+        else                    -> "menos de 1 mês"
     }
 }

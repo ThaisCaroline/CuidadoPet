@@ -35,6 +35,10 @@ data class MealPlanEntity(
     // "OTHER"        = outro
     val foodType: String,
 
+    // Detalhes do alimento em texto livre — marca da ração, composição da dieta natural, etc.
+    // Ex: "Royal Canin Adult Medium" / "Frango com batata-doce e cenoura"
+    val foodDetails: String? = null,
+
     // Restrições alimentares em texto livre
     // Ex: "Sem sódio, sem frango, sem glúten"
     val restrictions: String? = null,

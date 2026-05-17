@@ -25,12 +25,14 @@ import javax.inject.Inject
 data class PetFormState(
     val name: String = "",
     val species: String = "DOG",
+    val customSpecies: String = "",
     val breed: String = "",
+    val birthDate: Long? = null,
     val weightKg: String = "",
     val sex: String = "MALE",
     val isNeutered: Boolean = false,
     val clinicalStates: Set<String> = setOf("ACTIVE_TREATMENT"),
-    val photoPath: String? = null,     // caminho da foto no armazenamento interno
+    val photoPath: String? = null,
     val isLoading: Boolean = false,
     val isSaved: Boolean = false,
     val errorMessage: String? = null
@@ -54,7 +56,9 @@ class PetFormViewModel @Inject constructor(
                         it.copy(
                             name           = pet.name,
                             species        = pet.species,
+                            customSpecies  = pet.customSpecies ?: "",
                             breed          = pet.breed ?: "",
+                            birthDate      = pet.birthDate,
                             weightKg       = formatWeightForDisplay(pet.weightKg),
                             sex            = pet.sex,
                             isNeutered     = pet.isNeutered,
@@ -67,9 +71,11 @@ class PetFormViewModel @Inject constructor(
         }
     }
 
-    fun onNameChange(value: String)    = _uiState.update { it.copy(name = value) }
-    fun onSpeciesChange(value: String) = _uiState.update { it.copy(species = value) }
-    fun onBreedChange(value: String)   = _uiState.update { it.copy(breed = value) }
+    fun onNameChange(value: String)         = _uiState.update { it.copy(name = value) }
+    fun onSpeciesChange(value: String)      = _uiState.update { it.copy(species = value) }
+    fun onCustomSpeciesChange(value: String)= _uiState.update { it.copy(customSpecies = value) }
+    fun onBreedChange(value: String)        = _uiState.update { it.copy(breed = value) }
+    fun onBirthDateChange(utcMs: Long?)     = _uiState.update { it.copy(birthDate = utcMs?.let { ms -> normalizeToLocalMidnight(ms) }) }
 
     fun onWeightChange(value: String) {
         val sb     = StringBuilder()
@@ -160,7 +166,9 @@ class PetFormViewModel @Inject constructor(
                 id             = existingPetId ?: 0L,
                 name           = state.name.trim(),
                 species        = state.species,
+                customSpecies  = if (state.species == "OTHER") state.customSpecies.trim().ifBlank { null } else null,
                 breed          = state.breed.trim().ifBlank { null },
+                birthDate      = state.birthDate,
                 weightKg       = weight,
                 sex            = state.sex,
                 isNeutered     = state.isNeutered,
@@ -193,6 +201,15 @@ class PetFormViewModel @Inject constructor(
     }
 
     fun clearError() = _uiState.update { it.copy(errorMessage = null) }
+
+    private fun normalizeToLocalMidnight(utcMs: Long): Long {
+        val utcCal = Calendar.getInstance(java.util.TimeZone.getTimeZone("UTC"))
+        utcCal.timeInMillis = utcMs
+        val local = Calendar.getInstance()
+        local.set(utcCal.get(Calendar.YEAR), utcCal.get(Calendar.MONTH), utcCal.get(Calendar.DAY_OF_MONTH), 0, 0, 0)
+        local.set(Calendar.MILLISECOND, 0)
+        return local.timeInMillis
+    }
 
     private fun startOfDay(): Long {
         val cal = Calendar.getInstance()

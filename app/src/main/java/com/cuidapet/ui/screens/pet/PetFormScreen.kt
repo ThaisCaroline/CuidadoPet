@@ -31,6 +31,8 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
@@ -39,6 +41,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -47,6 +50,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -60,6 +64,10 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 import androidx.core.content.FileProvider
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -93,14 +101,37 @@ fun PetFormScreen(
     onNavigateBack: () -> Unit,
     viewModel: PetFormViewModel = hiltViewModel()
 ) {
-    val uiState          = viewModel.uiState.collectAsStateWithLifecycle().value
+    val uiState           = viewModel.uiState.collectAsStateWithLifecycle().value
     val snackbarHostState = remember { SnackbarHostState() }
     val context           = LocalContext.current
+    val dateFmt           = remember { SimpleDateFormat("dd/MM/yyyy", Locale.forLanguageTag("pt-BR")) }
 
     LaunchedEffect(petId) { if (petId != null) viewModel.loadPet(petId) }
     LaunchedEffect(uiState.isSaved) { if (uiState.isSaved) onNavigateBack() }
     LaunchedEffect(uiState.errorMessage) {
         uiState.errorMessage?.let { snackbarHostState.showSnackbar(it); viewModel.clearError() }
+    }
+
+    var showBirthDatePicker by remember { mutableStateOf(false) }
+
+    if (showBirthDatePicker) {
+        val pickerState = rememberDatePickerState(
+            initialSelectedDateMillis = uiState.birthDate ?: System.currentTimeMillis()
+        )
+        DatePickerDialog(
+            onDismissRequest = { showBirthDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.onBirthDateChange(pickerState.selectedDateMillis)
+                    showBirthDatePicker = false
+                }) { Text("OK") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showBirthDatePicker = false }) { Text("Cancelar") }
+            }
+        ) {
+            DatePicker(state = pickerState)
+        }
     }
 
     // ── Lançadores para galeria e câmera ──────────────────────────────────────
@@ -260,6 +291,18 @@ fun PetFormScreen(
                 }
             }
 
+            if (uiState.species == "OTHER") {
+                OutlinedTextField(
+                    value         = uiState.customSpecies,
+                    onValueChange = { if (it.length <= 50) viewModel.onCustomSpeciesChange(it) },
+                    label         = { Text("Qual espécie? *") },
+                    placeholder   = { Text("Ex: Chinchila, Furão, Porquinho-da-índia...") },
+                    modifier      = Modifier.fillMaxWidth(),
+                    singleLine    = true,
+                    supportingText = { Text("${uiState.customSpecies.length}/50") }
+                )
+            }
+
             OutlinedTextField(
                 value         = uiState.breed,
                 onValueChange = viewModel::onBreedChange,
@@ -267,6 +310,44 @@ fun PetFormScreen(
                 modifier      = Modifier.fillMaxWidth(),
                 singleLine    = true
             )
+
+            // ── Data de nascimento ─────────────────────────────────────────────
+            SectionTitle("Data de nascimento (opcional)")
+            Text(
+                "Pode ser uma data aproximada — especialmente para pets resgatados.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            val birthDateMs = uiState.birthDate
+            if (birthDateMs == null) {
+                OutlinedButton(
+                    onClick  = { showBirthDatePicker = true },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Informar data de nascimento")
+                }
+            } else {
+                Row(
+                    verticalAlignment     = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier              = Modifier.fillMaxWidth()
+                ) {
+                    OutlinedButton(
+                        onClick  = { showBirthDatePicker = true },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Nascimento: ${dateFmt.format(Date(birthDateMs))}")
+                    }
+                    TextButton(onClick = { viewModel.onBirthDateChange(null) }) {
+                        Text("Remover")
+                    }
+                }
+                Text(
+                    "Idade: ${calculatePetAge(birthDateMs)}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
 
             OutlinedTextField(
                 value         = uiState.weightKg,
@@ -374,6 +455,23 @@ fun PetFormScreen(
 @Composable
 private fun SectionTitle(text: String) {
     Text(text, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
+}
+
+private fun calculatePetAge(birthDateMs: Long): String {
+    val birth = Calendar.getInstance().also { it.timeInMillis = birthDateMs }
+    val today = Calendar.getInstance()
+    var years  = today.get(Calendar.YEAR)  - birth.get(Calendar.YEAR)
+    var months = today.get(Calendar.MONTH) - birth.get(Calendar.MONTH)
+    if (months < 0) { years--; months += 12 }
+    if (today.get(Calendar.DAY_OF_MONTH) < birth.get(Calendar.DAY_OF_MONTH)) {
+        if (months == 0) { years--; months = 11 } else months--
+    }
+    return when {
+        years > 0 && months > 0 -> "$years ${if (years == 1) "ano" else "anos"} e $months ${if (months == 1) "mês" else "meses"}"
+        years > 0               -> "$years ${if (years == 1) "ano" else "anos"}"
+        months > 0              -> "$months ${if (months == 1) "mês" else "meses"}"
+        else                    -> "menos de 1 mês"
+    }
 }
 
 @Composable

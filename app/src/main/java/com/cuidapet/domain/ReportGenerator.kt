@@ -20,6 +20,7 @@ import com.cuidadopet.data.db.entity.WeightRecordEntity
 import java.io.File
 import java.io.FileOutputStream
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
@@ -66,10 +67,11 @@ object ReportGenerator {
 
         // Informações do pet
         sb.appendLine("*🐾 Informações do pet*")
-        val speciesLabel  = if (pet.species == "DOG") "Cão" else "Gato"
+        val speciesLabel  = speciesLabel(pet.species, pet.customSpecies)
         val sexLabel      = if (pet.sex == "MALE") "Macho" else "Fêmea"
         val neuteredLabel = if (pet.isNeutered) " (castrado)" else ""
         sb.appendLine("$speciesLabel${if (!pet.breed.isNullOrBlank()) " · ${pet.breed}" else ""}")
+        pet.birthDate?.let { sb.appendLine("Idade: ${calculateAge(it)}") }
         sb.appendLine("$sexLabel$neuteredLabel · ${pet.weightKg} kg")
         sb.appendLine()
 
@@ -113,6 +115,7 @@ object ReportGenerator {
         } else {
             val foodLabel = foodTypeLabel(report.mealPlan.foodType)
             sb.appendLine("$foodLabel${if (report.mealPlan.dailyQuantityGrams != null) " · ${report.mealPlan.dailyQuantityGrams!!.toInt()}g/dia" else ""}")
+            if (!report.mealPlan.foodDetails.isNullOrBlank()) sb.appendLine("Alimento: ${report.mealPlan.foodDetails}")
             if (!report.mealPlan.restrictions.isNullOrBlank()) sb.appendLine("Restrições: ${report.mealPlan.restrictions}")
         }
         if (report.mealLogs.isEmpty() && report.sporadicLogs.isEmpty()) {
@@ -345,15 +348,16 @@ object ReportGenerator {
         // ── Pet ──────────────────────────────────────────────────────────────
         section("Informações do pet")
         val pet          = report.pet
-        val speciesLabel = if (pet.species == "DOG") "Cão" else "Gato"
+        val speciesLabelPdf = speciesLabel(pet.species, pet.customSpecies)
         val sexLabel     = if (pet.sex == "MALE") "Macho" else "Fêmea"
-        text("Nome: ${pet.name}   Espécie: $speciesLabel   Peso: ${pet.weightKg} kg", paintBody)
+        text("Nome: ${pet.name}   Espécie: $speciesLabelPdf   Peso: ${pet.weightKg} kg", paintBody)
         val breedSex = buildString {
             if (!pet.breed.isNullOrBlank()) append("Raça: ${pet.breed}   ")
             append("Sexo: $sexLabel")
             if (pet.isNeutered) append(" (castrado)")
         }
         text(breedSex, paintBody)
+        pet.birthDate?.let { text("Idade: ${calculateAge(it)}", paintBody) }
 
         // ── Medicamentos ─────────────────────────────────────────────────────
         section("Medicamentos em uso")
@@ -394,6 +398,7 @@ object ReportGenerator {
         } else {
             val plan = report.mealPlan
             text("Tipo: ${foodTypeLabel(plan.foodType)}${if (plan.dailyQuantityGrams != null) "   ${plan.dailyQuantityGrams!!.toInt()}g/dia" else ""}", paintBody)
+            if (!plan.foodDetails.isNullOrBlank()) text("Alimento: ${plan.foodDetails}", paintSmall)
             if (!plan.restrictions.isNullOrBlank()) text("Restrições: ${plan.restrictions}", paintSmall)
         }
         if (report.mealLogs.isEmpty() && report.sporadicLogs.isEmpty()) {
@@ -554,6 +559,35 @@ object ReportGenerator {
     // Ex: ["08:00","20:00"] → 08:00, 20:00
     private fun String.cleanJson() =
         removePrefix("[").removeSuffix("]").replace("\"", "").replace(",", ", ")
+
+    private fun speciesLabel(species: String, customSpecies: String?) = when (species) {
+        "DOG"     -> "Cão"
+        "CAT"     -> "Gato"
+        "RABBIT"  -> "Coelho"
+        "BIRD"    -> "Pássaro"
+        "HAMSTER" -> "Hamster"
+        "TURTLE"  -> "Tartaruga"
+        "FISH"    -> "Peixe"
+        "OTHER"   -> customSpecies?.takeIf { it.isNotBlank() } ?: "Outro"
+        else      -> species
+    }
+
+    private fun calculateAge(birthDateMs: Long): String {
+        val birth = Calendar.getInstance().also { it.timeInMillis = birthDateMs }
+        val today = Calendar.getInstance()
+        var years  = today.get(Calendar.YEAR)  - birth.get(Calendar.YEAR)
+        var months = today.get(Calendar.MONTH) - birth.get(Calendar.MONTH)
+        if (months < 0) { years--; months += 12 }
+        if (today.get(Calendar.DAY_OF_MONTH) < birth.get(Calendar.DAY_OF_MONTH)) {
+            if (months == 0) { years--; months = 11 } else months--
+        }
+        return when {
+            years > 0 && months > 0 -> "$years ${if (years == 1) "ano" else "anos"} e $months ${if (months == 1) "mês" else "meses"}"
+            years > 0               -> "$years ${if (years == 1) "ano" else "anos"}"
+            months > 0              -> "$months ${if (months == 1) "mês" else "meses"}"
+            else                    -> "menos de 1 mês"
+        }
+    }
 
     private fun foodTypeLabel(code: String) = when (code) {
         "DRY_KIBBLE"  -> "Ração seca"

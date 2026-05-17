@@ -17,12 +17,13 @@ data class PetEntity(
     // Nome do pet — ex: "Rex", "Luna"
     val name: String,
 
-    // Espécie — usamos String com valores fixos: "DOG" ou "CAT"
-    // Poderíamos usar um Enum, mas String é mais simples de salvar no banco
+    // Espécie — "DOG", "CAT", "RABBIT", "BIRD", "HAMSTER", "TURTLE", "FISH" ou "OTHER"
     val species: String,
 
+    // Nome personalizado quando espécie = "OTHER" — ex: "Chinchila", "Furão"
+    val customSpecies: String? = null,
+
     // Raça — opcional, por isso é String? (nullable — pode ser nulo)
-    // O "?" no tipo significa que o campo aceita o valor null (ausência de informação)
     val breed: String? = null,
 
     // Data de nascimento armazenada como Long (timestamp em milissegundos)

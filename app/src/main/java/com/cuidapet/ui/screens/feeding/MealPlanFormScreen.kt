@@ -121,6 +121,24 @@ fun MealPlanFormScreen(
                 onSelect = viewModel::updateFoodType
             )
 
+            // ── Detalhes do alimento ──────────────────────────────────────
+            val foodDetailsPlaceholder = when (state.foodType) {
+                "DRY_KIBBLE"   -> "Ex: Royal Canin Adult Medium, Pedigree..."
+                "WET_FOOD"     -> "Ex: Whiskas sachê frango, Hills lata..."
+                "NATURAL"      -> "Ex: frango com batata-doce e cenoura..."
+                "THERAPEUTIC"  -> "Ex: Hills Prescription k/d, Royal Canin Renal..."
+                else           -> "Descreva o alimento..."
+            }
+            OutlinedTextField(
+                value         = state.foodDetails,
+                onValueChange = { if (it.length <= 150) viewModel.updateFoodDetails(it) },
+                label         = { Text("Marca / detalhes do alimento (opcional)") },
+                placeholder   = { Text(foodDetailsPlaceholder) },
+                modifier      = Modifier.fillMaxWidth(),
+                singleLine    = true,
+                supportingText = { Text("${state.foodDetails.length}/150") }
+            )
+
             // ── Restrições alimentares ────────────────────────────────────
             OutlinedTextField(
                 value = state.restrictions,

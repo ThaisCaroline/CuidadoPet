@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cuidadopet.data.db.entity.VaccineEntity
+import com.cuidadopet.ui.components.AdBanner
 import com.cuidadopet.ui.utils.adaptiveHorizontalPadding
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -179,6 +180,7 @@ fun VaccineListScreen(
                     }
                 }
 
+                // item { AdBanner() }
                 item { Spacer(Modifier.height(80.dp)) }
             }
         }

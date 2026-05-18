@@ -77,6 +77,19 @@ fun FeedingTabContent(
         return
     }
 
+    var showPlanLimitDialog by remember { mutableStateOf(false) }
+
+    if (showPlanLimitDialog) {
+        AlertDialog(
+            onDismissRequest = { showPlanLimitDialog = false },
+            title = { Text("Limite atingido") },
+            text  = { Text("Limite de 5 planos atingido. Exclua um plano antes de adicionar outro.") },
+            confirmButton = {
+                TextButton(onClick = { showPlanLimitDialog = false }) { Text("Ok") }
+            }
+        )
+    }
+
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
@@ -118,7 +131,10 @@ fun FeedingTabContent(
 
         item {
             OutlinedButton(
-                onClick  = { onConfigurePlan(null) },
+                onClick  = {
+                    if (state.plans.size >= 5) showPlanLimitDialog = true
+                    else onConfigurePlan(null)
+                },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Icon(Icons.Default.Add, contentDescription = null)

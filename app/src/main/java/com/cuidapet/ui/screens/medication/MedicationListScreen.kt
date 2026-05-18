@@ -63,8 +63,19 @@ fun MedicationListScreen(
 
     val medications by viewModel.medications.collectAsStateWithLifecycle()
 
-    // Medicamento pendente de exclusão — abre o diálogo de confirmação
-    var pendingDelete by remember { mutableStateOf<MedicationEntity?>(null) }
+    var pendingDelete  by remember { mutableStateOf<MedicationEntity?>(null) }
+    var showLimitDialog by remember { mutableStateOf(false) }
+
+    if (showLimitDialog) {
+        AlertDialog(
+            onDismissRequest = { showLimitDialog = false },
+            title = { Text("Limite atingido") },
+            text  = { Text("Limite de 20 medicamentos ativos atingido. Conclua ou exclua um antes de adicionar outro.") },
+            confirmButton = {
+                TextButton(onClick = { showLimitDialog = false }) { Text("Ok") }
+            }
+        )
+    }
 
     if (pendingDelete != null) {
         AlertDialog(
@@ -87,7 +98,10 @@ fun MedicationListScreen(
         modifier = modifier,
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { onAddClick?.invoke() },
+                onClick = {
+                    if (medications.size >= 20) showLimitDialog = true
+                    else onAddClick?.invoke()
+                },
                 containerColor = MaterialTheme.colorScheme.secondary
             ) {
                 Icon(Icons.Default.Add, "Adicionar medicamento",

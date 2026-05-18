@@ -68,6 +68,16 @@ interface FeedingDao {
     @Query("SELECT * FROM meal_plans WHERE petId = :petId AND isActive = 1 LIMIT 1")
     suspend fun getActiveMealPlanOnce(petId: Long): MealPlanEntity?
 
+    // Busca uma refeição pelo ID, mas só se o plano dela ainda estiver ativo.
+    // Retorna null se o plano foi substituído — evita reagendar refeições de planos antigos.
+    @Query("""
+        SELECT meals.* FROM meals
+        INNER JOIN meal_plans ON meals.mealPlanId = meal_plans.id
+        WHERE meals.id = :mealId AND meal_plans.isActive = 1
+        LIMIT 1
+    """)
+    suspend fun getMealByIdIfActive(mealId: Long): MealEntity?
+
     // Busca todas as refeições do plano, ordenadas por horário
     @Query("SELECT * FROM meals WHERE mealPlanId = :planId ORDER BY timeOfDay ASC")
     fun getMealsForPlan(planId: Long): Flow<List<MealEntity>>

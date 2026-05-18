@@ -8,14 +8,25 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.cuidadopet.MainActivity
 import com.cuidadopet.R
-import com.cuidadopet.data.db.entity.MedicationEntity
+import com.cuidadopet.data.repository.MedicationRepository
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 // BroadcastReceiver é um componente Android que recebe "broadcasts" — mensagens do sistema.
 // Quando o AlarmManager dispara um alarme, ele envia um broadcast.
 // Este receiver escuta esse broadcast, exibe a notificação e reagenda o próximo alarme.
 //
 // Funciona mesmo com o app fechado — o Android acorda o processo só para executar onReceive().
+@AndroidEntryPoint
 class MedicationAlarmReceiver : BroadcastReceiver() {
+
+    @Inject lateinit var medicationRepository: MedicationRepository
+    @Inject lateinit var alarmScheduler: AlarmScheduler
 
     companion object {
         const val EXTRA_MEDICATION_ID    = "medication_id"
@@ -74,34 +85,21 @@ class MedicationAlarmReceiver : BroadcastReceiver() {
         )
 
         // ── Reagenda o próximo alarme ─────────────────────────────────────────
-        // Sem isso o alarme dispararia só uma vez e nunca mais voltaria.
-
-        val reminderEnabled = intent.getBooleanExtra(EXTRA_REMINDER_ENABLED, true)
-        if (!reminderEnabled) return
-
-        val endDate      = intent.getLongExtra(EXTRA_END_DATE, -1L)
-        val isContinuous = intent.getBooleanExtra(EXTRA_IS_CONTINUOUS, false)
-
-        // Não reagenda se o tratamento já terminou
-        if (!isContinuous && endDate != -1L && endDate < System.currentTimeMillis()) return
-
-        // Reconstrói a entidade do medicamento com os dados do Intent para poder reagendar
-        val medication = MedicationEntity(
-            id              = medicationId,
-            petId           = intent.getLongExtra(EXTRA_PET_ID, 0L),
-            name            = medicationName,
-            form            = intent.getStringExtra(EXTRA_FORM) ?: "ORAL",
-            dose            = dose,
-            doseUnit        = doseUnit,
-            frequencyType   = intent.getStringExtra(EXTRA_FREQUENCY_TYPE) ?: "FIXED_TIMES",
-            frequencyHours  = intent.getIntExtra(EXTRA_FREQUENCY_HOURS, -1).takeIf { it != -1 },
-            fixedTimes      = intent.getStringExtra(EXTRA_FIXED_TIMES)?.ifBlank { null },
-            startDate       = intent.getLongExtra(EXTRA_START_DATE, System.currentTimeMillis()),
-            endDate         = endDate.takeIf { it != -1L },
-            isContinuous    = isContinuous,
-            reminderEnabled = true
-        )
-
-        AlarmScheduler(context).scheduleMedication(medication, petName)
+        // Busca dados atuais do banco para não reagendar com horário desatualizado
+        // caso o medicamento tenha sido editado após o último disparo.
+        val pendingResult = goAsync()
+        CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
+            try {
+                val medication = medicationRepository.getMedicationById(medicationId).first()
+                if (medication != null && medication.isActive && medication.reminderEnabled) {
+                    val ended = !medication.isContinuous
+                            && medication.endDate != null
+                            && medication.endDate < System.currentTimeMillis()
+                    if (!ended) alarmScheduler.scheduleMedication(medication, petName)
+                }
+            } finally {
+                pendingResult.finish()
+            }
+        }
     }
 }

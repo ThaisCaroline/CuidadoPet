@@ -21,10 +21,8 @@ class MealAlarmScheduler @Inject constructor(
 
     private val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
-    // Agenda um alarme diário recorrente para uma refeição.
-    // O Android não tem alarmes verdadeiramente recorrentes no AlarmManager —
-    // o receiver precisa reagendar o próximo depois que cada alarme dispara.
-    // Aqui agendamos apenas o próximo disparo; o reagendamento fica no receiver (futuro sprint).
+    // Agenda o próximo disparo de uma refeição.
+    // O receiver reagenda para o dia seguinte cada vez que o alarme dispara.
     fun scheduleMeal(meal: MealEntity, petName: String) {
         val triggerTime = nextOccurrenceOf(meal.timeOfDay)
         if (triggerTime <= 0L) return  // horário inválido — descarta

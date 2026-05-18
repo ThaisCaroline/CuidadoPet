@@ -54,6 +54,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import com.cuidadopet.ui.components.AdBanner
 import com.cuidadopet.ui.utils.adaptiveHorizontalPadding
 
 @Composable
@@ -185,6 +186,7 @@ fun TodayTabContent(
             onAdd    = { ml -> viewModel.addWater(petId, ml) }
         )
 
+        AdBanner()
         Spacer(Modifier.height(16.dp))
     }
 }

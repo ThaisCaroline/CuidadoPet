@@ -38,6 +38,8 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import com.cuidadopet.ui.ads.InterstitialAdManager
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cuidadopet.ui.components.PetAvatar
@@ -84,6 +86,15 @@ fun PetDashboardScreen(
     val pet by viewModel.pet.collectAsStateWithLifecycle()
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
     val tablet = isTablet()
+    val context = LocalContext.current
+    val interstitialAd = remember { InterstitialAdManager(context) }
+
+    LaunchedEffect(selectedTab) {
+        if (selectedTab == 4) {
+            val activity = context as? android.app.Activity
+            activity?.let { interstitialAd.show(it) }
+        }
+    }
 
     Scaffold(
         topBar = {

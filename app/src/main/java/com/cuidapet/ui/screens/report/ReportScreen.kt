@@ -72,6 +72,7 @@ import com.cuidadopet.domain.PetReport
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import com.cuidadopet.ui.ads.InterstitialAdManager
 import com.cuidadopet.ui.utils.adaptiveHorizontalPadding
 
 private data class FoodDayEditState(
@@ -95,12 +96,17 @@ fun ReportScreen(
     onNavigateBack: () -> Unit,
     viewModel: ReportViewModel = hiltViewModel()
 ) {
-    // Carrega os dados assim que a tela abre com o período padrão (7 dias)
     LaunchedEffect(petId) { viewModel.load(petId) }
 
     val state   by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val snackbarHost = remember { SnackbarHostState() }
+    val interstitialAd = remember { InterstitialAdManager(context) }
+
+    LaunchedEffect(Unit) {
+        val activity = context as? android.app.Activity
+        activity?.let { interstitialAd.show(it) }
+    }
 
     // Quando o PDF estiver pronto, abre o share dialog do Android automaticamente
     LaunchedEffect(state.pdfFile) {

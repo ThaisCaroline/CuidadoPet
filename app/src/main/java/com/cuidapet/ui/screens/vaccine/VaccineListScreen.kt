@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.NotificationsOff
 import androidx.compose.material.icons.filled.Vaccines
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
@@ -205,13 +206,22 @@ private fun VaccineCard(
             Column(modifier = Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(vaccine.name, style = MaterialTheme.typography.bodyLarge)
-                    if (vaccine.reminderEnabled && vaccine.nextDueDate != null) {
-                        Icon(
-                            Icons.Default.Notifications,
-                            contentDescription = "Alertas ativos",
-                            modifier = Modifier.size(14.dp),
-                            tint = MaterialTheme.colorScheme.primary
-                        )
+                    if (vaccine.nextDueDate != null) {
+                        if (vaccine.reminderEnabled) {
+                            Icon(
+                                Icons.Default.Notifications,
+                                contentDescription = "Alertas ativos",
+                                modifier = Modifier.size(14.dp),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        } else {
+                            Icon(
+                                Icons.Default.NotificationsOff,
+                                contentDescription = "Alertas desativados",
+                                modifier = Modifier.size(14.dp),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 }
                 if (vaccine.administeredAt != null) {

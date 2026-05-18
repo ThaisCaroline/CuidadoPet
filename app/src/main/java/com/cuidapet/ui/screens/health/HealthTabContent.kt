@@ -37,6 +37,7 @@ import com.cuidadopet.data.db.entity.HealthEntryEntity
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import com.cuidadopet.ui.components.AdBanner
 import com.cuidadopet.ui.utils.adaptiveHorizontalPadding
 
 private val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.forLanguageTag("pt-BR"))
@@ -113,6 +114,7 @@ fun HealthTabContent(
             }
         }
 
+        // item { AdBanner() }
         item { Spacer(Modifier.height(16.dp)) }
     }
 }

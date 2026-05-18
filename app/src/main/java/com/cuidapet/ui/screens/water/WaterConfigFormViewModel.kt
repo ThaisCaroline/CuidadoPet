@@ -19,6 +19,7 @@ data class WaterConfigFormState(
     val dailyTargetMl: String = "",
     val reminderIntervalHours: String = "3",
     val reminderStartTime: String = "08:00",
+    val reminderEndTime: String = "23:55",
     val remindersEnabled: Boolean = true,
     val isSaving: Boolean = false,
     val isSaved: Boolean = false,
@@ -47,6 +48,7 @@ class WaterConfigFormViewModel @Inject constructor(
                         dailyTargetMl         = config.dailyTargetMl.toInt().toString(),
                         reminderIntervalHours = config.reminderIntervalHours.toString(),
                         reminderStartTime     = config.reminderStartTime,
+                        reminderEndTime       = config.reminderEndTime,
                         remindersEnabled      = config.remindersEnabled
                     )
                 }
@@ -57,6 +59,7 @@ class WaterConfigFormViewModel @Inject constructor(
     fun updateTargetMl(value: String)              = _state.update { it.copy(dailyTargetMl = value) }
     fun updateReminderInterval(value: String)      = _state.update { it.copy(reminderIntervalHours = value) }
     fun updateReminderStartTime(value: String)     = _state.update { it.copy(reminderStartTime = value) }
+    fun updateReminderEndTime(value: String)       = _state.update { it.copy(reminderEndTime = value) }
     fun updateRemindersEnabled(value: Boolean)     = _state.update { it.copy(remindersEnabled = value) }
 
     fun save(petId: Long) {
@@ -81,6 +84,15 @@ class WaterConfigFormViewModel @Inject constructor(
             return
         }
 
+        val startTime = s.reminderStartTime.ifBlank { "08:00" }
+        val endTime   = s.reminderEndTime.ifBlank { "23:55" }
+        val startMin  = startTime.split(":").let { (it.getOrNull(0)?.toIntOrNull() ?: 0) * 60 + (it.getOrNull(1)?.toIntOrNull() ?: 0) }
+        val endMin    = endTime.split(":").let { (it.getOrNull(0)?.toIntOrNull() ?: 0) * 60 + (it.getOrNull(1)?.toIntOrNull() ?: 0) }
+        if (endMin <= startMin) {
+            _state.update { it.copy(error = "Horário de fim deve ser depois do início") }
+            return
+        }
+
         _state.update { it.copy(isSaving = true, error = null) }
 
         viewModelScope.launch {
@@ -88,8 +100,9 @@ class WaterConfigFormViewModel @Inject constructor(
                 val config = WaterConfigEntity(
                     petId                 = petId,
                     dailyTargetMl         = targetMl,
-                    reminderIntervalHours = s.reminderIntervalHours.toIntOrNull() ?: 3,
-                    reminderStartTime     = s.reminderStartTime.ifBlank { "08:00" },
+                    reminderIntervalHours = interval,
+                    reminderStartTime     = startTime,
+                    reminderEndTime       = endTime,
                     remindersEnabled      = s.remindersEnabled
                 )
                 waterRepository.saveWaterConfig(config, s.petName)

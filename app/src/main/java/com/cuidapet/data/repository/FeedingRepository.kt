@@ -80,6 +80,11 @@ class FeedingRepository @Inject constructor(
 
     // ─── Refeições ──────────────────────────────────────────────────────────
 
+    // Busca refeição pelo ID apenas se o plano ainda estiver ativo — usado pelo receiver
+    // para reagendar com dados atuais em vez de usar extras stale do Intent.
+    suspend fun getMealByIdIfActive(mealId: Long): MealEntity? =
+        feedingDao.getMealByIdIfActive(mealId)
+
     // Lista as refeições de um plano, ordenadas por horário (já garantido pelo DAO)
     fun getMealsForPlan(planId: Long): Flow<List<MealEntity>> =
         feedingDao.getMealsForPlan(planId)

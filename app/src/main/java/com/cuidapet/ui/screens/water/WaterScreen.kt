@@ -47,6 +47,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import kotlin.math.min
+import com.cuidadopet.ui.components.AdBanner
 import com.cuidadopet.ui.utils.adaptiveHorizontalPadding
 
 // Formata um timestamp para exibir só a hora — ex: "14:30"
@@ -126,6 +127,7 @@ fun WaterTabContent(
             }
         }
 
+        // item { AdBanner() }
         item { Spacer(Modifier.height(16.dp)) }
     }
 }

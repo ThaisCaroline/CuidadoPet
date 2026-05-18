@@ -41,6 +41,10 @@ data class WaterConfigEntity(
     @androidx.room.ColumnInfo(defaultValue = "08:00")
     val reminderStartTime: String = "08:00",
 
+    // Horário de fim dos lembretes — alertas fora dessa janela são silenciados
+    @androidx.room.ColumnInfo(defaultValue = "23:55")
+    val reminderEndTime: String = "23:55",
+
     // Se os lembretes estão ativos ou silenciados
     val remindersEnabled: Boolean = true,
 

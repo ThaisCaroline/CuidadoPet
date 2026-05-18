@@ -38,11 +38,15 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -54,6 +58,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import com.cuidadopet.ui.components.AdBanner
 import com.cuidadopet.ui.utils.adaptiveHorizontalPadding
 
 @Composable
@@ -63,6 +68,15 @@ fun TodayTabContent(
     viewModel: TodayViewModel = hiltViewModel()
 ) {
     LaunchedEffect(petId) { viewModel.load(petId) }
+
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(petId, lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) viewModel.load(petId)
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
 
     val state by viewModel.state.collectAsStateWithLifecycle()
     var showSporadicDialog by remember { mutableStateOf(false) }
@@ -185,6 +199,7 @@ fun TodayTabContent(
             onAdd    = { ml -> viewModel.addWater(petId, ml) }
         )
 
+        // AdBanner()
         Spacer(Modifier.height(16.dp))
     }
 }

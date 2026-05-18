@@ -18,8 +18,8 @@ android {
         applicationId = "com.cuidadopet"
         minSdk = 26
         targetSdk = 36
-        versionCode = 13
-        versionName = "1.0.12"
+        versionCode = 16
+        versionName = "1.0.15"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -139,6 +139,9 @@ dependencies {
 
     // Play In-App Updates — popup de atualização quando há nova versão na Play Store
     implementation("com.google.android.play:app-update-ktx:2.1.0")
+
+    // AdMob — anúncios banner e intersticial
+    implementation("com.google.android.gms:play-services-ads:23.6.0")
 
     // Testes
     testImplementation(libs.junit)

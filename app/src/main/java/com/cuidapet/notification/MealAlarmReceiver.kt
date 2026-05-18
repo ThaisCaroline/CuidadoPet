@@ -7,11 +7,22 @@ import android.content.Intent
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.cuidadopet.R
+import com.cuidadopet.data.repository.FeedingRepository
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 // BroadcastReceiver que recebe os alarmes de refeição e exibe a notificação.
 // Funciona igual ao MedicationAlarmReceiver, mas para lembretes de horário de refeição.
 // O Android chama o método onReceive() quando o alarme dispara.
+@AndroidEntryPoint
 class MealAlarmReceiver : BroadcastReceiver() {
+
+    @Inject lateinit var feedingRepository: FeedingRepository
+    @Inject lateinit var mealAlarmScheduler: MealAlarmScheduler
 
     companion object {
         // Chaves dos extras passados pelo AlarmScheduler para este receiver
@@ -58,6 +69,19 @@ class MealAlarmReceiver : BroadcastReceiver() {
                 notify(mealId.toInt(), notification)
             } catch (e: SecurityException) {
                 // Permissão de notificação negada pelo usuário — silencia o erro
+            }
+        }
+
+        // ── Reagenda o próximo alarme para amanhã ─────────────────────────────
+        // Busca dados atuais do banco — se o plano foi substituído, getMealByIdIfActive
+        // retorna null e o alarme não é reagendado (evita fantasmas de planos antigos).
+        val pendingResult = goAsync()
+        CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
+            try {
+                val meal = feedingRepository.getMealByIdIfActive(mealId)
+                if (meal != null) mealAlarmScheduler.scheduleMeal(meal, petName)
+            } finally {
+                pendingResult.finish()
             }
         }
     }

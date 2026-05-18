@@ -179,26 +179,46 @@ fun WaterConfigFormScreen(
                     value = state.reminderStartTime,
                     onValueChange = viewModel::updateReminderStartTime,
                     label = "Horário de início dos lembretes",
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                // Campo de horário de fim — alertas fora da janela são silenciados
+                TimeInputField(
+                    value = state.reminderEndTime,
+                    onValueChange = viewModel::updateReminderEndTime,
+                    label = "Horário de fim dos lembretes",
                     modifier = Modifier.fillMaxWidth(),
                     supportingText = {
                         val interval = state.reminderIntervalHours.toIntOrNull() ?: 0
                         val start    = state.reminderStartTime
-                        if (interval > 0 && start.matches(Regex("""\d{1,2}:\d{2}"""))) {
-                            val parts  = start.split(":")
-                            val h      = parts[0].toIntOrNull() ?: 0
-                            val m      = parts[1].toIntOrNull() ?: 0
-                            val times  = (0 until (24 / interval)).map { i ->
-                                val totalMin = h * 60 + m + i * interval * 60
-                                "%02d:%02d".format((totalMin / 60) % 24, totalMin % 60)
+                        val end      = state.reminderEndTime
+                        val timeRegex = Regex("""\d{1,2}:\d{2}""")
+                        if (interval > 0 && start.matches(timeRegex) && end.matches(timeRegex)) {
+                            val sParts = start.split(":")
+                            val sh = sParts[0].toIntOrNull() ?: 0
+                            val sm = sParts[1].toIntOrNull() ?: 0
+                            val eParts = end.split(":")
+                            val endMin = (eParts[0].toIntOrNull() ?: 0) * 60 + (eParts[1].toIntOrNull() ?: 0)
+                            val times = (0 until (24 / interval)).map { i ->
+                                val totalMin = sh * 60 + sm + i * interval * 60
+                                totalMin to "%02d:%02d".format((totalMin / 60) % 24, totalMin % 60)
+                            }.filter { (min, _) -> min < endMin }.map { it.second }
+                            if (times.isNotEmpty()) {
+                                Text(
+                                    "Lembretes: ${times.take(5).joinToString(", ")}${if (times.size > 5) "..." else ""}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            } else {
+                                Text(
+                                    "Nenhum lembrete nessa janela — ajuste o início ou o fim",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.error
+                                )
                             }
-                            Text(
-                                "Lembretes: ${times.take(5).joinToString(", ")}${if (times.size > 5) "..." else ""}",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
                         } else {
                             Text(
-                                "Ex: 13:00 com intervalo 2h → lembretes às 13h, 15h, 17h...",
+                                "Ex: 22:00 → silencia após as 22h",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )

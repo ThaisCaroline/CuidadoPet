@@ -8,6 +8,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import java.util.Calendar
 
 // Worker do WorkManager responsável por exibir o lembrete periódico de água.
 // O WorkManager chama o doWork() automaticamente no intervalo configurado.
@@ -23,20 +24,36 @@ class WaterReminderWorker(
 
     companion object {
         // Chaves para os dados de entrada passados ao agendar o worker
-        const val KEY_PET_NAME  = "pet_name"
-        const val KEY_PET_ID    = "pet_id"
-        const val KEY_TARGET_ML = "target_ml"
+        const val KEY_PET_NAME   = "pet_name"
+        const val KEY_PET_ID     = "pet_id"
+        const val KEY_TARGET_ML  = "target_ml"
+        const val KEY_START_TIME = "start_time"
+        const val KEY_END_TIME   = "end_time"
 
         // Tag única por pet — usada para cancelar os lembretes quando necessário
         fun workTag(petId: Long) = "water_reminder_$petId"
+
+        private fun parseMinutes(time: String): Int {
+            val parts = time.split(":")
+            return (parts.getOrNull(0)?.toIntOrNull() ?: 0) * 60 +
+                   (parts.getOrNull(1)?.toIntOrNull() ?: 0)
+        }
     }
 
     override suspend fun doWork(): Result {
-        val petName  = inputData.getString(KEY_PET_NAME)  ?: "seu pet"
-        val petId    = inputData.getLong(KEY_PET_ID, -1L)
-        val targetMl = inputData.getDouble(KEY_TARGET_ML, 0.0)
+        val petName   = inputData.getString(KEY_PET_NAME)  ?: "seu pet"
+        val petId     = inputData.getLong(KEY_PET_ID, -1L)
+        val targetMl  = inputData.getDouble(KEY_TARGET_ML, 0.0)
+        val startTime = inputData.getString(KEY_START_TIME) ?: "08:00"
+        val endTime   = inputData.getString(KEY_END_TIME)   ?: "23:55"
 
         if (petId == -1L) return Result.failure()
+
+        val now = Calendar.getInstance()
+        val currentMinutes = now.get(Calendar.HOUR_OF_DAY) * 60 + now.get(Calendar.MINUTE)
+        if (currentMinutes < parseMinutes(startTime) || currentMinutes >= parseMinutes(endTime)) {
+            return Result.success()
+        }
 
         showWaterReminder(petName, targetMl)
 

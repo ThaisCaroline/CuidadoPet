@@ -3,6 +3,14 @@ package com.cuidadopet.data.db
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
+val MIGRATION_9_10 = object : Migration(9, 10) {
+    override fun migrate(database: SupportSQLiteDatabase) {
+        database.execSQL(
+            "ALTER TABLE water_configs ADD COLUMN reminderEndTime TEXT NOT NULL DEFAULT '23:55'"
+        )
+    }
+}
+
 val MIGRATION_8_9 = object : Migration(8, 9) {
     override fun migrate(database: SupportSQLiteDatabase) {
         database.execSQL("ALTER TABLE pets ADD COLUMN customSpecies TEXT")

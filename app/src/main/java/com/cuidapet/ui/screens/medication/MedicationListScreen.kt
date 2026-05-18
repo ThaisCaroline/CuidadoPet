@@ -47,6 +47,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cuidadopet.data.db.entity.MedicationEntity
+import com.cuidadopet.ui.components.AdBanner
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -124,6 +125,7 @@ fun MedicationListScreen(
                         onDelete = { pendingDelete = med }
                     )
                 }
+                // item { AdBanner() }
             }
         }
     }

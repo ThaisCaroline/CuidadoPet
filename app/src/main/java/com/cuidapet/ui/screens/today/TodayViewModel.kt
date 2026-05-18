@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import java.util.Calendar
 import javax.inject.Inject
@@ -60,8 +61,11 @@ class TodayViewModel @Inject constructor(
     private val _state = MutableStateFlow(TodayUiState())
     val state: StateFlow<TodayUiState> = _state.asStateFlow()
 
+    private var loadJob: Job? = null
+
     fun load(petId: Long) {
-        viewModelScope.launch {
+        loadJob?.cancel()
+        loadJob = viewModelScope.launch {
             val dayStart = startOfDay()
             val dayEnd   = dayStart + 86_400_000L - 1L  // 23:59:59.999 do mesmo dia
 

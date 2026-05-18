@@ -11,6 +11,6 @@ class CuidadoPetApp : Application() {
     override fun onCreate() {
         super.onCreate()
         NotificationChannels.createAll(this)
-        MobileAds.initialize(this)
+        // MobileAds.initialize(this)
     }
 }

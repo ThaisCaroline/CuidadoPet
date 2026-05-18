@@ -60,10 +60,11 @@ private val foodTypeOptions = listOf(
 @Composable
 fun MealPlanFormScreen(
     petId: Long,
+    planId: Long?,
     onNavigateBack: () -> Unit,
     viewModel: MealPlanFormViewModel = hiltViewModel()
 ) {
-    LaunchedEffect(petId) { viewModel.loadExistingPlan(petId) }
+    LaunchedEffect(petId, planId) { viewModel.loadPlan(petId, planId) }
 
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -81,13 +82,13 @@ fun MealPlanFormScreen(
         }
     }
 
-    // petName vem do ViewModel — exibe "Carregando..." enquanto o banco responde
-    val petName = state.petName.ifBlank { "Carregando..." }
+    val petName    = state.petName.ifBlank { "Carregando..." }
+    val isEditing  = state.editingPlanId != null
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Plano alimentar de $petName") },
+                title = { Text(if (isEditing) "Editar plano de $petName" else "Novo plano de $petName") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
@@ -123,8 +124,8 @@ fun MealPlanFormScreen(
 
             // ── Detalhes do alimento ──────────────────────────────────────
             val foodDetailsPlaceholder = when (state.foodType) {
-                "DRY_KIBBLE"   -> "Ex: Royal Canin Adult Medium, Pedigree..."
-                "WET_FOOD"     -> "Ex: Whiskas sachê frango, Hills lata..."
+                "DRY_KIBBLE"   -> "Ex: Royal Canin Adult Medium, ND..."
+                "WET_FOOD"     -> "Ex: Ração Úmida GranPlus, Hills lata..."
                 "NATURAL"      -> "Ex: frango com batata-doce e cenoura..."
                 "THERAPEUTIC"  -> "Ex: Hills Prescription k/d, Royal Canin Renal..."
                 else           -> "Descreva o alimento..."
@@ -233,7 +234,7 @@ fun MealPlanFormScreen(
                         color = MaterialTheme.colorScheme.onPrimary
                     )
                 } else {
-                    Text("Salvar plano")
+                    Text(if (isEditing) "Salvar plano" else "Adicionar plano")
                 }
             }
 

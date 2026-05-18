@@ -35,8 +35,8 @@ class ReportRepository @Inject constructor(
         val meds = medicationRepository.getActiveMedications(petId).first()
         val medLogs = medicationRepository.getLogsForPetInPeriod(petId, startDate, endDate).first()
 
-        // Plano alimentar ativo
-        val plan = feedingRepository.getActiveMealPlan(petId).first()
+        // Planos alimentares ativos (pode haver mais de um)
+        val plan = feedingRepository.getActiveMealPlans(petId).first()
         // Carrega refeições de TODOS os planos do pet — os logs podem referenciar
         // refeições de planos anteriores (desativados ao editar o plano)
         val meals = feedingRepository.getAllMealsForPet(petId).first()
@@ -66,7 +66,7 @@ class ReportRepository @Inject constructor(
             periodEnd         = endDate,
             activeMedications = meds,
             medicationLogs    = medLogs,
-            mealPlan          = plan,
+            mealPlans         = plan,
             meals             = meals,
             mealLogs          = mealLogs,
             sporadicLogs      = sporadicLogs,

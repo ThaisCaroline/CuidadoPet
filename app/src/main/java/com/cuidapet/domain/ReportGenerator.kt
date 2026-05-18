@@ -32,7 +32,7 @@ data class PetReport(
     val periodEnd: Long,
     val activeMedications: List<MedicationEntity>,
     val medicationLogs: List<MedicationLogEntity>,
-    val mealPlan: MealPlanEntity?,
+    val mealPlans: List<MealPlanEntity>,
     val meals: List<MealEntity>,
     val mealLogs: List<MealLogEntity>,
     val sporadicLogs: List<SporadicMealLogEntity>,
@@ -110,13 +110,16 @@ object ReportGenerator {
 
         // Alimentação
         sb.appendLine("*🍽️ Plano alimentar*")
-        if (report.mealPlan == null) {
+        if (report.mealPlans.isEmpty()) {
             sb.appendLine("Sem plano configurado.")
         } else {
-            val foodLabel = foodTypeLabel(report.mealPlan.foodType)
-            sb.appendLine("$foodLabel${if (report.mealPlan.dailyQuantityGrams != null) " · ${report.mealPlan.dailyQuantityGrams!!.toInt()}g/dia" else ""}")
-            if (!report.mealPlan.foodDetails.isNullOrBlank()) sb.appendLine("Alimento: ${report.mealPlan.foodDetails}")
-            if (!report.mealPlan.restrictions.isNullOrBlank()) sb.appendLine("Restrições: ${report.mealPlan.restrictions}")
+            report.mealPlans.forEach { plan ->
+                val unitForPlan = report.meals.firstOrNull { it.mealPlanId == plan.id }?.quantityUnit ?: "g"
+                val qty = plan.dailyQuantityGrams?.let { " · ${it.toInt()}$unitForPlan/dia" } ?: ""
+                sb.appendLine("• ${foodTypeLabel(plan.foodType)}$qty")
+                if (!plan.foodDetails.isNullOrBlank()) sb.appendLine("  Alimento: ${plan.foodDetails}")
+                if (!plan.restrictions.isNullOrBlank()) sb.appendLine("  Restrições: ${plan.restrictions}")
+            }
         }
         if (report.mealLogs.isEmpty() && report.sporadicLogs.isEmpty()) {
             sb.appendLine("Nenhuma refeição registrada no período.")
@@ -393,13 +396,16 @@ object ReportGenerator {
 
         // ── Alimentação ───────────────────────────────────────────────────────
         section("Plano alimentar")
-        if (report.mealPlan == null) {
+        if (report.mealPlans.isEmpty()) {
             text("Sem plano configurado.", paintBody)
         } else {
-            val plan = report.mealPlan
-            text("Tipo: ${foodTypeLabel(plan.foodType)}${if (plan.dailyQuantityGrams != null) "   ${plan.dailyQuantityGrams!!.toInt()}g/dia" else ""}", paintBody)
-            if (!plan.foodDetails.isNullOrBlank()) text("Alimento: ${plan.foodDetails}", paintSmall)
-            if (!plan.restrictions.isNullOrBlank()) text("Restrições: ${plan.restrictions}", paintSmall)
+            report.mealPlans.forEach { plan ->
+                val unitForPlan = report.meals.firstOrNull { it.mealPlanId == plan.id }?.quantityUnit ?: "g"
+                val qty = plan.dailyQuantityGrams?.let { "   ${it.toInt()}$unitForPlan/dia" } ?: ""
+                text("• ${foodTypeLabel(plan.foodType)}$qty", paintBody)
+                if (!plan.foodDetails.isNullOrBlank()) text("Alimento: ${plan.foodDetails}", paintSmall, 12f)
+                if (!plan.restrictions.isNullOrBlank()) text("Restrições: ${plan.restrictions}", paintSmall, 12f)
+            }
         }
         if (report.mealLogs.isEmpty() && report.sporadicLogs.isEmpty()) {
             text("Nenhuma refeição registrada no período.", paintSmall)

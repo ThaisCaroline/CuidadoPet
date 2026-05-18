@@ -374,6 +374,17 @@ private fun MealCard(
                     "${item.meal.quantityGrams}${item.meal.quantityUnit}",
                     style = MaterialTheme.typography.bodyMedium
                 )
+                if (item.planFoodType.isNotBlank()) {
+                    val foodLabel = buildString {
+                        append(foodTypeLabel(item.planFoodType))
+                        if (!item.planFoodDetails.isNullOrBlank()) append(" · ${item.planFoodDetails}")
+                    }
+                    Text(
+                        foodLabel,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
             if (isLogged && percentage != null) {
                 val textColor = when {
@@ -553,6 +564,14 @@ private fun WaterCard(
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
+
+private fun foodTypeLabel(code: String): String = when (code) {
+    "DRY_KIBBLE"  -> "Ração seca"
+    "WET_FOOD"    -> "Ração úmida"
+    "NATURAL"     -> "Alimentação natural/caseira"
+    "THERAPEUTIC" -> "Dieta terapêutica"
+    else          -> "Outro"
+}
 
 @Composable
 private fun SectionHeader(title: String) {

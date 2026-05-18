@@ -27,7 +27,7 @@ object Routes {
     const val PET_FORM      = "pet_form?petId={petId}"
     const val DASHBOARD     = "dashboard/{petId}"
     const val MED_FORM      = "med_form/{petId}?medicationId={medicationId}"
-    const val MEAL_PLAN     = "meal_plan/{petId}"    // formulário de plano alimentar
+    const val MEAL_PLAN     = "meal_plan/{petId}?planId={planId}"    // formulário de plano alimentar
     const val WATER_CONFIG   = "water_config/{petId}"   // configuração de hidratação
     const val HEALTH_ENTRY   = "health_entry/{petId}?entryId={entryId}" // diário saúde
     const val WEIGHT_HISTORY = "weight_history/{petId}" // histórico de peso
@@ -43,7 +43,8 @@ object Routes {
     fun medForm(petId: Long, medicationId: Long? = null) =
         if (medicationId != null) "med_form/$petId?medicationId=$medicationId"
         else "med_form/$petId"
-    fun mealPlan(petId: Long)         = "meal_plan/$petId"
+    fun mealPlan(petId: Long, planId: Long? = null) =
+        if (planId != null) "meal_plan/$petId?planId=$planId" else "meal_plan/$petId"
     fun waterConfig(petId: Long)      = "water_config/$petId"
     fun healthEntry(petId: Long, entryId: Long? = null) =
         if (entryId != null) "health_entry/$petId?entryId=$entryId"
@@ -111,7 +112,7 @@ fun AppNavigation(
                 onEditPet            = { navController.navigate(Routes.petForm(it)) },
                 onAddMedication      = { navController.navigate(Routes.medForm(petId)) },
                 onEditMedication     = { medId -> navController.navigate(Routes.medForm(petId, medId)) },
-                onConfigureMealPlan  = { navController.navigate(Routes.mealPlan(petId)) },
+                onConfigureMealPlan  = { planId -> navController.navigate(Routes.mealPlan(petId, planId)) },
                 onConfigureWater     = { navController.navigate(Routes.waterConfig(petId)) },
                 onNewHealthEntry     = { navController.navigate(Routes.healthEntry(petId)) },
                 onEditHealthEntry    = { navController.navigate(Routes.healthEntry(petId, it)) },
@@ -172,11 +173,16 @@ fun AppNavigation(
         // ── Plano alimentar ───────────────────────────────────────────────
         composable(
             route = Routes.MEAL_PLAN,
-            arguments = listOf(navArgument("petId") { type = NavType.LongType })
+            arguments = listOf(
+                navArgument("petId")  { type = NavType.LongType },
+                navArgument("planId") { type = NavType.LongType; defaultValue = -1L }
+            )
         ) { entry ->
-            val petId = entry.arguments!!.getLong("petId")
+            val petId  = entry.arguments!!.getLong("petId")
+            val planId = entry.arguments!!.getLong("planId").takeIf { it != -1L }
             MealPlanFormScreen(
                 petId          = petId,
+                planId         = planId,
                 onNavigateBack = { navController.popBackStack() }
             )
         }

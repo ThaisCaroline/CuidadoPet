@@ -267,7 +267,7 @@ private fun PetCard(
                 Text(pet.name, style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface)
                 Spacer(Modifier.height(2.dp))
-                val speciesLabel = if (pet.species == "DOG") "Cachorro" else "Gato"
+                val speciesLabel = petSpeciesLabel(pet.species, pet.customSpecies)
                 val subtitle = if (pet.breed != null) "$speciesLabel • ${pet.breed}" else speciesLabel
                 Text(subtitle, style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -293,4 +293,16 @@ private fun PetCard(
             }
         }
     }
+}
+
+private fun petSpeciesLabel(species: String, customSpecies: String?): String = when (species) {
+    "DOG"     -> "Cachorro"
+    "CAT"     -> "Gato"
+    "RABBIT"  -> "Coelho"
+    "BIRD"    -> "Pássaro"
+    "HAMSTER" -> "Hamster"
+    "TURTLE"  -> "Tartaruga"
+    "FISH"    -> "Peixe"
+    "OTHER"   -> customSpecies?.takeIf { it.isNotBlank() } ?: "Outro"
+    else      -> species
 }

@@ -3,8 +3,6 @@ package com.cuidadopet.ui.screens.feeding
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,9 +12,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -48,16 +46,16 @@ import com.cuidadopet.data.db.entity.SporadicMealLogEntity
 import com.cuidadopet.domain.FeedingStatus
 import com.cuidadopet.domain.toDisplayText
 import com.cuidadopet.ui.utils.adaptiveHorizontalPadding
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 
-// Aba "Alimentação" do dashboard — mostra o resumo do dia e as refeições programadas
 @Composable
 fun FeedingTabContent(
     petId: Long,
-    onConfigurePlan: () -> Unit,
+    onConfigurePlan: (planId: Long?) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: FeedingViewModel = hiltViewModel()
 ) {
-    // Carrega os dados ao entrar na aba
     LaunchedEffect(petId) {
         viewModel.loadFeedingData(petId)
     }
@@ -65,23 +63,20 @@ fun FeedingTabContent(
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     if (state.isLoading) {
-        // Exibe spinner enquanto carrega
         Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator()
         }
         return
     }
 
-    if (state.plan == null) {
-        // Nenhum plano configurado — convida o tutor a criar um
+    if (state.plans.isEmpty()) {
         NoPlanContent(
-            onConfigurePlan = onConfigurePlan,
+            onConfigurePlan = { onConfigurePlan(null) },
             modifier = modifier
         )
         return
     }
 
-    // Lista de refeições do dia com seus logs
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
@@ -90,45 +85,51 @@ fun FeedingTabContent(
     ) {
         item { Spacer(Modifier.height(12.dp)) }
 
-        // Card com o resumo do dia (status geral de alimentação)
         item {
             DailySummaryCard(
-                plan = state.plan!!,
-                meals = state.meals,
-                logs = state.logs,
+                plans        = state.plans,
+                logs         = state.logs,
                 sporadicLogs = state.sporadicLogs,
-                status = state.dailyStatus,
-                onConfigurePlan = onConfigurePlan,
-                onDeletePlan = { viewModel.deletePlan(petId) }
+                status       = state.dailyStatus
             )
         }
 
-        item { HorizontalDivider() }
+        state.plans.forEach { planWithMeals ->
+            item { HorizontalDivider() }
+
+            item {
+                PlanSectionHeader(
+                    plan     = planWithMeals.plan,
+                    onEdit   = { onConfigurePlan(planWithMeals.plan.id) },
+                    onDelete = { viewModel.deletePlan(petId, planWithMeals.plan.id) }
+                )
+            }
+
+            items(planWithMeals.meals, key = { it.id }) { meal ->
+                MealCard(
+                    meal     = meal,
+                    log      = state.logs[meal.id],
+                    onLogMeal = { percentage, appetite, notes ->
+                        viewModel.logMeal(meal.id, percentage, appetite, notes)
+                    }
+                )
+            }
+        }
 
         item {
-            Text(
-                "Refeições de hoje",
-                style = MaterialTheme.typography.titleSmall,
-                modifier = Modifier.padding(top = 4.dp)
-            )
-        }
-
-        // Um card por refeição programada
-        items(state.meals, key = { it.id }) { meal ->
-            MealCard(
-                meal = meal,
-                log = state.logs[meal.id],
-                onLogMeal = { percentage, appetite, notes ->
-                    viewModel.logMeal(meal.id, percentage, appetite, notes)
-                }
-            )
+            OutlinedButton(
+                onClick  = { onConfigurePlan(null) },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(Icons.Default.Add, contentDescription = null)
+                Text(" Adicionar plano alimentar")
+            }
         }
 
         item { Spacer(Modifier.height(16.dp)) }
     }
 }
 
-// Conteúdo exibido quando o pet não tem plano alimentar configurado ainda
 @Composable
 private fun NoPlanContent(
     onConfigurePlan: () -> Unit,
@@ -158,35 +159,14 @@ private fun NoPlanContent(
     }
 }
 
-// Card com o resumo do dia: tipo de alimento, meta de kcal, status geral e consumo real
 @Composable
 private fun DailySummaryCard(
-    plan: MealPlanEntity,
-    meals: List<MealEntity>,
+    plans: List<PlanWithMeals>,
     logs: Map<Long, MealLogEntity>,
     sporadicLogs: List<SporadicMealLogEntity>,
-    status: FeedingStatus?,
-    onConfigurePlan: () -> Unit,
-    onDeletePlan: () -> Unit
+    status: FeedingStatus?
 ) {
-    var showDeleteDialog by remember { mutableStateOf(false) }
-
-    if (showDeleteDialog) {
-        AlertDialog(
-            onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Excluir plano alimentar?") },
-            text = { Text("O plano e todas as refeições configuradas serão removidos. Os registros do histórico serão mantidos.") },
-            confirmButton = {
-                Button(
-                    onClick = { showDeleteDialog = false; onDeletePlan() },
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
-                ) { Text("Excluir") }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) { Text("Cancelar") }
-            }
-        )
-    }
+    val allMeals = plans.flatMap { it.meals }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -198,76 +178,13 @@ private fun DailySummaryCard(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text("Resumo do dia", style = MaterialTheme.typography.titleSmall)
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    // Botão para editar o plano alimentar
-                    FilledTonalButton(
-                        onClick = onConfigurePlan,
-                        contentPadding = ButtonDefaults.TextButtonContentPadding
-                    ) {
-                        Icon(Icons.Default.Edit, contentDescription = null)
-                        Text(" Editar plano", style = MaterialTheme.typography.labelSmall)
-                    }
-                    // Botão para excluir o plano
-                    OutlinedButton(
-                        onClick = { showDeleteDialog = true },
-                        contentPadding = ButtonDefaults.TextButtonContentPadding,
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
-                    ) {
-                        Text("Excluir", style = MaterialTheme.typography.labelSmall)
-                    }
-                }
-            }
+            Text("Resumo do dia", style = MaterialTheme.typography.titleSmall)
 
-            // Tipo de alimento em texto legível
-            Text(
-                foodTypeLabel(plan.foodType),
-                style = MaterialTheme.typography.bodyMedium
-            )
-
-            // Meta calórica, se definida
-            plan.dailyKcalTarget?.let {
-                Text(
-                    "Meta: ${it.toInt()} kcal/dia",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-
-            // Quantidade total em gramas, se definida
-            plan.dailyQuantityGrams?.let {
-                val unit = meals.firstOrNull()?.quantityUnit ?: "g"
-                Text(
-                    "Quantidade: ${it.toInt()} $unit/dia",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-
-            // Status do dia
             status?.let {
-                Text(
-                    it.toDisplayText(),
-                    style = MaterialTheme.typography.bodyMedium
-                )
+                Text(it.toDisplayText(), style = MaterialTheme.typography.bodyMedium)
             }
 
-            // Restrições, se houver
-            if (!plan.restrictions.isNullOrBlank()) {
-                Text(
-                    "Restrições: ${plan.restrictions}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error
-                )
-            }
-
-            // Consumo de hoje: plano + extras, agrupados por unidade
-            val planByUnit = meals
+            val planByUnit = allMeals
                 .groupBy { it.quantityUnit }
                 .mapValues { (_, mealsInUnit) ->
                     mealsInUnit.sumOf { meal ->
@@ -291,16 +208,14 @@ private fun DailySummaryCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 allUnits.sorted().forEach { unit ->
-                    val planAmt   = planByUnit[unit]
-                    val extraAmt  = sporadicByUnit[unit]
-                    val totalAmt  = (planAmt ?: 0.0) + (extraAmt ?: 0.0)
+                    val planAmt  = planByUnit[unit]
+                    val extraAmt = sporadicByUnit[unit]
+                    val totalAmt = (planAmt ?: 0.0) + (extraAmt ?: 0.0)
                     val line = when {
                         planAmt != null && extraAmt != null ->
                             "${planAmt.toInt()}$unit plano + ${extraAmt.toInt()}$unit extras = ${totalAmt.toInt()}$unit"
-                        planAmt != null ->
-                            "${planAmt.toInt()}$unit (plano)"
-                        else ->
-                            "${extraAmt!!.toInt()}$unit (extras)"
+                        planAmt != null -> "${planAmt.toInt()}$unit (plano)"
+                        else -> "${extraAmt!!.toInt()}$unit (extras)"
                     }
                     Text(line, style = MaterialTheme.typography.bodySmall)
                 }
@@ -309,14 +224,81 @@ private fun DailySummaryCard(
     }
 }
 
-// Card de uma refeição individual: mostra o horário, quantidade e o log do dia
+@Composable
+private fun PlanSectionHeader(
+    plan: MealPlanEntity,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit
+) {
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Excluir plano alimentar?") },
+            text = { Text("O plano e todas as refeições configuradas serão removidos. Os registros do histórico serão mantidos.") },
+            confirmButton = {
+                Button(
+                    onClick = { showDeleteDialog = false; onDelete() },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) { Text("Excluir") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) { Text("Cancelar") }
+            }
+        )
+    }
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                foodTypeLabel(plan.foodType),
+                style = MaterialTheme.typography.titleSmall
+            )
+            if (!plan.foodDetails.isNullOrBlank()) {
+                Text(
+                    plan.foodDetails,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            if (!plan.restrictions.isNullOrBlank()) {
+                Text(
+                    "Restrições: ${plan.restrictions}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FilledTonalButton(
+                onClick = onEdit,
+                contentPadding = ButtonDefaults.TextButtonContentPadding
+            ) {
+                Icon(Icons.Default.Edit, contentDescription = null)
+                Text(" Editar", style = MaterialTheme.typography.labelSmall)
+            }
+            OutlinedButton(
+                onClick = { showDeleteDialog = true },
+                contentPadding = ButtonDefaults.TextButtonContentPadding,
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
+            ) {
+                Text("Excluir", style = MaterialTheme.typography.labelSmall)
+            }
+        }
+    }
+}
+
 @Composable
 private fun MealCard(
     meal: MealEntity,
     log: MealLogEntity?,
     onLogMeal: (eatenPercentage: Int, appetiteStatus: String, notes: String) -> Unit
 ) {
-    // Controla se o painel de registro está expandido
     var expanded by remember { mutableStateOf(log == null) }
 
     Card(
@@ -330,8 +312,6 @@ private fun MealCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-
-            // Cabeçalho: horário e quantidade
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -348,7 +328,6 @@ private fun MealCard(
                     }
                 }
 
-                // Mostra status se já registrado, ou botão para registrar
                 if (log != null && !expanded) {
                     Column(horizontalAlignment = Alignment.End) {
                         Text(
@@ -360,7 +339,6 @@ private fun MealCard(
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                        // Permite editar o registro tocando no botão
                         OutlinedButton(
                             onClick = { expanded = true },
                             contentPadding = ButtonDefaults.TextButtonContentPadding
@@ -371,26 +349,24 @@ private fun MealCard(
                 }
             }
 
-            // Painel de registro expandido
             if (expanded) {
                 Spacer(Modifier.height(12.dp))
                 MealLogInput(
                     initialPercentage = log?.eatenPercentage ?: 100,
-                    initialAppetite = log?.appetiteStatus ?: "ALL",
-                    initialNotes = log?.notes ?: "",
+                    initialAppetite   = log?.appetiteStatus ?: "ALL",
+                    initialNotes      = log?.notes ?: "",
                     onSave = { pct, appetite, notes ->
                         onLogMeal(pct, appetite, notes)
                         expanded = false
                     },
-                    onCancel = { expanded = false },
-                    showCancel = log != null  // só mostra cancelar se já houver registro salvo
+                    onCancel    = { expanded = false },
+                    showCancel  = log != null
                 )
             }
         }
     }
 }
 
-// Formulário inline para registrar o que o pet comeu em uma refeição
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun MealLogInput(
@@ -401,25 +377,21 @@ private fun MealLogInput(
     onCancel: () -> Unit,
     showCancel: Boolean
 ) {
-    // Estado local — não precisa ir para o ViewModel até o usuário tocar em Salvar
     var selectedPct by remember { mutableIntStateOf(initialPercentage) }
     var selectedAppetite by remember { mutableStateOf(initialAppetite) }
     var notes by remember { mutableStateOf(initialNotes) }
 
-    // Opções de porcentagem comida — valores discretos mais práticos para o tutor
     val percentageOptions = listOf(0, 25, 50, 75, 100)
 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text("Quanto o pet comeu?", style = MaterialTheme.typography.labelMedium)
 
-        // Botões de porcentagem — FlowRow quebra para segunda linha se a tela for muito estreita
         FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             percentageOptions.forEach { pct ->
                 FilterChipCompact(
                     selected = selectedPct == pct,
-                    onClick = {
+                    onClick  = {
                         selectedPct = pct
-                        // Atualiza automaticamente o status de apetite ao tocar
                         selectedAppetite = when (pct) {
                             100  -> "ALL"
                             0    -> "REFUSED"
@@ -431,41 +403,26 @@ private fun MealLogInput(
             }
         }
 
-        // Linha de botões de apetite
         Text("Apetite:", style = MaterialTheme.typography.labelMedium)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            FilterChipCompact(
-                selected = selectedAppetite == "ALL",
-                onClick = { selectedAppetite = "ALL" },
-                label = "Comeu tudo"
-            )
-            FilterChipCompact(
-                selected = selectedAppetite == "PARTIAL",
-                onClick = { selectedAppetite = "PARTIAL" },
-                label = "Parcial"
-            )
-            FilterChipCompact(
-                selected = selectedAppetite == "REFUSED",
-                onClick = { selectedAppetite = "REFUSED" },
-                label = "Recusou"
-            )
+            FilterChipCompact(selected = selectedAppetite == "ALL",     onClick = { selectedAppetite = "ALL" },     label = "Comeu tudo")
+            FilterChipCompact(selected = selectedAppetite == "PARTIAL", onClick = { selectedAppetite = "PARTIAL" }, label = "Parcial")
+            FilterChipCompact(selected = selectedAppetite == "REFUSED", onClick = { selectedAppetite = "REFUSED" }, label = "Recusou")
         }
 
-        // Campo de observações livre
         androidx.compose.material3.OutlinedTextField(
-            value = notes,
+            value         = notes,
             onValueChange = { notes = it },
-            label = { Text("Observações (opcional)") },
-            placeholder = { Text("Ex: comeu devagar, misturou com patê...") },
-            modifier = Modifier.fillMaxWidth(),
-            maxLines = 3
+            label         = { Text("Observações (opcional)") },
+            placeholder   = { Text("Ex: comeu devagar, misturou com patê...") },
+            modifier      = Modifier.fillMaxWidth(),
+            maxLines      = 3
         )
 
-        // Botões de ação
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier              = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment     = Alignment.CenterVertically
         ) {
             if (showCancel) {
                 OutlinedButton(onClick = onCancel) { Text("Cancelar") }
@@ -477,21 +434,15 @@ private fun MealLogInput(
     }
 }
 
-// Chip compacto reutilizável dentro desta tela
 @Composable
-private fun FilterChipCompact(
-    selected: Boolean,
-    onClick: () -> Unit,
-    label: String
-) {
+private fun FilterChipCompact(selected: Boolean, onClick: () -> Unit, label: String) {
     androidx.compose.material3.FilterChip(
         selected = selected,
-        onClick = onClick,
-        label = { Text(label, style = MaterialTheme.typography.labelSmall, softWrap = false, maxLines = 1) }
+        onClick  = onClick,
+        label    = { Text(label, style = MaterialTheme.typography.labelSmall, softWrap = false, maxLines = 1) }
     )
 }
 
-// Converte código interno do tipo de alimento para rótulo legível
 private fun foodTypeLabel(code: String): String = when (code) {
     "DRY_KIBBLE"  -> "Ração seca"
     "WET_FOOD"    -> "Ração úmida"
@@ -500,7 +451,6 @@ private fun foodTypeLabel(code: String): String = when (code) {
     else          -> "Outro"
 }
 
-// Converte código de apetite para emoji + texto
 private fun appetiteLabel(code: String): String = when (code) {
     "ALL"     -> "Comeu tudo"
     "PARTIAL" -> "Comeu parcialmente"

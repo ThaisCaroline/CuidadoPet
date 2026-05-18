@@ -3,6 +3,7 @@ package com.cuidadopet.ui.screens.today
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cuidadopet.data.db.entity.MealEntity
+import com.cuidadopet.data.db.entity.MealPlanEntity
 import com.cuidadopet.data.db.entity.SporadicMealLogEntity
 import com.cuidadopet.data.db.entity.MealLogEntity
 import com.cuidadopet.data.db.entity.MedicationEntity
@@ -15,10 +16,11 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import java.util.Calendar
 import javax.inject.Inject
@@ -30,10 +32,12 @@ data class TodayDoseItem(
     val log: MedicationLogEntity?     // null = ainda não registrada
 )
 
-// Representa uma refeição agendada para hoje
+// Representa uma refeição agendada para hoje, com info do plano para exibição
 data class TodayMealItem(
     val meal: MealEntity,
-    val log: MealLogEntity?           // null = ainda não registrada
+    val log: MealLogEntity?,           // null = ainda não registrada
+    val planFoodType: String = "",
+    val planFoodDetails: String? = null
 )
 
 data class TodayUiState(
@@ -61,12 +65,19 @@ class TodayViewModel @Inject constructor(
             val dayStart = startOfDay()
             val dayEnd   = dayStart + 86_400_000L - 1L  // 23:59:59.999 do mesmo dia
 
-            // Refeições do plano ativo, reagindo quando o plano muda (ex: tutor reconfigura)
-            // flatMapLatest cancela o collect anterior sempre que o plano mudar
-            val mealsFlow = feedingRepository.getActiveMealPlan(petId)
-                .flatMapLatest { plan ->
-                    if (plan == null) flowOf(emptyList())
-                    else feedingRepository.getMealsForPlan(plan.id)
+            // Refeições de todos os planos ativos, achatadas e ordenadas por horário.
+            // flatMapLatest recria os flows quando a lista de planos muda.
+            val mealsFlow = feedingRepository.getActiveMealPlans(petId)
+                .flatMapLatest { plans ->
+                    if (plans.isEmpty()) {
+                        flowOf(emptyList<Pair<MealPlanEntity, List<MealEntity>>>())
+                    } else {
+                        val planFlows = plans.map { plan ->
+                            feedingRepository.getMealsForPlan(plan.id)
+                                .map { meals -> plan to meals }
+                        }
+                        combine(planFlows) { it.toList() }
+                    }
                 }
 
             // Combina todas as fontes de dados em um único estado reativo.
@@ -78,15 +89,17 @@ class TodayViewModel @Inject constructor(
                 mealsFlow,
                 feedingRepository.getLogsForPetInPeriod(petId, dayStart, dayEnd),
                 waterRepository.getTotalForDay(petId, dayStart, dayEnd)
-            ) { meds, medLogs, meals, mealLogs, waterTotal ->
-                // Monta a lista de doses do dia com o status de cada uma
+            ) { meds, medLogs, planAndMeals, mealLogs, waterTotal ->
                 val doses = buildDoseItems(meds, medLogs, dayStart, dayEnd)
-                // Associa cada refeição ao seu log de hoje (se houver)
-                val mealItems = meals.map { meal ->
-                    TodayMealItem(
-                        meal = meal,
-                        log  = mealLogs.find { it.mealId == meal.id && it.date == dayStart }
-                    )
+                val mealItems = planAndMeals.flatMap { (plan, meals) ->
+                    meals.map { meal ->
+                        TodayMealItem(
+                            meal            = meal,
+                            log             = mealLogs.find { it.mealId == meal.id && it.date == dayStart },
+                            planFoodType    = plan.foodType,
+                            planFoodDetails = plan.foodDetails
+                        )
+                    }
                 }.sortedBy { it.meal.timeOfDay }
 
                 Triple(doses, mealItems, waterTotal)

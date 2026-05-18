@@ -23,6 +23,16 @@ interface FeedingDao {
     @Query("SELECT * FROM meal_plans WHERE petId = :petId AND isActive = 1 LIMIT 1")
     fun getActiveMealPlan(petId: Long): Flow<MealPlanEntity?>
 
+    // Busca todos os planos ativos do pet — suporta múltiplos planos simultâneos
+    @Query("SELECT * FROM meal_plans WHERE petId = :petId AND isActive = 1 ORDER BY createdAt ASC")
+    fun getActiveMealPlans(petId: Long): Flow<List<MealPlanEntity>>
+
+    @Query("SELECT * FROM meal_plans WHERE petId = :petId AND isActive = 1 ORDER BY createdAt ASC")
+    suspend fun getActiveMealPlansOnce(petId: Long): List<MealPlanEntity>
+
+    @Query("SELECT * FROM meal_plans WHERE id = :planId LIMIT 1")
+    suspend fun getMealPlanById(planId: Long): MealPlanEntity?
+
     @Query("SELECT * FROM meal_plans")
     suspend fun getAllMealPlansForBackup(): List<MealPlanEntity>
 
@@ -41,10 +51,13 @@ interface FeedingDao {
     @Update
     suspend fun updateMealPlan(plan: MealPlanEntity)
 
-    // Desativa o plano atual antes de criar um novo
-    // Um pet só deve ter um plano ativo por vez
+    // Desativa todos os planos do pet de uma vez — usado no fluxo de exclusão
     @Query("UPDATE meal_plans SET isActive = 0 WHERE petId = :petId")
     suspend fun deactivateAllMealPlans(petId: Long)
+
+    // Desativa um plano específico — usado ao editar um dos planos ativos
+    @Query("UPDATE meal_plans SET isActive = 0 WHERE id = :planId")
+    suspend fun deactivateMealPlan(planId: Long)
 
     @Query("DELETE FROM meal_plans WHERE id = :planId")
     suspend fun deleteMealPlan(planId: Long)

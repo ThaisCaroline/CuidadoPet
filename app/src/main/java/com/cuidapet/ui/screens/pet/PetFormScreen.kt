@@ -260,7 +260,10 @@ fun PetFormScreen(
             )
 
             var speciesExpanded by remember { mutableStateOf(false) }
-            val selectedSpeciesLabel = speciesOptions.firstOrNull { it.first == uiState.species }?.second ?: ""
+            val selectedSpeciesLabel = when {
+                uiState.species == "OTHER" && uiState.customSpecies.isNotBlank() -> uiState.customSpecies
+                else -> speciesOptions.firstOrNull { it.first == uiState.species }?.second ?: ""
+            }
             ExposedDropdownMenuBox(
                 expanded = speciesExpanded,
                 onExpandedChange = { speciesExpanded = it }
@@ -283,6 +286,7 @@ fun PetFormScreen(
                         DropdownMenuItem(
                             text = { Text(label) },
                             onClick = {
+                                if (code == "OTHER") viewModel.onCustomSpeciesChange("")
                                 viewModel.onSpeciesChange(code)
                                 speciesExpanded = false
                             }
@@ -291,7 +295,7 @@ fun PetFormScreen(
                 }
             }
 
-            if (uiState.species == "OTHER") {
+            if (uiState.species == "OTHER" && uiState.customSpecies.isBlank()) {
                 OutlinedTextField(
                     value         = uiState.customSpecies,
                     onValueChange = { if (it.length <= 50) viewModel.onCustomSpeciesChange(it) },
@@ -314,7 +318,7 @@ fun PetFormScreen(
             // ── Data de nascimento ─────────────────────────────────────────────
             SectionTitle("Data de nascimento (opcional)")
             Text(
-                "Pode ser uma data aproximada — especialmente para pets resgatados.",
+                "Pode ser uma data aproximada.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

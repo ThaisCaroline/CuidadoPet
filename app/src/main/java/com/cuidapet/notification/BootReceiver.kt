@@ -78,11 +78,10 @@ class BootReceiver : BroadcastReceiver() {
     }
 
     private suspend fun reagendarRefeicoes(petId: Long, petName: String) {
-        val plan = feedingRepository.getActiveMealPlan(petId).first() ?: return
-        val meals = feedingRepository.getMealsForPlan(plan.id).first()
-
-        meals.forEach { meal ->
-            mealAlarmScheduler.scheduleMeal(meal, petName)
+        val plans = feedingRepository.getActiveMealPlans(petId).first()
+        plans.forEach { plan ->
+            val meals = feedingRepository.getMealsForPlan(plan.id).first()
+            meals.forEach { meal -> mealAlarmScheduler.scheduleMeal(meal, petName) }
         }
     }
 }

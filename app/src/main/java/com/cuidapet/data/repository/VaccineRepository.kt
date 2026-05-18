@@ -48,30 +48,40 @@ class VaccineRepository @Inject constructor(
     private fun scheduleReminderIfNeeded(vaccine: VaccineEntity, petName: String) {
         val nextDue = vaccine.nextDueDate ?: return
         if (!vaccine.reminderEnabled) return
-        val delayMs = nextDue - System.currentTimeMillis()
-        if (delayMs <= 0) return
 
-        val data = workDataOf(
-            VaccineReminderWorker.KEY_VACCINE_ID   to vaccine.id,
-            VaccineReminderWorker.KEY_VACCINE_NAME to vaccine.name,
-            VaccineReminderWorker.KEY_VACCINE_TYPE to vaccine.type,
-            VaccineReminderWorker.KEY_PET_NAME     to petName
-        )
+        val now = System.currentTimeMillis()
+        val wm  = WorkManager.getInstance(context)
 
-        val request = OneTimeWorkRequestBuilder<VaccineReminderWorker>()
-            .setInitialDelay(delayMs, TimeUnit.MILLISECONDS)
-            .setInputData(data)
-            .addTag("vaccine_${vaccine.id}")
-            .build()
+        listOf(7, 3, 0).forEach { daysBefore ->
+            val triggerAt = nextDue - daysBefore * 86_400_000L
+            val delayMs   = triggerAt - now
+            if (delayMs <= 0) return@forEach
 
-        WorkManager.getInstance(context).enqueueUniqueWork(
-            "vaccine_reminder_${vaccine.id}",
-            ExistingWorkPolicy.REPLACE,
-            request
-        )
+            val data = workDataOf(
+                VaccineReminderWorker.KEY_VACCINE_ID   to vaccine.id,
+                VaccineReminderWorker.KEY_VACCINE_NAME to vaccine.name,
+                VaccineReminderWorker.KEY_VACCINE_TYPE to vaccine.type,
+                VaccineReminderWorker.KEY_PET_NAME     to petName,
+                VaccineReminderWorker.KEY_DAYS_BEFORE  to daysBefore
+            )
+
+            val request = OneTimeWorkRequestBuilder<VaccineReminderWorker>()
+                .setInitialDelay(delayMs, TimeUnit.MILLISECONDS)
+                .setInputData(data)
+                .build()
+
+            wm.enqueueUniqueWork(
+                "vaccine_${daysBefore}d_${vaccine.id}",
+                ExistingWorkPolicy.REPLACE,
+                request
+            )
+        }
     }
 
     private fun cancelReminder(vaccineId: Long) {
-        WorkManager.getInstance(context).cancelUniqueWork("vaccine_reminder_$vaccineId")
+        val wm = WorkManager.getInstance(context)
+        listOf(7, 3, 0).forEach { daysBefore ->
+            wm.cancelUniqueWork("vaccine_${daysBefore}d_$vaccineId")
+        }
     }
 }

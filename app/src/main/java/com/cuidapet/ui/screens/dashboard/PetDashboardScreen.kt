@@ -70,7 +70,7 @@ fun PetDashboardScreen(
     onEditPet: (Long) -> Unit,
     onAddMedication: () -> Unit = {},
     onEditMedication: (Long) -> Unit = {},
-    onConfigureMealPlan: () -> Unit = {},
+    onConfigureMealPlan: (Long?) -> Unit = {},
     onConfigureWater: () -> Unit = {},
     onNewHealthEntry: () -> Unit = {},
     onEditHealthEntry: (Long) -> Unit = {},
@@ -203,7 +203,7 @@ private fun DashboardTabContent(
     modifier: Modifier = Modifier,
     onAddMedication: () -> Unit,
     onEditMedication: (Long) -> Unit,
-    onConfigureMealPlan: () -> Unit,
+    onConfigureMealPlan: (Long?) -> Unit,
     onConfigureWater: () -> Unit,
     onNewHealthEntry: () -> Unit,
     onEditHealthEntry: (Long) -> Unit,
@@ -219,7 +219,7 @@ private fun DashboardTabContent(
         )
         2 -> FeedingTabContent(
             petId           = petId,
-            onConfigurePlan = onConfigureMealPlan,
+            onConfigurePlan = { planId -> onConfigureMealPlan(planId) },
             modifier        = modifier
         )
         3 -> WaterTabContent(

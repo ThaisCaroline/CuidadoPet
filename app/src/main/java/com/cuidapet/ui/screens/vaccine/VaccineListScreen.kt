@@ -17,6 +17,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Vaccines
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
@@ -202,7 +203,17 @@ private fun VaccineCard(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(vaccine.name, style = MaterialTheme.typography.bodyLarge)
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(vaccine.name, style = MaterialTheme.typography.bodyLarge)
+                    if (vaccine.reminderEnabled && vaccine.nextDueDate != null) {
+                        Icon(
+                            Icons.Default.Notifications,
+                            contentDescription = "Alertas ativos",
+                            modifier = Modifier.size(14.dp),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
                 if (vaccine.administeredAt != null) {
                     Text(
                         "Aplicada: ${dateFmt.format(Date(vaccine.administeredAt))}",

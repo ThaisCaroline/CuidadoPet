@@ -75,7 +75,7 @@ class VaccineFormViewModel @Inject constructor(
         val utcCal = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
         utcCal.timeInMillis = utcMs
         val local = Calendar.getInstance()
-        local.set(utcCal.get(Calendar.YEAR), utcCal.get(Calendar.MONTH), utcCal.get(Calendar.DAY_OF_MONTH), 0, 0, 0)
+        local.set(utcCal.get(Calendar.YEAR), utcCal.get(Calendar.MONTH), utcCal.get(Calendar.DAY_OF_MONTH), 9, 0, 0)
         local.set(Calendar.MILLISECOND, 0)
         return local.timeInMillis
     }

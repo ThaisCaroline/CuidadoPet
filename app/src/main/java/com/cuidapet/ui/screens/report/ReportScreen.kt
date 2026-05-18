@@ -340,23 +340,29 @@ private fun ReportContent(
         }
 
         SummaryCard(title = "Alimentação") {
-            if (report.mealPlan == null) {
+            if (report.mealPlans.isEmpty()) {
                 Text("Sem plano configurado.", style = MaterialTheme.typography.bodySmall)
             } else {
-                val foodLabel = when (report.mealPlan.foodType) {
-                    "DRY_KIBBLE"  -> "Ração seca"
-                    "WET_FOOD"    -> "Ração úmida"
-                    "NATURAL"     -> "Alimentação natural"
-                    "THERAPEUTIC" -> "Dieta terapêutica"
-                    else          -> "Outro"
-                }
-                Text(
-                    "$foodLabel${if (report.mealPlan.dailyQuantityGrams != null) " · ${report.mealPlan.dailyQuantityGrams!!.toInt()}g/dia" else ""}",
-                    style = MaterialTheme.typography.bodySmall
-                )
-                if (!report.mealPlan.restrictions.isNullOrBlank()) {
-                    Text("Restrições: ${report.mealPlan.restrictions}",
-                        style = MaterialTheme.typography.bodySmall)
+                report.mealPlans.forEach { plan ->
+                    val foodLabel = when (plan.foodType) {
+                        "DRY_KIBBLE"  -> "Ração seca"
+                        "WET_FOOD"    -> "Ração úmida"
+                        "NATURAL"     -> "Alimentação natural"
+                        "THERAPEUTIC" -> "Dieta terapêutica"
+                        else          -> "Outro"
+                    }
+                    val unitForPlan = report.meals.firstOrNull { it.mealPlanId == plan.id }?.quantityUnit ?: "g"
+                    Text(
+                        "• $foodLabel${if (plan.dailyQuantityGrams != null) " · ${plan.dailyQuantityGrams!!.toInt()}$unitForPlan/dia" else ""}",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    if (!plan.foodDetails.isNullOrBlank()) {
+                        Text("  ${plan.foodDetails}", style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    if (!plan.restrictions.isNullOrBlank()) {
+                        Text("  Restrições: ${plan.restrictions}", style = MaterialTheme.typography.bodySmall)
+                    }
                 }
             }
         }

@@ -21,55 +21,60 @@ class FeedingRepository @Inject constructor(
 
     // ─── Plano alimentar ────────────────────────────────────────────────────
 
-    // Retorna o plano ativo do pet como Flow — a tela reage automaticamente a mudanças
+    // Retorna o plano ativo do pet como Flow — mantido para compatibilidade com ReportRepository
     fun getActiveMealPlan(petId: Long): Flow<MealPlanEntity?> =
         feedingDao.getActiveMealPlan(petId)
 
-    // Cria um novo plano alimentar para o pet.
-    // Desativa qualquer plano anterior antes de inserir o novo —
-    // um pet só tem um plano ativo por vez.
-    suspend fun setMealPlan(plan: MealPlanEntity, meals: List<MealEntity>, petName: String) {
-        // Lê as refeições do plano ATUAL antes de desativá-lo para poder migrar
-        // os logs existentes: se o tutor só mudou a porção de um horário já marcado,
-        // o registro do dia não pode sumir da aba Hoje nem duplicar no relatório.
-        val currentPlan = feedingDao.getActiveMealPlanOnce(plan.petId)
-        val oldMeals = if (currentPlan != null)
-            feedingDao.getMealsForPlanOnce(currentPlan.id)
+    // Retorna todos os planos ativos do pet — suporta múltiplos planos simultâneos
+    fun getActiveMealPlans(petId: Long): Flow<List<MealPlanEntity>> =
+        feedingDao.getActiveMealPlans(petId)
+
+    // Busca um plano específico pelo ID — usado ao editar um plano existente
+    suspend fun getMealPlanById(planId: Long): MealPlanEntity? =
+        feedingDao.getMealPlanById(planId)
+
+    // Cria um novo plano ou substitui um plano existente.
+    // planIdToReplace == null → adiciona novo plano sem desativar os outros.
+    // planIdToReplace != null → desativa só aquele plano, migra logs e cria o novo.
+    suspend fun setMealPlan(
+        plan: MealPlanEntity,
+        meals: List<MealEntity>,
+        petName: String,
+        planIdToReplace: Long? = null
+    ) {
+        val oldMeals = if (planIdToReplace != null)
+            feedingDao.getMealsForPlanOnce(planIdToReplace)
         else
             emptyList()
 
-        // Desativa planos antigos para não acumular registros ativos
-        feedingDao.deactivateAllMealPlans(plan.petId)
+        if (planIdToReplace != null) {
+            feedingDao.deactivateMealPlan(planIdToReplace)
+        }
 
-        // Insere o novo plano e obtém o ID gerado pelo banco
         val planId = feedingDao.insertMealPlan(plan)
 
-        // Insere as refeições uma a uma para capturar o ID real gerado pelo banco —
-        // necessário para reassociar os logs na etapa seguinte
         val newMeals = meals.map { meal ->
             val newId = feedingDao.insertMeal(meal.copy(mealPlanId = planId))
             meal.copy(mealPlanId = planId, id = newId)
         }
 
-        // Para cada novo horário que existia no plano anterior, migra os logs:
-        // atualiza mealId nos registros antigos para apontar para o novo meal do mesmo horário
-        val oldMealsByTime = oldMeals.associateBy { it.timeOfDay }
-        newMeals.forEach { newMeal ->
-            val oldMeal = oldMealsByTime[newMeal.timeOfDay]
-            if (oldMeal != null) {
-                feedingDao.reassignMealLogs(oldMeal.id, newMeal.id)
+        if (planIdToReplace != null) {
+            val oldMealsByTime = oldMeals.associateBy { it.timeOfDay }
+            newMeals.forEach { newMeal ->
+                val oldMeal = oldMealsByTime[newMeal.timeOfDay]
+                if (oldMeal != null) {
+                    feedingDao.reassignMealLogs(oldMeal.id, newMeal.id)
+                }
             }
+            oldMeals.forEach { mealAlarmScheduler.cancelMeal(it.id) }
         }
 
-        // Cancela lembretes antigos e agenda os novos com os horários corretos
-        mealAlarmScheduler.cancelAllForPet(plan.petId)
-        newMeals.forEach { meal ->
-            mealAlarmScheduler.scheduleMeal(meal, petName)
-        }
+        newMeals.forEach { mealAlarmScheduler.scheduleMeal(it, petName) }
     }
 
     suspend fun deleteMealPlan(petId: Long, planId: Long) {
-        mealAlarmScheduler.cancelAllForPet(petId)
+        val oldMeals = feedingDao.getMealsForPlanOnce(planId)
+        oldMeals.forEach { mealAlarmScheduler.cancelMeal(it.id) }
         feedingDao.deleteMealPlan(planId)
     }
 

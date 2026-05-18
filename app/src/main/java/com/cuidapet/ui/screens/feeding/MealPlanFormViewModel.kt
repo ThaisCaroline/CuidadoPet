@@ -21,8 +21,9 @@ import javax.inject.Inject
 // a conversão para Double acontece apenas ao salvar.
 data class MealPlanFormState(
     val petName: String = "",
+    val editingPlanId: Long? = null,           // null = criando novo plano; != null = editando existente
     val foodType: String = "DRY_KIBBLE",
-    val foodDetails: String = "",              // marca da ração, ingredientes da dieta, etc.
+    val foodDetails: String = "",
     val restrictions: String = "",
     val dailyQuantityGrams: String = "",
     val dailyKcalTarget: String = "",
@@ -52,15 +53,15 @@ class MealPlanFormViewModel @Inject constructor(
     private val _state = MutableStateFlow(MealPlanFormState())
     val state: StateFlow<MealPlanFormState> = _state.asStateFlow()
 
-    // Carrega o nome do pet e o plano ativo (se existir) para pré-preencher o formulário
-    fun loadExistingPlan(petId: Long) {
+    // Carrega o nome do pet e, se planId != null, pré-preenche o formulário com o plano existente.
+    // planId == null → tela de criação de novo plano (formulário em branco).
+    fun loadPlan(petId: Long, planId: Long?) {
         viewModelScope.launch {
-            // Carrega o nome do pet para exibir na TopAppBar
             val pet = petRepository.getPetById(petId).first()
-            _state.update { it.copy(petName = pet?.name ?: "") }
+            _state.update { it.copy(petName = pet?.name ?: "", editingPlanId = planId) }
 
-            val plan = feedingRepository.getActiveMealPlan(petId).first()
-            if (plan != null) {
+            if (planId != null) {
+                val plan = feedingRepository.getMealPlanById(planId) ?: return@launch
                 val savedMeals = feedingRepository.getMealsForPlan(plan.id).first()
                 val mealEntries = if (savedMeals.isNotEmpty()) {
                     savedMeals.map { m ->
@@ -221,7 +222,7 @@ class MealPlanFormViewModel @Inject constructor(
                     )
                 }
 
-                feedingRepository.setMealPlan(plan, meals, petName)
+                feedingRepository.setMealPlan(plan, meals, petName, planIdToReplace = s.editingPlanId)
                 _state.update { it.copy(isSaving = false, isSaved = true) }
             } catch (e: Exception) {
                 _state.update { it.copy(isSaving = false, error = "Erro ao salvar: ${e.message}") }

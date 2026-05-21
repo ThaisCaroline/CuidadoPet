@@ -130,7 +130,7 @@ fun MedicationListScreen(
                         onDelete = { pendingDelete = med }
                     )
                 }
-                // item { AdBanner() }
+                item { AdBanner() }
             }
         }
     }

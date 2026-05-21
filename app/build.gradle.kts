@@ -55,8 +55,12 @@ android {
         debug {
             applicationIdSuffix = ".debug"
             versionNameSuffix   = "-debug"
+            buildConfigField("String", "BANNER_AD_UNIT_ID",       "\"ca-app-pub-3940256099942544/6300978111\"")
+            buildConfigField("String", "INTERSTITIAL_AD_UNIT_ID", "\"ca-app-pub-3940256099942544/1033173712\"")
         }
         release {
+            buildConfigField("String", "BANNER_AD_UNIT_ID",       "\"\"")
+            buildConfigField("String", "INTERSTITIAL_AD_UNIT_ID", "\"\"")
             // isMinifyEnabled remove código não utilizado (reduz tamanho do APK/AAB)
             isMinifyEnabled   = true
             isShrinkResources = true

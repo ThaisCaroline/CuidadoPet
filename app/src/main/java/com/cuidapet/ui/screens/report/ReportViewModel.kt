@@ -11,6 +11,7 @@ import com.cuidadopet.data.db.entity.WeightRecordEntity
 import com.cuidadopet.data.repository.FeedingRepository
 import com.cuidadopet.data.repository.HealthRepository
 import com.cuidadopet.data.repository.MedicationRepository
+import com.cuidadopet.data.repository.PurchaseRepository
 import com.cuidadopet.data.repository.ReportRepository
 import com.cuidadopet.data.repository.WaterRepository
 import com.cuidadopet.domain.PetReport
@@ -42,11 +43,14 @@ class ReportViewModel @Inject constructor(
     private val feedingRepository: FeedingRepository,
     private val waterRepository: WaterRepository,
     private val healthRepository: HealthRepository,
+    private val purchaseRepository: PurchaseRepository,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ReportUiState())
     val state: StateFlow<ReportUiState> = _state.asStateFlow()
+
+    val isPremium = purchaseRepository.isPremium
 
     private var selectedDays = 7
     private var currentPetId: Long = 0

@@ -55,10 +55,9 @@
                 android:resource="@xml/file_provider_paths" />
         </provider>
 
-        <!-- AdMob App ID — substituir pelo ID real ao publicar na Play Store -->
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-3940256099942544~3347511713" />
+            android:value="ca-app-pub-2305929806870072~2887455158" />
 
         <activity
             android:name=".MainActivity"

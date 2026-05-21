@@ -13,7 +13,7 @@ class CuidadoPetApp : Application() {
     override fun onCreate() {
         super.onCreate()
         NotificationChannels.createAll(this)
-        // MobileAds.initialize(this)
+        MobileAds.initialize(this)
         if (BuildConfig.REVENUECAT_API_KEY.isNotBlank()) {
             Purchases.configure(PurchasesConfiguration.Builder(this, BuildConfig.REVENUECAT_API_KEY).build())
         }

@@ -9,17 +9,20 @@ import com.google.android.gms.ads.FullScreenContentCallback
 import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.interstitial.InterstitialAd
 import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
+import java.lang.ref.WeakReference
 
 class InterstitialAdManager(context: Context) {
 
-    private val appContext = context.applicationContext
+    private val appContext    = context.applicationContext
     private var interstitialAd: InterstitialAd? = null
+    private var pendingActivity: WeakReference<Activity>? = null
 
     init {
         load()
     }
 
     private fun load() {
+        if (BuildConfig.INTERSTITIAL_AD_UNIT_ID.isBlank()) return
         InterstitialAd.load(
             appContext,
             BuildConfig.INTERSTITIAL_AD_UNIT_ID,
@@ -28,18 +31,26 @@ class InterstitialAdManager(context: Context) {
                 override fun onAdLoaded(ad: InterstitialAd) {
                     interstitialAd = ad
                     interstitialAd?.fullScreenContentCallback = object : FullScreenContentCallback() {
-                        override fun onAdDismissedFullScreenContent() { load() }
+                        override fun onAdDismissedFullScreenContent()              { load() }
                         override fun onAdFailedToShowFullScreenContent(e: AdError) { load() }
                     }
+                    // Mostra imediatamente se show() foi chamado antes de carregar
+                    pendingActivity?.get()?.let { interstitialAd?.show(it) }
+                    pendingActivity = null
                 }
                 override fun onAdFailedToLoad(error: LoadAdError) {
-                    interstitialAd = null
+                    interstitialAd  = null
+                    pendingActivity = null
                 }
             }
         )
     }
 
     fun show(activity: Activity) {
-        interstitialAd?.show(activity) ?: load()
+        if (interstitialAd != null) {
+            interstitialAd?.show(activity)
+        } else {
+            pendingActivity = WeakReference(activity)
+        }
     }
 }

@@ -57,12 +57,12 @@ android {
             versionNameSuffix   = "-debug"
             buildConfigField("String", "BANNER_AD_UNIT_ID",       "\"ca-app-pub-3940256099942544/6300978111\"")
             buildConfigField("String", "INTERSTITIAL_AD_UNIT_ID", "\"ca-app-pub-3940256099942544/1033173712\"")
-            buildConfigField("String", "REVENUECAT_API_KEY",      "\"\"")
+            buildConfigField("String", "REVENUECAT_API_KEY",      "\"goog_IHfIcQmttQkHQFWFTWFumMfmilL\"")
         }
         release {
-            buildConfigField("String", "BANNER_AD_UNIT_ID",       "\"\"")
-            buildConfigField("String", "INTERSTITIAL_AD_UNIT_ID", "\"\"")
-            buildConfigField("String", "REVENUECAT_API_KEY",      "\"\"")
+            buildConfigField("String", "BANNER_AD_UNIT_ID",       "\"ca-app-pub-2305929806870072/7948210146\"")
+            buildConfigField("String", "INTERSTITIAL_AD_UNIT_ID", "\"ca-app-pub-2305929806870072/3538191847\"")
+            buildConfigField("String", "REVENUECAT_API_KEY",      "\"goog_IHfIcQmttQkHQFWFTWFumMfmilL\"")
             // isMinifyEnabled remove código não utilizado (reduz tamanho do APK/AAB)
             isMinifyEnabled   = true
             isShrinkResources = true

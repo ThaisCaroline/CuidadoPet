@@ -57,10 +57,12 @@ android {
             versionNameSuffix   = "-debug"
             buildConfigField("String", "BANNER_AD_UNIT_ID",       "\"ca-app-pub-3940256099942544/6300978111\"")
             buildConfigField("String", "INTERSTITIAL_AD_UNIT_ID", "\"ca-app-pub-3940256099942544/1033173712\"")
+            buildConfigField("String", "REVENUECAT_API_KEY",      "\"\"")
         }
         release {
             buildConfigField("String", "BANNER_AD_UNIT_ID",       "\"\"")
             buildConfigField("String", "INTERSTITIAL_AD_UNIT_ID", "\"\"")
+            buildConfigField("String", "REVENUECAT_API_KEY",      "\"\"")
             // isMinifyEnabled remove código não utilizado (reduz tamanho do APK/AAB)
             isMinifyEnabled   = true
             isShrinkResources = true
@@ -146,6 +148,9 @@ dependencies {
 
     // AdMob — anúncios banner e intersticial
     implementation("com.google.android.gms:play-services-ads:23.6.0")
+
+    // RevenueCat — gerenciamento de assinaturas e compras in-app
+    implementation("com.revenuecat.purchases:purchases:8.3.0")
 
     // Testes
     testImplementation(libs.junit)

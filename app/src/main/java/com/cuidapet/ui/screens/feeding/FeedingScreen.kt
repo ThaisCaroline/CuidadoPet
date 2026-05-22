@@ -47,6 +47,7 @@ import com.cuidadopet.ui.utils.adaptiveHorizontalPadding
 fun FeedingTabContent(
     petId: Long,
     onConfigurePlan: (planId: Long?) -> Unit,
+    onOpenPaywall: () -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: FeedingViewModel = hiltViewModel()
 ) {
@@ -77,9 +78,12 @@ fun FeedingTabContent(
         AlertDialog(
             onDismissRequest = { showPlanLimitDialog = false },
             title = { Text("Limite atingido") },
-            text  = { Text("Limite de 5 planos atingido. Exclua um plano antes de adicionar outro.") },
+            text  = { Text("Você atingiu o limite de 5 planos do plano gratuito.") },
             confirmButton = {
-                TextButton(onClick = { showPlanLimitDialog = false }) { Text("Ok") }
+                Button(onClick = { showPlanLimitDialog = false; onOpenPaywall() }) { Text("Ver Premium") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showPlanLimitDialog = false }) { Text("Agora não") }
             }
         )
     }
@@ -121,7 +125,7 @@ fun FeedingTabContent(
             }
         }
 
-        // item { AdBanner() }
+        item { AdBanner() }
         item { Spacer(Modifier.height(16.dp)) }
     }
 }

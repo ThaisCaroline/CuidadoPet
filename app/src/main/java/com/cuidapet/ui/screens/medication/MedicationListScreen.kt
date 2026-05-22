@@ -22,6 +22,7 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.NotificationsOff
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -58,6 +59,7 @@ fun MedicationListScreen(
     modifier: Modifier = Modifier,
     onAddClick: (() -> Unit)? = null,
     onEditClick: ((Long) -> Unit)? = null,
+    onOpenPaywall: () -> Unit = {},
     viewModel: MedicationListViewModel = hiltViewModel()
 ) {
     LaunchedEffect(petId) { viewModel.loadMedications(petId) }
@@ -71,9 +73,12 @@ fun MedicationListScreen(
         AlertDialog(
             onDismissRequest = { showLimitDialog = false },
             title = { Text("Limite atingido") },
-            text  = { Text("Limite de 20 medicamentos ativos atingido. Conclua ou exclua um antes de adicionar outro.") },
+            text  = { Text("Você atingiu o limite de 20 medicamentos do plano gratuito.") },
             confirmButton = {
-                TextButton(onClick = { showLimitDialog = false }) { Text("Ok") }
+                Button(onClick = { showLimitDialog = false; onOpenPaywall() }) { Text("Ver Premium") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showLimitDialog = false }) { Text("Agora não") }
             }
         )
     }
@@ -115,7 +120,7 @@ fun MedicationListScreen(
         } else {
             LazyColumn(
                 modifier = Modifier.padding(innerPadding).fillMaxSize(),
-                contentPadding = PaddingValues(16.dp),
+                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 88.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 items(medications, key = { it.id }) { med ->
@@ -125,7 +130,7 @@ fun MedicationListScreen(
                         onDelete = { pendingDelete = med }
                     )
                 }
-                // item { AdBanner() }
+                item { AdBanner() }
             }
         }
     }

@@ -2,46 +2,55 @@ package com.cuidadopet.ui.ads
 
 import android.app.Activity
 import android.content.Context
+import com.cuidadopet.BuildConfig
 import com.google.android.gms.ads.AdError
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.FullScreenContentCallback
 import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.interstitial.InterstitialAd
 import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
-
-// ID de teste oficial do Google — substituir pelo ID real ao publicar
-private const val INTERSTITIAL_AD_UNIT_ID = "ca-app-pub-3940256099942544/1033173712"
+import java.lang.ref.WeakReference
 
 class InterstitialAdManager(context: Context) {
 
-    private val appContext = context.applicationContext
+    private val appContext    = context.applicationContext
     private var interstitialAd: InterstitialAd? = null
+    private var pendingActivity: WeakReference<Activity>? = null
 
     init {
         load()
     }
 
     private fun load() {
+        if (BuildConfig.INTERSTITIAL_AD_UNIT_ID.isBlank()) return
         InterstitialAd.load(
             appContext,
-            INTERSTITIAL_AD_UNIT_ID,
+            BuildConfig.INTERSTITIAL_AD_UNIT_ID,
             AdRequest.Builder().build(),
             object : InterstitialAdLoadCallback() {
                 override fun onAdLoaded(ad: InterstitialAd) {
                     interstitialAd = ad
                     interstitialAd?.fullScreenContentCallback = object : FullScreenContentCallback() {
-                        override fun onAdDismissedFullScreenContent() { load() }
+                        override fun onAdDismissedFullScreenContent()              { load() }
                         override fun onAdFailedToShowFullScreenContent(e: AdError) { load() }
                     }
+                    // Mostra imediatamente se show() foi chamado antes de carregar
+                    pendingActivity?.get()?.let { interstitialAd?.show(it) }
+                    pendingActivity = null
                 }
                 override fun onAdFailedToLoad(error: LoadAdError) {
-                    interstitialAd = null
+                    interstitialAd  = null
+                    pendingActivity = null
                 }
             }
         )
     }
 
     fun show(activity: Activity) {
-        interstitialAd?.show(activity) ?: load()
+        if (interstitialAd != null) {
+            interstitialAd?.show(activity)
+        } else {
+            pendingActivity = WeakReference(activity)
+        }
     }
 }

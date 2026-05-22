@@ -180,7 +180,7 @@ fun VaccineListScreen(
                     }
                 }
 
-                // item { AdBanner() }
+                item { AdBanner() }
                 item { Spacer(Modifier.height(80.dp)) }
             }
         }

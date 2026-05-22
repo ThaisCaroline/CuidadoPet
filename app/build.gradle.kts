@@ -18,8 +18,8 @@ android {
         applicationId = "com.cuidadopet"
         minSdk = 26
         targetSdk = 36
-        versionCode = 16
-        versionName = "1.0.15"
+        versionCode = 20
+        versionName = "1.0.19"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -55,8 +55,14 @@ android {
         debug {
             applicationIdSuffix = ".debug"
             versionNameSuffix   = "-debug"
+            buildConfigField("String", "BANNER_AD_UNIT_ID",       "\"ca-app-pub-3940256099942544/6300978111\"")
+            buildConfigField("String", "INTERSTITIAL_AD_UNIT_ID", "\"ca-app-pub-3940256099942544/1033173712\"")
+            buildConfigField("String", "REVENUECAT_API_KEY",      "\"goog_IHfIcQmttQkHQFWFTWFumMfmilL\"")
         }
         release {
+            buildConfigField("String", "BANNER_AD_UNIT_ID",       "\"ca-app-pub-2305929806870072/7948210146\"")
+            buildConfigField("String", "INTERSTITIAL_AD_UNIT_ID", "\"ca-app-pub-2305929806870072/3538191847\"")
+            buildConfigField("String", "REVENUECAT_API_KEY",      "\"goog_IHfIcQmttQkHQFWFTWFumMfmilL\"")
             // isMinifyEnabled remove código não utilizado (reduz tamanho do APK/AAB)
             isMinifyEnabled   = true
             isShrinkResources = true
@@ -142,6 +148,9 @@ dependencies {
 
     // AdMob — anúncios banner e intersticial
     implementation("com.google.android.gms:play-services-ads:23.6.0")
+
+    // RevenueCat — gerenciamento de assinaturas e compras in-app
+    implementation("com.revenuecat.purchases:purchases:8.3.0")
 
     // Testes
     testImplementation(libs.junit)

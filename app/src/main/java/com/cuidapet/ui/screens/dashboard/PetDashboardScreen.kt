@@ -78,6 +78,7 @@ fun PetDashboardScreen(
     onWeightHistory: () -> Unit = {},
     onReport: () -> Unit = {},
     onVaccines: () -> Unit = {},
+    onOpenPaywall: () -> Unit = {},
     viewModel: PetDashboardViewModel = hiltViewModel()
 ) {
     LaunchedEffect(petId) { viewModel.loadPet(petId) }
@@ -176,7 +177,8 @@ fun PetDashboardScreen(
                         onConfigureWater    = onConfigureWater,
                         onNewHealthEntry    = onNewHealthEntry,
                         onEditHealthEntry   = onEditHealthEntry,
-                        onWeightHistory     = onWeightHistory
+                        onWeightHistory     = onWeightHistory,
+                        onOpenPaywall       = onOpenPaywall
                     )
                 }
             }
@@ -191,7 +193,8 @@ fun PetDashboardScreen(
                 onConfigureWater    = onConfigureWater,
                 onNewHealthEntry    = onNewHealthEntry,
                 onEditHealthEntry   = onEditHealthEntry,
-                onWeightHistory     = onWeightHistory
+                onWeightHistory     = onWeightHistory,
+                onOpenPaywall       = onOpenPaywall
             )
         }
     }
@@ -208,19 +211,22 @@ private fun DashboardTabContent(
     onConfigureWater: () -> Unit,
     onNewHealthEntry: () -> Unit,
     onEditHealthEntry: (Long) -> Unit,
-    onWeightHistory: () -> Unit
+    onWeightHistory: () -> Unit,
+    onOpenPaywall: () -> Unit = {}
 ) {
     when (selectedTab) {
         0 -> TodayTabContent(petId = petId, modifier = modifier)
         1 -> MedicationListScreen(
-            petId      = petId,
-            modifier   = modifier,
-            onAddClick  = onAddMedication,
-            onEditClick = onEditMedication
+            petId         = petId,
+            modifier      = modifier,
+            onAddClick    = onAddMedication,
+            onEditClick   = onEditMedication,
+            onOpenPaywall = onOpenPaywall
         )
         2 -> FeedingTabContent(
             petId           = petId,
             onConfigurePlan = { planId -> onConfigureMealPlan(planId) },
+            onOpenPaywall   = onOpenPaywall,
             modifier        = modifier
         )
         3 -> WaterTabContent(

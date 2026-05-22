@@ -199,7 +199,7 @@ fun TodayTabContent(
             onAdd    = { ml -> viewModel.addWater(petId, ml) }
         )
 
-        // AdBanner()
+        AdBanner()
         Spacer(Modifier.height(16.dp))
     }
 }

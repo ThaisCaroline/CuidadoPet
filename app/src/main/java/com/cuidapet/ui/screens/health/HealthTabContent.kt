@@ -114,7 +114,7 @@ fun HealthTabContent(
             }
         }
 
-        // item { AdBanner() }
+        item { AdBanner() }
         item { Spacer(Modifier.height(16.dp)) }
     }
 }

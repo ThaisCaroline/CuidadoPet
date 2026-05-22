@@ -19,6 +19,7 @@ import com.cuidadopet.ui.screens.health.WeightHistoryScreen
 import com.cuidadopet.ui.screens.report.ReportScreen
 import com.cuidadopet.ui.screens.vaccine.VaccineFormScreen
 import com.cuidadopet.ui.screens.vaccine.VaccineListScreen
+import com.cuidadopet.ui.screens.paywall.PaywallScreen
 import com.cuidadopet.ui.screens.water.WaterConfigFormScreen
 
 // Todas as rotas do app centralizadas aqui
@@ -34,6 +35,7 @@ object Routes {
     const val REPORT         = "report/{petId}"          // relatório do pet
     const val PRIVACY_POLICY = "privacy_policy"           // política de privacidade
     const val SETTINGS       = "settings"                  // configurações / backup
+    const val PAYWALL        = "paywall"                   // assinatura premium
     const val VACCINE_LIST   = "vaccine_list/{petId}"
     const val VACCINE_FORM   = "vaccine_form/{petId}?vaccineId={vaccineId}"
 
@@ -69,10 +71,11 @@ fun AppNavigation(
         // ── Home — lista de pets ─────────────────────────────────────────
         composable(Routes.HOME) {
             HomeScreen(
-                onAddPetClick      = { navController.navigate(Routes.petForm()) },
-                onPetClick         = { petId -> navController.navigate(Routes.dashboard(petId)) },
-                onPrivacyPolicy    = { navController.navigate(Routes.PRIVACY_POLICY) },
-                onSettings         = { navController.navigate(Routes.SETTINGS) }
+                onAddPetClick   = { navController.navigate(Routes.petForm()) },
+                onPetClick      = { petId -> navController.navigate(Routes.dashboard(petId)) },
+                onPrivacyPolicy = { navController.navigate(Routes.PRIVACY_POLICY) },
+                onSettings      = { navController.navigate(Routes.SETTINGS) },
+                onOpenPaywall   = { navController.navigate(Routes.PAYWALL) }
             )
         }
 
@@ -83,7 +86,15 @@ fun AppNavigation(
 
         // ── Configurações / Backup ────────────────────────────────────────
         composable(Routes.SETTINGS) {
-            SettingsScreen(onNavigateBack = { navController.popBackStack() })
+            SettingsScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onOpenPaywall  = { navController.navigate(Routes.PAYWALL) }
+            )
+        }
+
+        // ── Paywall — planos premium ──────────────────────────────────────
+        composable(Routes.PAYWALL) {
+            PaywallScreen(onNavigateBack = { navController.popBackStack() })
         }
 
         // ── Cadastro / Edição de pet ─────────────────────────────────────
@@ -118,7 +129,8 @@ fun AppNavigation(
                 onEditHealthEntry    = { navController.navigate(Routes.healthEntry(petId, it)) },
                 onWeightHistory      = { navController.navigate(Routes.weightHistory(petId)) },
                 onReport             = { navController.navigate(Routes.report(petId)) },
-                onVaccines           = { navController.navigate(Routes.vaccineList(petId)) }
+                onVaccines           = { navController.navigate(Routes.vaccineList(petId)) },
+                onOpenPaywall        = { navController.navigate(Routes.PAYWALL) }
             )
         }
 

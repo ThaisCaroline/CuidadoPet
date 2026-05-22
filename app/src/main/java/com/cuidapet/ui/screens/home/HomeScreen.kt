@@ -21,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -64,7 +65,8 @@ fun HomeScreen(
     onAddPetClick: () -> Unit,
     onPetClick: (Long) -> Unit,
     onPrivacyPolicy: () -> Unit = {},
-    onSettings: () -> Unit = {}
+    onSettings: () -> Unit = {},
+    onOpenPaywall: () -> Unit = {}
 ) {
     val viewModel: HomeViewModel = hiltViewModel()
     val pets by viewModel.pets.collectAsStateWithLifecycle()
@@ -135,6 +137,11 @@ fun HomeScreen(
                         expanded         = menuExpanded,
                         onDismissRequest = { menuExpanded = false }
                     ) {
+                        DropdownMenuItem(
+                            text         = { Text("Seja Premium", color = MaterialTheme.colorScheme.primary) },
+                            leadingIcon  = { Icon(Icons.Default.Star, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+                            onClick      = { menuExpanded = false; onOpenPaywall() }
+                        )
                         DropdownMenuItem(
                             text    = { Text("Configurações") },
                             onClick = { menuExpanded = false; onSettings() }

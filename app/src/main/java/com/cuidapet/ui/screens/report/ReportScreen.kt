@@ -98,14 +98,17 @@ fun ReportScreen(
 ) {
     LaunchedEffect(petId) { viewModel.load(petId) }
 
-    val state   by viewModel.state.collectAsStateWithLifecycle()
-    val context = LocalContext.current
+    val state      by viewModel.state.collectAsStateWithLifecycle()
+    val isPremium  by viewModel.isPremium.collectAsStateWithLifecycle()
+    val context    = LocalContext.current
     val snackbarHost = remember { SnackbarHostState() }
-    // val interstitialAd = remember { InterstitialAdManager(context) }
-    // LaunchedEffect(petId) {
-    //     val activity = context as? android.app.Activity
-    //     activity?.let { interstitialAd.show(it) }
-    // }
+    val interstitialAd = remember { InterstitialAdManager(context) }
+    LaunchedEffect(petId) {
+        if (!isPremium) {
+            val activity = context as? android.app.Activity
+            activity?.let { interstitialAd.show(it) }
+        }
+    }
 
     // Quando o PDF estiver pronto, abre o share dialog do Android automaticamente
     LaunchedEffect(state.pdfFile) {

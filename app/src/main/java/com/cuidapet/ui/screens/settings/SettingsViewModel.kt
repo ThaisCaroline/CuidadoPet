@@ -7,7 +7,9 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cuidadopet.data.backup.BackupManager
+import com.cuidadopet.data.repository.PurchaseRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.io.File
 import javax.inject.Inject
@@ -20,8 +22,11 @@ data class SettingsUiState(
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val backupManager: BackupManager
+    private val backupManager: BackupManager,
+    private val purchaseRepository: PurchaseRepository
 ) : ViewModel() {
+
+    val isPremium: StateFlow<Boolean> = purchaseRepository.isPremium
 
     var uiState by mutableStateOf(SettingsUiState())
         private set

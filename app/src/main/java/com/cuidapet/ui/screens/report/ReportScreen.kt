@@ -391,13 +391,14 @@ private fun ReportContent(
                 orderedDays.forEach { day ->
                     val dayMealLogs     = mealsByDay[day] ?: emptyList()
                     val daySporadicLogs = sporadicByDay[day] ?: emptyList()
-                    val mealTotal       = dayMealLogs.sumOf { log ->
-                        (mealsById[log.mealId]?.quantityGrams ?: 0.0) * log.eatenPercentage / 100.0
+                    val byUnit = dayMealLogs.groupBy { log ->
+                        mealsById[log.mealId]?.quantityUnit ?: "g"
                     }
-                    val dayTotal = mealTotal + daySporadicLogs.sumOf { it.amountGrams ?: 0.0 }
-                    val unit     = dayMealLogs.firstOrNull()?.let { mealsById[it.mealId]?.quantityUnit } ?: "g"
-                    val foodTypes = dayMealLogs
-                        .mapNotNull { log ->
+                    val unitLines = byUnit.entries.map { (unit, logs) ->
+                        val total = logs.sumOf { log ->
+                            (mealsById[log.mealId]?.quantityGrams ?: 0.0) * log.eatenPercentage / 100.0
+                        }
+                        val types = logs.mapNotNull { log ->
                             mealsById[log.mealId]?.mealPlanId?.let { planId ->
                                 when (planById[planId]?.foodType) {
                                     "DRY_KIBBLE"  -> "Ração seca"
@@ -407,28 +408,39 @@ private fun ReportContent(
                                     else          -> null
                                 }
                             }
+                        }.distinct()
+                        val typeLabel = if (types.isNotEmpty()) " · ${types.joinToString(", ")}" else ""
+                        Triple(total, unit, "${total.toInt()} $unit$typeLabel")
+                    }
+                    val sporadicTotal = daySporadicLogs.sumOf { it.amountGrams ?: 0.0 }
+                    val editTotal = (unitLines.firstOrNull()?.first ?: 0.0) + sporadicTotal
+                    val editUnit  = unitLines.firstOrNull()?.second ?: "g"
+
+                    Column(modifier = Modifier.clickable {
+                        editingFoodDay = FoodDayEditState(day, editTotal, editUnit, dayMealLogs, daySporadicLogs)
+                    }) {
+                        Text(
+                            "$day  ✏",
+                            style      = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        unitLines.forEach { (_, _, label) ->
+                            Text(
+                                "  $label",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
-                        .distinct()
-                    val foodLabel = if (foodTypes.isNotEmpty()) " · ${foodTypes.joinToString(", ")}" else ""
-                    Text(
-                        "$day: ${dayTotal.toInt()} $unit$foodLabel  ✏",
-                        style      = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.SemiBold,
-                        modifier   = Modifier.clickable {
-                            editingFoodDay = FoodDayEditState(day, dayTotal, unit, dayMealLogs, daySporadicLogs)
+                        if (sporadicTotal > 0) {
+                            Text(
+                                "  ${sporadicTotal.toInt()} g",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
-                    )
+                    }
                 }
 
-                val grandTotal = report.mealLogs.sumOf { log ->
-                    (mealsById[log.mealId]?.quantityGrams ?: 0.0) * log.eatenPercentage / 100.0
-                } + report.sporadicLogs.sumOf { it.amountGrams ?: 0.0 }
-                Text(
-                    "Total: ${grandTotal.toInt()} g",
-                    style      = MaterialTheme.typography.bodySmall,
-                    fontWeight = FontWeight.SemiBold,
-                    color      = MaterialTheme.colorScheme.primary
-                )
             }
         }
 
@@ -450,12 +462,6 @@ private fun ReportContent(
                             }
                         )
                     }
-                Text(
-                    "Total: ${report.waterLogs.sumOf { it.amountMl }.toInt()} ml",
-                    style      = MaterialTheme.typography.bodySmall,
-                    fontWeight = FontWeight.SemiBold,
-                    color      = MaterialTheme.colorScheme.primary
-                )
             }
         }
 

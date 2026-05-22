@@ -380,6 +380,7 @@ private fun ReportContent(
                 Text("Nenhuma refeição registrada no período.", style = MaterialTheme.typography.bodySmall)
             } else {
                 val mealsById     = report.meals.associateBy { it.id }
+                val planById      = report.mealPlans.associateBy { it.id }
                 val mealsByDay    = report.mealLogs.sortedBy { it.date }
                     .groupBy { dateFmt.format(Date(it.date)) }
                 val sporadicByDay = report.sporadicLogs.sortedBy { it.registeredAt }
@@ -395,8 +396,22 @@ private fun ReportContent(
                     }
                     val dayTotal = mealTotal + daySporadicLogs.sumOf { it.amountGrams ?: 0.0 }
                     val unit     = dayMealLogs.firstOrNull()?.let { mealsById[it.mealId]?.quantityUnit } ?: "g"
+                    val foodTypes = dayMealLogs
+                        .mapNotNull { log ->
+                            mealsById[log.mealId]?.mealPlanId?.let { planId ->
+                                when (planById[planId]?.foodType) {
+                                    "DRY_KIBBLE"  -> "Ração seca"
+                                    "WET_FOOD"    -> "Ração úmida"
+                                    "NATURAL"     -> "Alimentação natural"
+                                    "THERAPEUTIC" -> "Dieta terapêutica"
+                                    else          -> null
+                                }
+                            }
+                        }
+                        .distinct()
+                    val foodLabel = if (foodTypes.isNotEmpty()) " · ${foodTypes.joinToString(", ")}" else ""
                     Text(
-                        "$day: ${dayTotal.toInt()} $unit  ✏",
+                        "$day: ${dayTotal.toInt()} $unit$foodLabel  ✏",
                         style      = MaterialTheme.typography.bodySmall,
                         fontWeight = FontWeight.SemiBold,
                         modifier   = Modifier.clickable {

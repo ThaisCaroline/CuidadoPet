@@ -74,12 +74,12 @@ class WaterReminderWorker(
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val targetText = if (targetMl > 0) " (meta: ${targetMl.toInt()} ml/dia)" else ""
+        val targetText = if (targetMl > 0) context.getString(R.string.notif_water_target, targetMl.toInt()) else ""
 
         val notification = NotificationCompat.Builder(context, NotificationChannels.CHANNEL_WATER)
             .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle("Hora de oferecer água para $petName")
-            .setContentText("Lembre de hidratar seu pet$targetText")
+            .setContentTitle(context.getString(R.string.notif_water_title, petName))
+            .setContentText(context.getString(R.string.notif_water_body, targetText))
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setDefaults(NotificationCompat.DEFAULT_ALL)
             .setContentIntent(pendingIntent)

@@ -39,6 +39,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.ui.res.stringResource
+import com.cuidadopet.R
 import com.revenuecat.purchases.Package
 import com.revenuecat.purchases.PackageType
 
@@ -58,10 +60,10 @@ fun PaywallScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("CuidadoPet Premium") },
+                title = { Text(stringResource(R.string.paywall_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
                     }
                 }
             )
@@ -87,12 +89,12 @@ fun PaywallScreen(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Default.Star, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                             Spacer(Modifier.width(8.dp))
-                            Text("O que você ganha", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                            Text(stringResource(R.string.paywall_what_you_get), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                         }
                         listOf(
-                            "Planos alimentares ilimitados",
-                            "Medicamentos ilimitados",
-                            "Sem anúncios"
+                            stringResource(R.string.settings_premium_benefit_plans),
+                            stringResource(R.string.settings_premium_benefit_meds),
+                            stringResource(R.string.settings_premium_benefit_no_ads)
                         ).forEach { benefit ->
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(
@@ -120,7 +122,7 @@ fun PaywallScreen(
                 if (packages.isEmpty()) {
                     item {
                         Text(
-                            "Planos indisponíveis no momento. Tente novamente mais tarde.",
+                            stringResource(R.string.paywall_unavailable),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -148,7 +150,7 @@ fun PaywallScreen(
                     onClick  = { viewModel.restorePurchases(context as Activity) },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Restaurar compras")
+                    Text(stringResource(R.string.paywall_restore))
                 }
             }
         }
@@ -158,9 +160,9 @@ fun PaywallScreen(
 @Composable
 private fun PackageCard(rcPackage: Package, onClick: () -> Unit) {
     val label = when (rcPackage.packageType) {
-        PackageType.MONTHLY  -> "Mensal"
-        PackageType.ANNUAL   -> "Anual"
-        PackageType.LIFETIME -> "Vitalício"
+        PackageType.MONTHLY  -> stringResource(R.string.paywall_monthly)
+        PackageType.ANNUAL   -> stringResource(R.string.paywall_annual)
+        PackageType.LIFETIME -> stringResource(R.string.paywall_lifetime)
         else                 -> rcPackage.identifier
     }
     val price = rcPackage.product.price.formatted

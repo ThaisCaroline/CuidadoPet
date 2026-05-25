@@ -1,5 +1,8 @@
 package com.cuidadopet.domain
 
+import android.content.Context
+import com.cuidadopet.R
+
 // Calculadora de necessidade hídrica diária
 // Referência: WSAVA — 40 a 60 ml por kg de peso corporal por dia
 // Para pets doentes o veterinário pode prescrever valores diferentes —
@@ -49,10 +52,10 @@ enum class HydrationStatus {
 }
 
 // Texto de exibição para cada status
-fun HydrationStatus.toDisplayText(): String = when (this) {
-    HydrationStatus.SUFFICIENT        -> "Hidratação adequada"
-    HydrationStatus.PARTIAL           -> "Abaixo da meta — continue oferecendo água"
-    HydrationStatus.BELOW_MINIMUM     -> "Muito pouca água hoje — monitore com atenção"
-    HydrationStatus.ABOVE_RECOMMENDED -> "Consumo elevado — consulte o veterinário se persistir"
-    HydrationStatus.NO_RECORD         -> "Nenhum registro hoje"
+fun HydrationStatus.toDisplayText(context: Context): String = when (this) {
+    HydrationStatus.SUFFICIENT        -> context.getString(R.string.hydration_sufficient)
+    HydrationStatus.PARTIAL           -> context.getString(R.string.hydration_partial)
+    HydrationStatus.BELOW_MINIMUM     -> context.getString(R.string.hydration_below_minimum)
+    HydrationStatus.ABOVE_RECOMMENDED -> context.getString(R.string.hydration_above_recommended)
+    HydrationStatus.NO_RECORD         -> context.getString(R.string.hydration_no_record)
 }

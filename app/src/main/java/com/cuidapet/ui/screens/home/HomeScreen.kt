@@ -47,8 +47,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.shape.CircleShape
+import android.content.Context
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.cuidadopet.R
@@ -75,22 +78,18 @@ fun HomeScreen(
     if (pendingDelete != null) {
         AlertDialog(
             onDismissRequest = { pendingDelete = null },
-            title   = { Text("Excluir pet?") },
+            title   = { Text(stringResource(R.string.dialog_delete_pet_title)) },
             text    = {
-                Text(
-                    "\"${pendingDelete!!.name}\" e todos os dados vinculados " +
-                    "(medicamentos, registros de saúde, água e alimentação) " +
-                    "serão excluídos permanentemente."
-                )
+                Text(stringResource(R.string.dialog_delete_pet_msg, pendingDelete!!.name))
             },
             confirmButton = {
                 TextButton(onClick = {
                     viewModel.deletePet(pendingDelete!!)
                     pendingDelete = null
-                }) { Text("Excluir", color = MaterialTheme.colorScheme.error) }
+                }) { Text(stringResource(R.string.action_delete), color = MaterialTheme.colorScheme.error) }
             },
             dismissButton = {
-                TextButton(onClick = { pendingDelete = null }) { Text("Cancelar") }
+                TextButton(onClick = { pendingDelete = null }) { Text(stringResource(R.string.action_cancel)) }
             }
         )
     }
@@ -122,7 +121,7 @@ fun HomeScreen(
                                 .clip(CircleShape)
                         )
                         Text(
-                            text = "CuidadoPet",
+                            text = stringResource(R.string.home_title),
                             style = MaterialTheme.typography.titleLarge
                         )
                     }
@@ -137,17 +136,18 @@ fun HomeScreen(
                         expanded         = menuExpanded,
                         onDismissRequest = { menuExpanded = false }
                     ) {
+                        // TODO: descomentar quando o premium estiver ativo
+                        // DropdownMenuItem(
+                        //     text         = { Text(stringResource(R.string.home_menu_be_premium), color = MaterialTheme.colorScheme.primary) },
+                        //     leadingIcon  = { Icon(Icons.Default.Star, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+                        //     onClick      = { menuExpanded = false; onOpenPaywall() }
+                        // )
                         DropdownMenuItem(
-                            text         = { Text("Seja Premium", color = MaterialTheme.colorScheme.primary) },
-                            leadingIcon  = { Icon(Icons.Default.Star, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
-                            onClick      = { menuExpanded = false; onOpenPaywall() }
-                        )
-                        DropdownMenuItem(
-                            text    = { Text("Configurações") },
+                            text    = { Text(stringResource(R.string.home_menu_settings)) },
                             onClick = { menuExpanded = false; onSettings() }
                         )
                         DropdownMenuItem(
-                            text    = { Text("Política de privacidade") },
+                            text    = { Text(stringResource(R.string.home_menu_privacy)) },
                             onClick = { menuExpanded = false; onPrivacyPolicy() }
                         )
                     }
@@ -165,7 +165,7 @@ fun HomeScreen(
             ) {
                 Icon(
                     imageVector = Icons.Default.Add,
-                    contentDescription = "Adicionar pet",
+                    contentDescription = stringResource(R.string.home_add_pet_cd),
                     tint = MaterialTheme.colorScheme.onSecondary
                 )
             }
@@ -200,13 +200,13 @@ private fun EmptyPetsContent(modifier: Modifier = Modifier) {
             )
             Spacer(modifier = Modifier.height(16.dp))
             Text(
-                text = "Nenhum pet cadastrado",
+                text = stringResource(R.string.home_no_pets_title),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onBackground
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Toque no + para adicionar\nseu primeiro pet",
+                text = stringResource(R.string.home_no_pets_hint),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
@@ -270,11 +270,12 @@ private fun PetCard(
         ) {
             PetAvatar(photoPath = pet.photoPath, petName = pet.name, size = 56.dp)
 
+            val context = LocalContext.current
             Column(modifier = Modifier.weight(1f)) {
                 Text(pet.name, style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface)
                 Spacer(Modifier.height(2.dp))
-                val speciesLabel = petSpeciesLabel(pet.species, pet.customSpecies)
+                val speciesLabel = petSpeciesLabel(context, pet.species, pet.customSpecies)
                 val subtitle = if (pet.breed != null) "$speciesLabel • ${pet.breed}" else speciesLabel
                 Text(subtitle, style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -285,7 +286,7 @@ private fun PetCard(
 
             Box {
                 IconButton(onClick = { menuExpanded = true }) {
-                    Icon(Icons.Default.MoreVert, contentDescription = "Opções do pet",
+                    Icon(Icons.Default.MoreVert, contentDescription = stringResource(R.string.home_pet_options_cd),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 DropdownMenu(
@@ -293,7 +294,7 @@ private fun PetCard(
                     onDismissRequest = { menuExpanded = false }
                 ) {
                     DropdownMenuItem(
-                        text = { Text("Excluir", color = MaterialTheme.colorScheme.error) },
+                        text = { Text(stringResource(R.string.action_delete), color = MaterialTheme.colorScheme.error) },
                         onClick = { menuExpanded = false; onDelete() }
                     )
                 }
@@ -302,14 +303,14 @@ private fun PetCard(
     }
 }
 
-private fun petSpeciesLabel(species: String, customSpecies: String?): String = when (species) {
-    "DOG"     -> "Cachorro"
-    "CAT"     -> "Gato"
-    "RABBIT"  -> "Coelho"
-    "BIRD"    -> "Pássaro"
-    "HAMSTER" -> "Hamster"
-    "TURTLE"  -> "Tartaruga"
-    "FISH"    -> "Peixe"
-    "OTHER"   -> customSpecies?.takeIf { it.isNotBlank() } ?: "Outro"
+private fun petSpeciesLabel(context: Context, species: String, customSpecies: String?): String = when (species) {
+    "DOG"     -> context.getString(com.cuidadopet.R.string.species_dog)
+    "CAT"     -> context.getString(com.cuidadopet.R.string.species_cat)
+    "RABBIT"  -> context.getString(com.cuidadopet.R.string.species_rabbit)
+    "BIRD"    -> context.getString(com.cuidadopet.R.string.species_bird)
+    "HAMSTER" -> context.getString(com.cuidadopet.R.string.species_hamster)
+    "TURTLE"  -> context.getString(com.cuidadopet.R.string.species_turtle)
+    "FISH"    -> context.getString(com.cuidadopet.R.string.species_fish)
+    "OTHER"   -> customSpecies?.takeIf { it.isNotBlank() } ?: context.getString(com.cuidadopet.R.string.species_other)
     else      -> species
 }

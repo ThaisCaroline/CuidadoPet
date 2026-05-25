@@ -47,6 +47,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.ui.res.stringResource
+import com.cuidadopet.R
 import com.cuidadopet.data.db.entity.MedicationEntity
 import com.cuidadopet.ui.components.AdBanner
 import java.text.SimpleDateFormat
@@ -72,13 +74,13 @@ fun MedicationListScreen(
     if (showLimitDialog) {
         AlertDialog(
             onDismissRequest = { showLimitDialog = false },
-            title = { Text("Limite atingido") },
-            text  = { Text("Você atingiu o limite de 20 medicamentos do plano gratuito.") },
+            title = { Text(stringResource(R.string.dialog_med_limit_title)) },
+            text  = { Text(stringResource(R.string.dialog_med_limit_msg)) },
             confirmButton = {
-                Button(onClick = { showLimitDialog = false; onOpenPaywall() }) { Text("Ver Premium") }
+                Button(onClick = { showLimitDialog = false; onOpenPaywall() }) { Text(stringResource(R.string.dialog_med_limit_premium)) }
             },
             dismissButton = {
-                TextButton(onClick = { showLimitDialog = false }) { Text("Agora não") }
+                TextButton(onClick = { showLimitDialog = false }) { Text(stringResource(R.string.dialog_med_limit_later)) }
             }
         )
     }
@@ -86,16 +88,16 @@ fun MedicationListScreen(
     if (pendingDelete != null) {
         AlertDialog(
             onDismissRequest = { pendingDelete = null },
-            title   = { Text("Excluir medicamento?") },
-            text    = { Text("\"${pendingDelete!!.name}\" será desativado e não aparecerá mais na lista. O histórico de doses registradas é mantido.") },
+            title   = { Text(stringResource(R.string.dialog_med_delete_title)) },
+            text    = { Text(stringResource(R.string.dialog_med_delete_msg, pendingDelete!!.name)) },
             confirmButton = {
                 TextButton(onClick = {
                     viewModel.deactivateMedication(pendingDelete!!.id)
                     pendingDelete = null
-                }) { Text("Excluir", color = MaterialTheme.colorScheme.error) }
+                }) { Text(stringResource(R.string.action_delete), color = MaterialTheme.colorScheme.error) }
             },
             dismissButton = {
-                TextButton(onClick = { pendingDelete = null }) { Text("Cancelar") }
+                TextButton(onClick = { pendingDelete = null }) { Text(stringResource(R.string.action_cancel)) }
             }
         )
     }
@@ -110,7 +112,7 @@ fun MedicationListScreen(
                 },
                 containerColor = MaterialTheme.colorScheme.secondary
             ) {
-                Icon(Icons.Default.Add, "Adicionar medicamento",
+                Icon(Icons.Default.Add, stringResource(R.string.med_list_add_cd),
                     tint = MaterialTheme.colorScheme.onSecondary)
             }
         }
@@ -144,9 +146,9 @@ private fun EmptyMedicationsContent(modifier: Modifier = Modifier) {
                 modifier = Modifier.size(72.dp),
                 tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f))
             Spacer(Modifier.height(16.dp))
-            Text("Nenhum medicamento ativo", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.med_list_empty_title), style = MaterialTheme.typography.titleMedium)
             Spacer(Modifier.height(8.dp))
-            Text("Toque no + para adicionar\num medicamento prescrito",
+            Text(stringResource(R.string.med_list_empty_hint),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center)
@@ -178,17 +180,17 @@ private fun MedicationCard(
                 )
                 Icon(
                     imageVector = if (medication.reminderEnabled) Icons.Default.Notifications else Icons.Default.NotificationsOff,
-                    contentDescription = if (medication.reminderEnabled) "Lembrete ativo" else "Lembrete desativado",
+                    contentDescription = if (medication.reminderEnabled) stringResource(R.string.med_list_reminder_on_cd) else stringResource(R.string.med_list_reminder_off_cd),
                     tint = if (medication.reminderEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
                     modifier = Modifier.size(18.dp)
                 )
                 IconButton(onClick = onEdit, modifier = Modifier.size(36.dp)) {
-                    Icon(Icons.Default.Edit, "Editar",
+                    Icon(Icons.Default.Edit, stringResource(R.string.med_list_edit_cd),
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(20.dp))
                 }
                 IconButton(onClick = onDelete, modifier = Modifier.size(36.dp)) {
-                    Icon(Icons.Default.Delete, "Excluir",
+                    Icon(Icons.Default.Delete, stringResource(R.string.med_list_delete_cd),
                         tint = MaterialTheme.colorScheme.error,
                         modifier = Modifier.size(20.dp))
                 }
@@ -197,11 +199,11 @@ private fun MedicationCard(
             Spacer(Modifier.height(4.dp))
 
             val formLabel = when (medication.form) {
-                "ORAL"       -> "Oral"
-                "TOPICAL"    -> "Tópico"
-                "INJECTABLE" -> "Injetável"
-                "EYE_DROP"   -> "Colírio"
-                else         -> "Outro"
+                "ORAL"       -> stringResource(R.string.dose_form_oral)
+                "TOPICAL"    -> stringResource(R.string.dose_form_topical)
+                "INJECTABLE" -> stringResource(R.string.dose_form_injectable)
+                "EYE_DROP"   -> stringResource(R.string.dose_form_eye_drop)
+                else         -> stringResource(R.string.dose_form_other)
             }
             Text("${medication.dose} ${medication.doseUnit} • $formLabel",
                 style = MaterialTheme.typography.bodyMedium,
@@ -210,7 +212,7 @@ private fun MedicationCard(
             Spacer(Modifier.height(4.dp))
 
             val frequencyText = when (medication.frequencyType) {
-                "INTERVAL"    -> "A cada ${medication.frequencyHours}h"
+                "INTERVAL"    -> stringResource(R.string.med_list_interval, medication.frequencyHours ?: 0)
                 "FIXED_TIMES" -> medication.fixedTimes
                     ?.removeSurrounding("[", "]")
                     ?.split(",")
@@ -218,7 +220,7 @@ private fun MedicationCard(
                     ?: ""
                 else -> ""
             }
-            val badge = if (medication.isContinuous) "Uso contínuo" else "Com prazo"
+            val badge = if (medication.isContinuous) stringResource(R.string.med_list_continuous) else stringResource(R.string.med_list_with_deadline)
             Text("$badge • $frequencyText",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.primary)
@@ -227,9 +229,9 @@ private fun MedicationCard(
 
             val fmt = SimpleDateFormat("dd/MM/yyyy", Locale("pt", "BR"))
             val dateRangeText = if (medication.isContinuous) {
-                "Desde ${fmt.format(Date(medication.startDate))}"
+                stringResource(R.string.med_list_since, fmt.format(Date(medication.startDate)))
             } else if (medication.endDate != null) {
-                "${fmt.format(Date(medication.startDate))} → ${fmt.format(Date(medication.endDate))}"
+                stringResource(R.string.med_list_from_to, fmt.format(Date(medication.startDate)), fmt.format(Date(medication.endDate)))
             } else null
 
             if (dateRangeText != null) {
@@ -246,7 +248,7 @@ private fun MedicationCard(
                 Spacer(Modifier.height(6.dp))
                 SuggestionChip(
                     onClick = {},
-                    label = { Text("Concluído", style = MaterialTheme.typography.labelSmall) },
+                    label = { Text(stringResource(R.string.med_list_completed), style = MaterialTheme.typography.labelSmall) },
                     icon = {
                         Icon(
                             Icons.Default.CheckCircle,

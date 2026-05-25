@@ -52,6 +52,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
@@ -61,6 +62,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import coil.compose.AsyncImage
+import com.cuidadopet.R
 import com.cuidadopet.data.db.entity.HealthPhotoEntity
 import com.cuidadopet.data.db.entity.MealLogEntity
 import com.cuidadopet.data.db.entity.MedicationLogEntity
@@ -110,32 +112,22 @@ fun ReportScreen(
         }
     }
 
-    // Quando o PDF estiver pronto, abre o share dialog do Android automaticamente
     LaunchedEffect(state.pdfFile) {
         val file = state.pdfFile ?: return@LaunchedEffect
-
-        // FileProvider.getUriForFile transforma o File em Uri segura para compartilhamento
-        // A authority deve bater com o que está declarado no AndroidManifest
         val uri = FileProvider.getUriForFile(
             context,
             "${context.packageName}.fileprovider",
             file
         )
-
-        // Cria um Intent de compartilhamento para o PDF
         val intent = Intent(Intent.ACTION_SEND).apply {
             type    = "application/pdf"
             putExtra(Intent.EXTRA_STREAM, uri)
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)  // permite que o app receptor leia o arquivo
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
-        // Abre o seletor de apps (WhatsApp, Drive, e-mail etc.)
-        context.startActivity(Intent.createChooser(intent, "Compartilhar PDF"))
-
-        // Limpa o pdfFile do estado para evitar reabrir o dialog ao girar a tela
+        context.startActivity(Intent.createChooser(intent, context.getString(R.string.report_share_pdf_chooser)))
         viewModel.clearPdfFile()
     }
 
-    // Mostra o erro como Snackbar se houver
     LaunchedEffect(state.error) {
         state.error?.let {
             snackbarHost.showSnackbar(it)
@@ -147,10 +139,10 @@ fun ReportScreen(
         snackbarHost = { SnackbarHost(snackbarHost) },
         topBar = {
             TopAppBar(
-                title = { Text("Relatório") },
+                title = { Text(stringResource(R.string.report_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -180,7 +172,7 @@ fun ReportScreen(
                             type = "text/plain"
                             putExtra(Intent.EXTRA_TEXT, text)
                         }
-                        context.startActivity(Intent.createChooser(intent, "Compartilhar relatório"))
+                        context.startActivity(Intent.createChooser(intent, context.getString(R.string.report_share_chooser)))
                     },
                     onGeneratePdf       = { viewModel.generatePdf() },
                     onChangePeriod      = { days -> viewModel.load(petId, days) },
@@ -200,7 +192,7 @@ fun ReportScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        "Não foi possível carregar os dados.",
+                        stringResource(R.string.report_loading_error),
                         color = MaterialTheme.colorScheme.error
                     )
                 }
@@ -273,11 +265,14 @@ private fun ReportContent(
     ) {
         Spacer(Modifier.height(8.dp))
 
-        // ── Seletor de período ────────────────────────────────────────────────
-        val periods = listOf(7 to "7 dias", 14 to "14 dias", 30 to "30 dias")
+        val periods = listOf(
+            7  to stringResource(R.string.report_period_7d),
+            14 to stringResource(R.string.report_period_14d),
+            30 to stringResource(R.string.report_period_30d)
+        )
         val currentDays = ((report.periodEnd - report.periodStart) / 86_400_000).toInt()
 
-        Text("Período do relatório", style = MaterialTheme.typography.labelMedium)
+        Text(stringResource(R.string.report_period_label), style = MaterialTheme.typography.labelMedium)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             periods.forEach { (days, label) ->
                 FilterChip(
@@ -288,7 +283,6 @@ private fun ReportContent(
             }
         }
 
-        // ── Cabeçalho do relatório ────────────────────────────────────────────
         val (actualStart, actualEnd) = remember(report) { actualDataDateRange(report) }
         val periodLabel = if (dateFmt.format(Date(actualStart)) == dateFmt.format(Date(actualEnd)))
             dateFmt.format(Date(actualStart))
@@ -301,7 +295,7 @@ private fun ReportContent(
         ) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
-                    "Relatório de ${report.pet.name}",
+                    stringResource(R.string.report_header, report.pet.name),
                     style      = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -313,12 +307,11 @@ private fun ReportContent(
             }
         }
 
-        // ── Resumo dos dados ──────────────────────────────────────────────────
-        SummaryCard(title = "Medicamentos em uso") {
+        SummaryCard(title = stringResource(R.string.report_section_medications)) {
             if (report.activeMedications.isEmpty()) {
-                Text("Nenhum", style = MaterialTheme.typography.bodySmall)
+                Text(stringResource(R.string.report_no_medications), style = MaterialTheme.typography.bodySmall)
             } else {
-                val timeFmt = remember { SimpleDateFormat("dd/MM HH:mm", Locale.forLanguageTag("pt-BR")) }
+                val timeFmtLocal = remember { SimpleDateFormat("dd/MM HH:mm", Locale.forLanguageTag("pt-BR")) }
                 report.activeMedications.forEach { med ->
                     Text(
                         "• ${med.name} — ${med.dose} ${med.doseUnit}",
@@ -330,13 +323,13 @@ private fun ReportContent(
                     if (logsThisMed.isNotEmpty()) {
                         logsThisMed.forEach { log ->
                             val statusLabel = when (log.status) {
-                                "TAKEN"     -> "✓ Administrado"
-                                "NOT_TAKEN" -> "✗ Não administrado"
-                                "VOMITED"   -> "⚠ Administrado (vomitou)"
-                                else        -> "Pendente"
+                                "TAKEN"     -> stringResource(R.string.dose_status_taken_icon)
+                                "NOT_TAKEN" -> stringResource(R.string.dose_status_not_taken_icon)
+                                "VOMITED"   -> stringResource(R.string.dose_status_vomited_icon)
+                                else        -> stringResource(R.string.dose_status_pending)
                             }
                             Text(
-                                "  ${timeFmt.format(Date(log.scheduledAt))} — $statusLabel  ✏",
+                                "  ${timeFmtLocal.format(Date(log.scheduledAt))} — $statusLabel  ✏",
                                 style    = MaterialTheme.typography.bodySmall,
                                 color    = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.clickable { editingMedLog = log }
@@ -347,17 +340,17 @@ private fun ReportContent(
             }
         }
 
-        SummaryCard(title = "Alimentação") {
+        SummaryCard(title = stringResource(R.string.report_section_feeding)) {
             if (report.mealPlans.isEmpty()) {
-                Text("Sem plano configurado.", style = MaterialTheme.typography.bodySmall)
+                Text(stringResource(R.string.report_no_plan), style = MaterialTheme.typography.bodySmall)
             } else {
                 report.mealPlans.forEach { plan ->
                     val foodLabel = when (plan.foodType) {
-                        "DRY_KIBBLE"  -> "Ração seca"
-                        "WET_FOOD"    -> "Ração úmida"
-                        "NATURAL"     -> "Alimentação natural"
-                        "THERAPEUTIC" -> "Dieta terapêutica"
-                        else          -> "Outro"
+                        "DRY_KIBBLE"  -> stringResource(R.string.food_type_dry_kibble)
+                        "WET_FOOD"    -> stringResource(R.string.food_type_wet_food)
+                        "NATURAL"     -> stringResource(R.string.food_type_natural)
+                        "THERAPEUTIC" -> stringResource(R.string.food_type_therapeutic)
+                        else          -> stringResource(R.string.food_type_other)
                     }
                     val unitForPlan = report.meals.firstOrNull { it.mealPlanId == plan.id }?.quantityUnit ?: "g"
                     Text(
@@ -369,15 +362,15 @@ private fun ReportContent(
                             color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     if (!plan.restrictions.isNullOrBlank()) {
-                        Text("  Restrições: ${plan.restrictions}", style = MaterialTheme.typography.bodySmall)
+                        Text(stringResource(R.string.report_restrictions, plan.restrictions!!), style = MaterialTheme.typography.bodySmall)
                     }
                 }
             }
         }
 
-        SummaryCard(title = "Alimentação no período") {
+        SummaryCard(title = stringResource(R.string.report_section_feeding_period)) {
             if (report.mealLogs.isEmpty() && report.sporadicLogs.isEmpty()) {
-                Text("Nenhuma refeição registrada no período.", style = MaterialTheme.typography.bodySmall)
+                Text(stringResource(R.string.report_no_meals), style = MaterialTheme.typography.bodySmall)
             } else {
                 val mealsById     = report.meals.associateBy { it.id }
                 val planById      = report.mealPlans.associateBy { it.id }
@@ -401,10 +394,10 @@ private fun ReportContent(
                         val types = logs.mapNotNull { log ->
                             mealsById[log.mealId]?.mealPlanId?.let { planId ->
                                 when (planById[planId]?.foodType) {
-                                    "DRY_KIBBLE"  -> "Ração seca"
-                                    "WET_FOOD"    -> "Ração úmida"
-                                    "NATURAL"     -> "Alimentação natural"
-                                    "THERAPEUTIC" -> "Dieta terapêutica"
+                                    "DRY_KIBBLE"  -> stringResource(R.string.food_type_dry_kibble)
+                                    "WET_FOOD"    -> stringResource(R.string.food_type_wet_food)
+                                    "NATURAL"     -> stringResource(R.string.food_type_natural)
+                                    "THERAPEUTIC" -> stringResource(R.string.food_type_therapeutic)
                                     else          -> null
                                 }
                             }
@@ -431,22 +424,34 @@ private fun ReportContent(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
-                        if (sporadicTotal > 0) {
+                        val sporadicGroups = daySporadicLogs
+                            .groupBy { (it.description?.trim() ?: "") to it.amountUnit }
+                            .entries.toList()
+                        sporadicGroups.forEachIndexed { index, (key, logs) ->
+                            val (desc, unit) = key
+                            val total  = logs.sumOf { it.amountGrams ?: 0.0 }
+                            val amount = if (total > 0) "${total.toInt()} $unit" else ""
+                            val line   = when {
+                                amount.isNotBlank() && desc.isNotBlank() -> "$amount $desc"
+                                amount.isNotBlank() -> amount
+                                desc.isNotBlank()   -> desc
+                                else                -> return@forEachIndexed
+                            }
+                            if (index > 0) Spacer(Modifier.height(4.dp))
                             Text(
-                                "  ${sporadicTotal.toInt()} g",
+                                line,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
                 }
-
             }
         }
 
-        SummaryCard(title = "Hidratação no período") {
+        SummaryCard(title = stringResource(R.string.report_section_water)) {
             if (report.waterLogs.isEmpty()) {
-                Text("Nenhum registro.", style = MaterialTheme.typography.bodySmall)
+                Text(stringResource(R.string.report_no_water), style = MaterialTheme.typography.bodySmall)
             } else {
                 report.waterLogs
                     .sortedBy { it.registeredAt }
@@ -465,16 +470,16 @@ private fun ReportContent(
             }
         }
 
-        SummaryCard(title = "Diário de saúde") {
+        SummaryCard(title = stringResource(R.string.report_section_health)) {
             if (report.healthEntries.isEmpty()) {
-                Text("Nenhum registro no período.", style = MaterialTheme.typography.bodySmall)
+                Text(stringResource(R.string.report_no_water), style = MaterialTheme.typography.bodySmall)
             } else {
                 val withNotes = report.healthEntries
                     .filter { !it.observations.isNullOrBlank() }
                     .sortedByDescending { it.registeredAt }
                 if (withNotes.isEmpty()) {
                     Text(
-                        "${report.healthEntries.size} registros — sem anotações de texto.",
+                        stringResource(R.string.report_health_entries_no_notes, report.healthEntries.size),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -489,9 +494,9 @@ private fun ReportContent(
             }
         }
 
-        SummaryCard(title = "Histórico de peso") {
+        SummaryCard(title = stringResource(R.string.report_section_weight)) {
             if (report.weightRecords.isEmpty()) {
-                Text("Nenhuma pesagem registrada.", style = MaterialTheme.typography.bodySmall)
+                Text(stringResource(R.string.report_no_weight), style = MaterialTheme.typography.bodySmall)
             } else {
                 report.weightRecords.sortedByDescending { it.date }.forEach { w ->
                     val note = if (!w.notes.isNullOrBlank()) " — ${w.notes}" else ""
@@ -504,14 +509,13 @@ private fun ReportContent(
             }
         }
 
-        // ── Vacinas e Vermífugos ──────────────────────────────────────────────
         if (report.lastVaccineDoses.isNotEmpty()) {
-            SummaryCard(title = "Vacinas e Vermífugos — última dose") {
+            SummaryCard(title = stringResource(R.string.report_section_vaccines)) {
                 val vaccines  = report.lastVaccineDoses.filter { it.type == "VACCINE" }
                 val dewormers = report.lastVaccineDoses.filter { it.type == "DEWORMER" }
                 if (vaccines.isNotEmpty()) {
                     Text(
-                        "Vacinas:",
+                        stringResource(R.string.report_vaccines_label),
                         style    = MaterialTheme.typography.labelMedium,
                         modifier = Modifier.padding(bottom = 2.dp)
                     )
@@ -526,7 +530,7 @@ private fun ReportContent(
                 }
                 if (dewormers.isNotEmpty()) {
                     Text(
-                        "Vermífugos:",
+                        stringResource(R.string.report_dewormers_label),
                         style    = MaterialTheme.typography.labelMedium,
                         modifier = Modifier.padding(top = 6.dp, bottom = 2.dp)
                     )
@@ -542,9 +546,8 @@ private fun ReportContent(
             }
         }
 
-        // ── Fotos ────────────────────────────────────────────────────────────
         if (report.photos.isNotEmpty()) {
-            SummaryCard(title = "Fotos registradas") {
+            SummaryCard(title = stringResource(R.string.report_section_photos)) {
                 val photosByDay = report.photos.groupBy { dateFmt.format(Date(it.entryDate)) }
                 photosByDay.forEach { (date, photos) ->
                     Text(date, style = MaterialTheme.typography.labelMedium,
@@ -569,22 +572,19 @@ private fun ReportContent(
             }
         }
 
-        // ── Aviso veterinário ─────────────────────────────────────────────────
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors   = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
         ) {
             Text(
-                "⚠️ Este relatório é um registro de observações do tutor e não substitui " +
-                    "avaliação, diagnóstico ou prescrição veterinária.",
+                stringResource(R.string.report_disclaimer),
                 modifier = Modifier.padding(12.dp),
                 style    = MaterialTheme.typography.bodySmall,
                 color    = MaterialTheme.colorScheme.onErrorContainer
             )
         }
 
-        // ── Botões de compartilhamento ────────────────────────────────────────
-        Text("Compartilhar relatório", style = MaterialTheme.typography.labelMedium)
+        Text(stringResource(R.string.report_share_chooser), style = MaterialTheme.typography.labelMedium)
 
         Button(
             onClick  = onShareText,
@@ -592,7 +592,7 @@ private fun ReportContent(
         ) {
             Icon(Icons.Default.Share, contentDescription = null,
                 modifier = Modifier.size(18.dp).padding(end = 4.dp))
-            Text("Compartilhar como texto (WhatsApp)")
+            Text(stringResource(R.string.report_share_text_btn))
         }
 
         OutlinedButton(
@@ -606,9 +606,9 @@ private fun ReportContent(
                     modifier  = Modifier.size(18.dp),
                     strokeWidth = 2.dp
                 )
-                Text("  Gerando PDF...")
+                Text(stringResource(R.string.report_generating_pdf))
             } else {
-                Text("Gerar e compartilhar PDF")
+                Text(stringResource(R.string.report_generate_pdf_btn))
             }
         }
 
@@ -616,8 +616,6 @@ private fun ReportContent(
     }
 }
 
-// Retorna o intervalo real dos dados do relatório (min/max das datas com registros).
-// Se não houver dados, retorna hoje como ponto único.
 private fun actualDataDateRange(report: PetReport): Pair<Long, Long> {
     val timestamps = buildList {
         report.mealLogs.forEach      { add(it.date) }
@@ -641,20 +639,20 @@ private fun EditMedicationLogDialog(
     var selectedStatus by remember { mutableStateOf(log.status ?: "TAKEN") }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Editar administração") },
+        title = { Text(stringResource(R.string.report_edit_med_log_title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 listOf(
-                    "TAKEN"     to "Administrado",
-                    "NOT_TAKEN" to "Não administrado",
-                    "VOMITED"   to "Administrado (vomitou)"
-                ).forEach { (value, label) ->
+                    "TAKEN"     to R.string.dose_status_taken,
+                    "NOT_TAKEN" to R.string.dose_status_not_taken,
+                    "VOMITED"   to R.string.dose_status_vomited
+                ).forEach { (value, labelRes) ->
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.fillMaxWidth().clickable { selectedStatus = value }
                     ) {
                         RadioButton(selected = selectedStatus == value, onClick = { selectedStatus = value })
-                        Text(label, style = MaterialTheme.typography.bodyMedium)
+                        Text(stringResource(labelRes), style = MaterialTheme.typography.bodyMedium)
                     }
                 }
                 HorizontalDivider(modifier = Modifier.padding(top = 4.dp))
@@ -662,13 +660,13 @@ private fun EditMedicationLogDialog(
                     onClick = onDelete,
                     colors  = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
                     modifier = Modifier.fillMaxWidth()
-                ) { Text("Excluir registro") }
+                ) { Text(stringResource(R.string.report_delete_log_btn)) }
             }
         },
         confirmButton = {
-            Button(onClick = { onConfirm(log.copy(status = selectedStatus)) }) { Text("Salvar") }
+            Button(onClick = { onConfirm(log.copy(status = selectedStatus)) }) { Text(stringResource(R.string.action_save)) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } }
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } }
     )
 }
 
@@ -681,21 +679,21 @@ private fun EditFoodDayDialog(
     var valueText by remember { mutableStateOf(state.totalGrams.toInt().toString()) }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Editar total — ${state.day}") },
+        title = { Text(stringResource(R.string.report_edit_food_total_title, state.day)) },
         text = {
             OutlinedTextField(
                 value           = valueText,
                 onValueChange   = { if (it.all { c -> c.isDigit() }) valueText = it },
-                label           = { Text("Total do dia (${state.unit})") },
+                label           = { Text(stringResource(R.string.report_food_total_label, state.unit)) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 singleLine      = true,
                 modifier        = Modifier.fillMaxWidth()
             )
         },
         confirmButton = {
-            Button(onClick = { valueText.toDoubleOrNull()?.let { onConfirm(it) } }) { Text("Salvar") }
+            Button(onClick = { valueText.toDoubleOrNull()?.let { onConfirm(it) } }) { Text(stringResource(R.string.action_save)) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } }
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } }
     )
 }
 
@@ -708,21 +706,21 @@ private fun EditWaterDayDialog(
     var valueText by remember { mutableStateOf(state.totalMl.toString()) }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Editar total — ${state.day}") },
+        title = { Text(stringResource(R.string.report_edit_water_total_title, state.day)) },
         text = {
             OutlinedTextField(
                 value           = valueText,
                 onValueChange   = { if (it.all { c -> c.isDigit() }) valueText = it },
-                label           = { Text("Total do dia (ml)") },
+                label           = { Text(stringResource(R.string.report_water_total_label)) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 singleLine      = true,
                 modifier        = Modifier.fillMaxWidth()
             )
         },
         confirmButton = {
-            Button(onClick = { valueText.toDoubleOrNull()?.let { onConfirm(it) } }) { Text("Salvar") }
+            Button(onClick = { valueText.toDoubleOrNull()?.let { onConfirm(it) } }) { Text(stringResource(R.string.action_save)) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } }
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } }
     )
 }
 
@@ -737,13 +735,13 @@ private fun EditWeightDialog(
     var notes      by remember { mutableStateOf(record.notes ?: "") }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Editar pesagem") },
+        title = { Text(stringResource(R.string.report_edit_weight_title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(
                     value           = weightText,
                     onValueChange   = { weightText = it },
-                    label           = { Text("Peso (kg)") },
+                    label           = { Text(stringResource(R.string.report_weight_label)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine      = true,
                     modifier        = Modifier.fillMaxWidth()
@@ -751,7 +749,7 @@ private fun EditWeightDialog(
                 OutlinedTextField(
                     value         = notes,
                     onValueChange = { notes = it },
-                    label         = { Text("Observações (opcional)") },
+                    label         = { Text(stringResource(R.string.report_weight_notes_label)) },
                     singleLine    = true,
                     modifier      = Modifier.fillMaxWidth()
                 )
@@ -760,7 +758,7 @@ private fun EditWeightDialog(
                     onClick  = onDelete,
                     colors   = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
                     modifier = Modifier.fillMaxWidth()
-                ) { Text("Excluir registro") }
+                ) { Text(stringResource(R.string.report_delete_log_btn)) }
             }
         },
         confirmButton = {
@@ -769,13 +767,12 @@ private fun EditWeightDialog(
                     val kg = weightText.replace(",", ".").toDoubleOrNull() ?: return@Button
                     onConfirm(record.copy(weightKg = kg, notes = notes.ifBlank { null }))
                 }
-            ) { Text("Salvar") }
+            ) { Text(stringResource(R.string.action_save)) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } }
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } }
     )
 }
 
-// Card genérico para cada seção do resumo
 @Composable
 private fun SummaryCard(
     title: String,

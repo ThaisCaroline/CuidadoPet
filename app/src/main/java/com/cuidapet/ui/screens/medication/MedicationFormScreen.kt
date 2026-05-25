@@ -54,8 +54,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.cuidadopet.R
 import com.cuidadopet.ui.utils.adaptiveHorizontalPadding
 import com.cuidadopet.ui.utils.TimeInputField
 import androidx.core.content.ContextCompat
@@ -81,7 +83,6 @@ fun MedicationFormScreen(
     var doseUnitExpanded by remember { mutableStateOf(false) }
     var showNotifDialog by remember { mutableStateOf(false) }
 
-    // Lançador para solicitar permissão de notificação; salva após resultado
     val notifPermLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { viewModel.saveMedication(petId, medicationId) }
@@ -113,24 +114,18 @@ fun MedicationFormScreen(
         }
     }
 
-    // Diálogo de confirmação para receber alertas
     if (showNotifDialog) {
         AlertDialog(
             onDismissRequest = { showNotifDialog = false },
-            title   = { Text("Receber alertas?") },
-            text    = {
-                Text(
-                    "O app enviará uma notificação nos horários configurados para lembrar " +
-                    "você de administrar o medicamento. Deseja ativar os alertas?"
-                )
-            },
+            title   = { Text(stringResource(R.string.med_form_notif_title)) },
+            text    = { Text(stringResource(R.string.med_form_notif_msg)) },
             confirmButton = {
                 TextButton(onClick = {
                     showNotifDialog = false
                     viewModel.onReminderEnabledChange(true)
                     doSave()
                 }) {
-                    Text("Ativar e salvar")
+                    Text(stringResource(R.string.med_form_notif_enable))
                 }
             },
             dismissButton = {
@@ -138,7 +133,7 @@ fun MedicationFormScreen(
                     showNotifDialog = false
                     viewModel.onReminderEnabledChange(false)
                     viewModel.saveMedication(petId, medicationId)
-                }) { Text("Salvar sem alertas") }
+                }) { Text(stringResource(R.string.med_form_notif_skip)) }
             }
         )
     }
@@ -148,7 +143,7 @@ fun MedicationFormScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = if (medicationId == null) "Novo medicamento" else "Editar medicamento",
+                        text = stringResource(if (medicationId == null) R.string.med_form_new_title else R.string.med_form_edit_title),
                         style = MaterialTheme.typography.titleLarge
                     )
                 },
@@ -156,7 +151,7 @@ fun MedicationFormScreen(
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Voltar",
+                            contentDescription = stringResource(R.string.action_back),
                             tint = MaterialTheme.colorScheme.onPrimary
                         )
                     }
@@ -179,12 +174,10 @@ fun MedicationFormScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
-            // ── Nome ───────────────────────────────────────────────────────
-            SectionLabel("Medicamento")
+            SectionLabel(stringResource(R.string.med_form_section_med))
 
             Text(
-                text = "⚠ Medicamentos devem ser prescritos por médico veterinário. " +
-                       "Este app não sugere nem recomenda medicamentos.",
+                text = stringResource(R.string.med_form_disclaimer),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.error
             )
@@ -192,26 +185,28 @@ fun MedicationFormScreen(
             OutlinedTextField(
                 value = uiState.name,
                 onValueChange = viewModel::onNameChange,
-                label = { Text("Nome (ex: Amoxicilina, Prednisolona) *") },
+                label = { Text(stringResource(R.string.med_form_name_label)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )
 
-            // ── Forma ──────────────────────────────────────────────────────
-            SectionLabel("Forma de administração *")
+            SectionLabel(stringResource(R.string.med_form_route_section))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                listOf("ORAL" to "Oral", "TOPICAL" to "Tópico",
-                       "INJECTABLE" to "Injetável", "EYE_DROP" to "Colírio").forEach { (key, label) ->
+                listOf(
+                    "ORAL"       to R.string.dose_form_oral,
+                    "TOPICAL"    to R.string.dose_form_topical,
+                    "INJECTABLE" to R.string.dose_form_injectable,
+                    "EYE_DROP"   to R.string.dose_form_eye_drop
+                ).forEach { (key, labelRes) ->
                     FilterChip(
                         selected = uiState.form == key,
                         onClick = { viewModel.onFormChange(key) },
-                        label = { Text(label) }
+                        label = { Text(stringResource(labelRes)) }
                     )
                 }
             }
 
-            // ── Dose ───────────────────────────────────────────────────────
-            SectionLabel("Dose *")
+            SectionLabel(stringResource(R.string.med_form_dose_section))
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.fillMaxWidth()
@@ -219,14 +214,13 @@ fun MedicationFormScreen(
                 OutlinedTextField(
                     value = uiState.dose,
                     onValueChange = viewModel::onDoseChange,
-                    label = { Text("Quantidade") },
-                    placeholder = { Text("Ex: 0,5") },
+                    label = { Text(stringResource(R.string.med_form_dose_qty_label)) },
+                    placeholder = { Text(stringResource(R.string.med_form_dose_qty_hint)) },
                     modifier = Modifier.weight(1f),
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
                 )
 
-                // Dropdown de unidade de dose
                 ExposedDropdownMenuBox(
                     expanded = doseUnitExpanded,
                     onExpandedChange = { doseUnitExpanded = it },
@@ -236,7 +230,7 @@ fun MedicationFormScreen(
                         value = uiState.doseUnit,
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("Unidade") },
+                        label = { Text(stringResource(R.string.med_form_dose_unit_label)) },
                         trailingIcon = {
                             ExposedDropdownMenuDefaults.TrailingIcon(expanded = doseUnitExpanded)
                         },
@@ -262,18 +256,17 @@ fun MedicationFormScreen(
                 }
             }
 
-            // ── Frequência ─────────────────────────────────────────────────
-            SectionLabel("Frequência *")
+            SectionLabel(stringResource(R.string.med_form_frequency_section))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 FilterChip(
                     selected = uiState.frequencyType == "INTERVAL",
                     onClick = { viewModel.onFrequencyTypeChange("INTERVAL") },
-                    label = { Text("A cada X horas") }
+                    label = { Text(stringResource(R.string.med_form_freq_interval)) }
                 )
                 FilterChip(
                     selected = uiState.frequencyType == "FIXED_TIMES",
                     onClick = { viewModel.onFrequencyTypeChange("FIXED_TIMES") },
-                    label = { Text("Horários fixos") }
+                    label = { Text(stringResource(R.string.med_form_freq_fixed)) }
                 )
             }
 
@@ -281,20 +274,20 @@ fun MedicationFormScreen(
                 OutlinedTextField(
                     value = uiState.frequencyHours,
                     onValueChange = { viewModel.onFrequencyHoursChange(it.filter { c -> c.isDigit() }.take(3)) },
-                    label = { Text("Intervalo entre doses *") },
+                    label = { Text(stringResource(R.string.med_form_interval_label)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    suffix = { Text("horas") }
+                    suffix = { Text(stringResource(R.string.med_form_interval_suffix)) }
                 )
                 TimeInputField(
                     value = uiState.intervalStartTime,
                     onValueChange = viewModel::onIntervalStartTimeChange,
-                    label = "Horário da primeira dose (opcional)",
+                    label = stringResource(R.string.med_form_first_dose_label),
                     modifier = Modifier.fillMaxWidth(),
                     supportingText = {
                         Text(
-                            "Se não informado, o primeiro alarme é agendado a partir de agora.",
+                            stringResource(R.string.med_form_first_dose_hint),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -312,12 +305,12 @@ fun MedicationFormScreen(
                             TimeInputField(
                                 value = time,
                                 onValueChange = { viewModel.onFixedTimeChange(index, it) },
-                                label = "Horário ${index + 1}",
+                                label = stringResource(R.string.med_form_fixed_time_label, index + 1),
                                 modifier = Modifier.weight(1f)
                             )
                             if (uiState.fixedTimes.size > 1) {
                                 IconButton(onClick = { viewModel.removeFixedTime(index) }) {
-                                    Icon(Icons.Default.Remove, contentDescription = "Remover horário")
+                                    Icon(Icons.Default.Remove, contentDescription = stringResource(R.string.med_form_remove_time_cd))
                                 }
                             }
                         }
@@ -328,12 +321,11 @@ fun MedicationFormScreen(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Icon(Icons.Default.Add, contentDescription = null)
-                    Text(" Adicionar horário")
+                    Text(stringResource(R.string.med_form_add_time_btn))
                 }
             }
 
-            // ── Duração ────────────────────────────────────────────────────
-            SectionLabel("Duração do tratamento")
+            SectionLabel(stringResource(R.string.med_form_duration_section))
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
@@ -342,37 +334,36 @@ fun MedicationFormScreen(
                     checked = uiState.isContinuous,
                     onCheckedChange = viewModel::onContinuousChange
                 )
-                Text("Uso contínuo (sem data de fim)")
+                Text(stringResource(R.string.med_form_continuous))
             }
 
             if (!uiState.isContinuous) {
                 OutlinedTextField(
                     value = uiState.durationDays,
                     onValueChange = { viewModel.onDurationDaysChange(it.filter { c -> c.isDigit() }.take(3)) },
-                    label = { Text("Duração *") },
+                    label = { Text(stringResource(R.string.med_form_duration_label)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    suffix = { Text("dias") }
+                    suffix = { Text(stringResource(R.string.med_form_duration_suffix)) }
                 )
             }
 
-            // ── Orientação de administração ────────────────────────────────
-            SectionLabel("Orientação de administração")
+            SectionLabel(stringResource(R.string.med_form_guideline_section))
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 listOf(
-                    "WITH_FOOD"  to "Com alimentação",
-                    "FASTING"    to "Em jejum",
-                    "WITH_WATER" to "Com água",
-                    "OTHER"      to "Outra"
-                ).forEach { (key, label) ->
+                    "WITH_FOOD"  to R.string.med_form_guideline_with_food,
+                    "FASTING"    to R.string.med_form_guideline_fasting,
+                    "WITH_WATER" to R.string.med_form_guideline_with_water,
+                    "OTHER"      to R.string.med_form_guideline_other
+                ).forEach { (key, labelRes) ->
                     FilterChip(
                         selected = uiState.guideline == key,
                         onClick = { viewModel.onGuidelineChange(key) },
-                        label = { Text(label) }
+                        label = { Text(stringResource(labelRes)) }
                     )
                 }
             }
@@ -381,23 +372,21 @@ fun MedicationFormScreen(
                 OutlinedTextField(
                     value = uiState.guidelineDetail,
                     onValueChange = viewModel::onGuidelineDetailChange,
-                    label = { Text("Detalhe a orientação") },
+                    label = { Text(stringResource(R.string.med_form_guideline_detail_label)) },
                     modifier = Modifier.fillMaxWidth(),
                     maxLines = 2
                 )
             }
 
-            // ── Observações ────────────────────────────────────────────────
             OutlinedTextField(
                 value = uiState.observations,
                 onValueChange = viewModel::onObservationsChange,
-                label = { Text("Observações (opcional)") },
-                placeholder = { Text("Ex: esconder na comida, amarga — usar seringa") },
+                label = { Text(stringResource(R.string.med_form_obs_label)) },
+                placeholder = { Text(stringResource(R.string.med_form_obs_hint)) },
                 modifier = Modifier.fillMaxWidth(),
                 maxLines = 3
             )
 
-            // ── Botão salvar ───────────────────────────────────────────────
             Spacer(modifier = Modifier.height(8.dp))
             Button(
                 onClick = { showNotifDialog = true },
@@ -407,7 +396,7 @@ fun MedicationFormScreen(
                 if (uiState.isLoading) {
                     CircularProgressIndicator(modifier = Modifier.height(20.dp))
                 } else {
-                    Text(if (medicationId == null) "Cadastrar medicamento" else "Salvar alterações")
+                    Text(stringResource(if (medicationId == null) R.string.med_form_save_btn else R.string.med_form_update_btn))
                 }
             }
 
@@ -424,4 +413,3 @@ private fun SectionLabel(text: String) {
         color = MaterialTheme.colorScheme.primary
     )
 }
-

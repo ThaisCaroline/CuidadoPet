@@ -37,6 +37,10 @@ import com.cuidadopet.data.db.entity.HealthEntryEntity
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import android.content.Context
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import com.cuidadopet.R
 import com.cuidadopet.ui.components.AdBanner
 import com.cuidadopet.ui.utils.adaptiveHorizontalPadding
 
@@ -87,10 +91,10 @@ fun HealthTabContent(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Diário de saúde", style = MaterialTheme.typography.titleSmall)
+                Text(stringResource(R.string.health_diary_title), style = MaterialTheme.typography.titleSmall)
                 Button(onClick = onNewEntry) {
                     Icon(Icons.Default.Add, contentDescription = null)
-                    Text(" Nova entrada")
+                    Text(stringResource(R.string.health_new_entry_btn))
                 }
             }
         }
@@ -98,7 +102,7 @@ fun HealthTabContent(
         if (state.entries.isEmpty()) {
             item {
                 Text(
-                    "Nenhuma entrada registrada ainda.\nUse o botão acima para começar.",
+                    stringResource(R.string.health_empty),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(vertical = 16.dp)
@@ -139,16 +143,16 @@ private fun WeightSummaryCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column {
-                Text("Peso atual", style = MaterialTheme.typography.titleSmall)
+                Text(stringResource(R.string.health_current_weight), style = MaterialTheme.typography.titleSmall)
                 Text(
-                    if (latestWeightKg != null) "$latestWeightKg kg" else "Não registrado",
+                    if (latestWeightKg != null) "$latestWeightKg kg" else stringResource(R.string.health_no_weight),
                     style = MaterialTheme.typography.headlineSmall,
                     color = MaterialTheme.colorScheme.primary
                 )
             }
             FilledTonalButton(onClick = onWeightHistory) {
                 Icon(Icons.Default.MonitorWeight, contentDescription = null)
-                Text(" Histórico de peso")
+                Text(stringResource(R.string.health_weight_history_btn))
             }
         }
     }
@@ -180,7 +184,7 @@ private fun HealthEntryCard(
                 IconButton(onClick = onDelete) {
                     Icon(
                         Icons.Default.Delete,
-                        contentDescription = "Remover entrada",
+                        contentDescription = stringResource(R.string.health_remove_entry_cd),
                         tint = MaterialTheme.colorScheme.error
                     )
                 }
@@ -189,7 +193,8 @@ private fun HealthEntryCard(
             Spacer(Modifier.height(4.dp))
 
             // Exibe só os campos que foram preenchidos
-            buildEntryLines(entry).forEach { line ->
+            val context = LocalContext.current
+            buildEntryLines(context, entry).forEach { line ->
                 Text(line, style = MaterialTheme.typography.bodySmall)
             }
         }
@@ -197,54 +202,54 @@ private fun HealthEntryCard(
 }
 
 // Constrói as linhas de resumo de uma entrada — só mostra campos preenchidos
-private fun buildEntryLines(entry: HealthEntryEntity): List<String> {
+private fun buildEntryLines(context: Context, entry: HealthEntryEntity): List<String> {
     val lines = mutableListOf<String>()
-    entry.behavior?.let     { lines.add("Comportamento: ${behaviorLabel(it)}") }
-    entry.fecesStatus?.let  { lines.add("Fezes: ${fecesLabel(it)}") }
-    entry.urineStatus?.let  { lines.add("Urina: ${urineLabel(it)}") }
-    entry.vomitCount?.let   { if (it > 0) lines.add("Vômitos: $it episódio(s)") }
-    entry.mobility?.let     { if (it != "NORMAL") lines.add("Mobilidade: ${mobilityLabel(it)}") }
-    entry.painSigns?.let    { if (it != "NONE") lines.add("Dor: ${painLabel(it)}") }
-    entry.observations?.let { lines.add("Obs: $it") }
+    entry.behavior?.let     { lines.add(context.getString(R.string.health_behavior_prefix, behaviorLabel(context, it))) }
+    entry.fecesStatus?.let  { lines.add(context.getString(R.string.health_feces_prefix, fecesLabel(context, it))) }
+    entry.urineStatus?.let  { lines.add(context.getString(R.string.health_urine_prefix, urineLabel(context, it))) }
+    entry.vomitCount?.let   { if (it > 0) lines.add(context.getString(R.string.health_vomit_count, it)) }
+    entry.mobility?.let     { if (it != "NORMAL") lines.add(context.getString(R.string.health_mobility_prefix, mobilityLabel(context, it))) }
+    entry.painSigns?.let    { if (it != "NONE") lines.add(context.getString(R.string.health_pain_prefix, painLabel(context, it))) }
+    entry.observations?.let { lines.add(context.getString(R.string.health_obs_prefix, it)) }
     return lines
 }
 
-private fun behaviorLabel(code: String) = when (code) {
-    "NORMAL"    -> "Normal, ativo"
-    "LETHARGIC" -> "Apático"
-    "AGITATED"  -> "Agitado"
-    "SLEEPY"    -> "Sonolento"
+private fun behaviorLabel(context: Context, code: String) = when (code) {
+    "NORMAL"    -> context.getString(R.string.health_behavior_normal)
+    "LETHARGIC" -> context.getString(R.string.health_behavior_lethargic)
+    "AGITATED"  -> context.getString(R.string.health_behavior_agitated)
+    "SLEEPY"    -> context.getString(R.string.health_behavior_sleepy)
     else        -> code
 }
 
-private fun fecesLabel(code: String) = when (code) {
-    "NORMAL"   -> "Normal"
-    "SOFT"     -> "Amolecidas"
-    "DIARRHEA" -> "Diarreia"
-    "ABSENT"   -> "Não evacuou"
-    "BLOOD"    -> "Com sangue ⚠️"
+private fun fecesLabel(context: Context, code: String) = when (code) {
+    "NORMAL"   -> context.getString(R.string.health_feces_normal)
+    "SOFT"     -> context.getString(R.string.health_feces_soft)
+    "DIARRHEA" -> context.getString(R.string.health_feces_diarrhea)
+    "ABSENT"   -> context.getString(R.string.health_feces_absent)
+    "BLOOD"    -> context.getString(R.string.health_feces_blood)
     else       -> code
 }
 
-private fun urineLabel(code: String) = when (code) {
-    "NORMAL"    -> "Normal"
-    "INCREASED" -> "Aumentada"
-    "REDUCED"   -> "Reduzida"
-    "ABSENT"    -> "Não urinou"
-    "BLOOD"     -> "Com sangue ⚠️"
+private fun urineLabel(context: Context, code: String) = when (code) {
+    "NORMAL"    -> context.getString(R.string.health_urine_normal)
+    "INCREASED" -> context.getString(R.string.health_urine_increased)
+    "REDUCED"   -> context.getString(R.string.health_urine_reduced)
+    "ABSENT"    -> context.getString(R.string.health_urine_absent)
+    "BLOOD"     -> context.getString(R.string.health_urine_blood)
     else        -> code
 }
 
-private fun mobilityLabel(code: String) = when (code) {
-    "NORMAL"   -> "Normal"
-    "REDUCED"  -> "Reduzida"
-    "IMMOBILE" -> "Imóvel"
+private fun mobilityLabel(context: Context, code: String) = when (code) {
+    "NORMAL"   -> context.getString(R.string.health_mobility_normal)
+    "REDUCED"  -> context.getString(R.string.health_mobility_reduced)
+    "IMMOBILE" -> context.getString(R.string.health_mobility_immobile)
     else       -> code
 }
 
-private fun painLabel(code: String) = when (code) {
-    "NONE"     -> "Sem sinais"
-    "APPARENT" -> "Aparente"
-    "EVIDENT"  -> "Evidente"
+private fun painLabel(context: Context, code: String) = when (code) {
+    "NONE"     -> context.getString(R.string.health_pain_none)
+    "APPARENT" -> context.getString(R.string.health_pain_apparent)
+    "EVIDENT"  -> context.getString(R.string.health_pain_evident)
     else       -> code
 }

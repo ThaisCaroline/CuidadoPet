@@ -31,11 +31,13 @@ class VaccineReminderWorker(
 
         if (vaccineId == -1L) return Result.failure()
 
-        val typeLabel = if (vaccineType == "VACCINE") "vacina" else "vermífugo"
+        val typeLabel = context.getString(
+            if (vaccineType == "VACCINE") R.string.notif_vaccine_type_vaccine else R.string.notif_vaccine_type_dewormer
+        )
         val body = when (daysBefore) {
-            7    -> "Faltam 7 dias para $vaccineName"
-            3    -> "Faltam 3 dias para $vaccineName"
-            else -> "Está na hora: $vaccineName"
+            7    -> context.getString(R.string.notif_vaccine_7days, vaccineName)
+            3    -> context.getString(R.string.notif_vaccine_3days, vaccineName)
+            else -> context.getString(R.string.notif_vaccine_now, vaccineName)
         }
 
         val openAppIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)
@@ -48,7 +50,7 @@ class VaccineReminderWorker(
 
         val notification = NotificationCompat.Builder(context, NotificationChannels.CHANNEL_VACCINES)
             .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle("Lembrete de $typeLabel — $petName")
+            .setContentTitle(context.getString(R.string.notif_vaccine_title, typeLabel, petName))
             .setContentText(body)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setDefaults(NotificationCompat.DEFAULT_ALL)

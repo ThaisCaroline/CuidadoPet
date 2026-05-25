@@ -51,11 +51,11 @@ class MealAlarmReceiver : BroadcastReceiver() {
         )
 
         // Monta a notificação com ícone, título e texto
-        val quantityText = if (quantity > 0) " (${quantity.toInt()}g)" else ""
+        val quantityText = if (quantity > 0) context.getString(R.string.notif_meal_quantity, quantity.toInt()) else ""
         val notification = NotificationCompat.Builder(context, NotificationChannels.CHANNEL_MEALS)
             .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle("Hora de alimentar $petName 🍽️")
-            .setContentText("Refeição das $time$quantityText")
+            .setContentTitle(context.getString(R.string.notif_meal_title, petName))
+            .setContentText(context.getString(R.string.notif_meal_body, time, quantityText))
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setDefaults(NotificationCompat.DEFAULT_ALL)
             .setContentIntent(pendingIntent)

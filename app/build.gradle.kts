@@ -18,8 +18,8 @@ android {
         applicationId = "com.cuidadopet"
         minSdk = 26
         targetSdk = 36
-        versionCode = 23
-        versionName = "1.0.23"
+        versionCode = 26
+        versionName = "1.0.26"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -142,6 +142,9 @@ dependencies {
 
     // Gson — serialização JSON para backup/restauração de dados
     implementation(libs.gson)
+
+    // AppCompat — necessário para AppCompatDelegate.setApplicationLocales() (seleção de idioma)
+    implementation("androidx.appcompat:appcompat:1.7.0")
 
     // Play In-App Updates — popup de atualização quando há nova versão na Play Store
     implementation("com.google.android.play:app-update-ktx:2.1.0")

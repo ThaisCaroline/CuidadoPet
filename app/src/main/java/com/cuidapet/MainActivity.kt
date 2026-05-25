@@ -15,7 +15,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.res.stringResource
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import com.cuidadopet.R
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cuidadopet.ui.navigation.AppNavigation
 import com.cuidadopet.ui.theme.CuidadoPetTheme
@@ -75,16 +77,16 @@ class MainActivity : ComponentActivity() {
                 if (downloaded) {
                     AlertDialog(
                         onDismissRequest = {},
-                        title = { Text("Atualização pronta") },
-                        text  = { Text("Uma nova versão foi baixada. Reinicie o app para aplicar a atualização.") },
+                        title = { Text(stringResource(R.string.update_ready_title)) },
+                        text  = { Text(stringResource(R.string.update_ready_msg)) },
                         confirmButton = {
                             Button(onClick = { appUpdateManager.completeUpdate() }) {
-                                Text("Reiniciar agora")
+                                Text(stringResource(R.string.update_restart_now))
                             }
                         },
                         dismissButton = {
                             TextButton(onClick = { updateDownloaded.value = false }) {
-                                Text("Depois")
+                                Text(stringResource(R.string.update_later))
                             }
                         }
                     )

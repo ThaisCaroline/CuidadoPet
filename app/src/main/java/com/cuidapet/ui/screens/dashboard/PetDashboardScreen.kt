@@ -13,7 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.Medication
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Summarize
@@ -48,19 +48,24 @@ import com.cuidadopet.ui.screens.medication.MedicationListScreen
 import com.cuidadopet.ui.screens.today.TodayTabContent
 import com.cuidadopet.ui.screens.water.WaterTabContent
 import com.cuidadopet.ui.utils.isTablet
+import android.content.Context
+import androidx.annotation.StringRes
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import com.cuidadopet.R
 
 private data class DashboardTab(
     val index: Int,
-    val label: String,
+    @StringRes val labelRes: Int,
     val icon: @Composable () -> Unit
 )
 
 private val dashboardTabs = listOf(
-    DashboardTab(0, "Hoje",        { Icon(Icons.Default.Home,            contentDescription = "Hoje") }),
-    DashboardTab(1, "Medicação",   { Icon(Icons.AutoMirrored.Filled.List, contentDescription = "Medicação") }),
-    DashboardTab(2, "Refeições",   { Icon(Icons.Default.Restaurant,       contentDescription = "Refeições") }),
-    DashboardTab(3, "Água",        { Icon(Icons.Default.WaterDrop,        contentDescription = "Água") }),
-    DashboardTab(4, "Saúde",       { Icon(Icons.Default.Favorite,         contentDescription = "Saúde") })
+    DashboardTab(0, R.string.tab_today,      { Icon(Icons.Default.Home,            contentDescription = stringResource(R.string.tab_today)) }),
+    DashboardTab(1, R.string.tab_medication, { Icon(Icons.Default.Medication,       contentDescription = stringResource(R.string.tab_medication)) }),
+    DashboardTab(2, R.string.tab_meals,      { Icon(Icons.Default.Restaurant,       contentDescription = stringResource(R.string.tab_meals)) }),
+    DashboardTab(3, R.string.tab_water,      { Icon(Icons.Default.WaterDrop,        contentDescription = stringResource(R.string.tab_water)) }),
+    DashboardTab(4, R.string.tab_health,     { Icon(Icons.Default.Favorite,         contentDescription = stringResource(R.string.tab_health)) })
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -84,6 +89,7 @@ fun PetDashboardScreen(
     LaunchedEffect(petId) { viewModel.loadPet(petId) }
 
     val pet by viewModel.pet.collectAsStateWithLifecycle()
+    val context = LocalContext.current
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
     val tablet = isTablet()
 
@@ -95,13 +101,13 @@ fun PetDashboardScreen(
                         PetAvatar(photoPath = pet?.photoPath, petName = pet?.name ?: "", size = 32.dp)
                         Column {
                             Text(
-                                text  = "  ${pet?.name ?: "Carregando..."}",
+                                text  = "  ${pet?.name ?: stringResource(R.string.loading)}",
                                 style = MaterialTheme.typography.titleLarge,
                                 color = MaterialTheme.colorScheme.onPrimary
                             )
                             pet?.birthDate?.let { birthDateMs ->
                                 Text(
-                                    text  = "  ${petAgeLabel(birthDateMs)}",
+                                    text  = "  ${petAgeLabel(context, birthDateMs)}",
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
                                 )
@@ -111,21 +117,21 @@ fun PetDashboardScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar",
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back),
                             tint = MaterialTheme.colorScheme.onPrimary)
                     }
                 },
                 actions = {
                     IconButton(onClick = { onEditPet(petId) }) {
-                        Icon(Icons.Default.Edit, contentDescription = "Editar pet",
+                        Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.dashboard_edit_pet_cd),
                             tint = MaterialTheme.colorScheme.onPrimary)
                     }
                     IconButton(onClick = onVaccines) {
-                        Icon(Icons.Default.Vaccines, contentDescription = "Vacinas e vermífugos",
+                        Icon(Icons.Default.Vaccines, contentDescription = stringResource(R.string.dashboard_vaccines_cd),
                             tint = MaterialTheme.colorScheme.onPrimary)
                     }
                     IconButton(onClick = onReport) {
-                        Icon(Icons.Default.Summarize, contentDescription = "Relatório",
+                        Icon(Icons.Default.Summarize, contentDescription = stringResource(R.string.dashboard_report_cd),
                             tint = MaterialTheme.colorScheme.onPrimary)
                     }
                 },
@@ -143,7 +149,7 @@ fun PetDashboardScreen(
                             selected = selectedTab == tab.index,
                             onClick  = { selectedTab = tab.index },
                             icon     = tab.icon,
-                            label    = { Text(tab.label, style = MaterialTheme.typography.labelSmall, maxLines = 1, softWrap = false) }
+                            label    = { Text(stringResource(tab.labelRes), style = MaterialTheme.typography.labelSmall, maxLines = 1, softWrap = false) }
                         )
                     }
                 }
@@ -162,7 +168,7 @@ fun PetDashboardScreen(
                             selected = selectedTab == tab.index,
                             onClick  = { selectedTab = tab.index },
                             icon     = tab.icon,
-                            label    = { Text(tab.label, style = MaterialTheme.typography.labelSmall, maxLines = 1, softWrap = false) }
+                            label    = { Text(stringResource(tab.labelRes), style = MaterialTheme.typography.labelSmall, maxLines = 1, softWrap = false) }
                         )
                     }
                 }
@@ -244,7 +250,7 @@ private fun DashboardTabContent(
     }
 }
 
-private fun petAgeLabel(birthDateMs: Long): String {
+private fun petAgeLabel(context: Context, birthDateMs: Long): String {
     val birth = Calendar.getInstance().also { it.timeInMillis = birthDateMs }
     val today = Calendar.getInstance()
     var years  = today.get(Calendar.YEAR)  - birth.get(Calendar.YEAR)
@@ -254,9 +260,9 @@ private fun petAgeLabel(birthDateMs: Long): String {
         if (months == 0) { years--; months = 11 } else months--
     }
     return when {
-        years > 0 && months > 0 -> "$years ${if (years == 1) "ano" else "anos"} e $months ${if (months == 1) "mês" else "meses"}"
-        years > 0               -> "$years ${if (years == 1) "ano" else "anos"}"
-        months > 0              -> "$months ${if (months == 1) "mês" else "meses"}"
-        else                    -> "menos de 1 mês"
+        years > 0 && months > 0 -> "$years ${context.getString(if (years == 1) R.string.age_year else R.string.age_years)} e $months ${context.getString(if (months == 1) R.string.age_month else R.string.age_months)}"
+        years > 0               -> "$years ${context.getString(if (years == 1) R.string.age_year else R.string.age_years)}"
+        months > 0              -> "$months ${context.getString(if (months == 1) R.string.age_month else R.string.age_months)}"
+        else                    -> context.getString(R.string.age_less_than_1_month)
     }
 }

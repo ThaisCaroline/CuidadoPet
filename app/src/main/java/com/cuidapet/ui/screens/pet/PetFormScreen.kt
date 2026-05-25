@@ -1,5 +1,6 @@
 package com.cuidadopet.ui.screens.pet
 
+import android.content.Context
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -62,6 +63,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import java.text.SimpleDateFormat
@@ -73,25 +75,26 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import java.io.File
+import com.cuidadopet.R
 import com.cuidadopet.ui.utils.adaptiveHorizontalPadding
 
 private val speciesOptions = listOf(
-    "DOG"     to "Cachorro",
-    "CAT"     to "Gato",
-    "RABBIT"  to "Coelho",
-    "BIRD"    to "Pássaro",
-    "HAMSTER" to "Hamster",
-    "TURTLE"  to "Tartaruga",
-    "FISH"    to "Peixe",
-    "OTHER"   to "Outro"
+    "DOG"     to R.string.species_dog,
+    "CAT"     to R.string.species_cat,
+    "RABBIT"  to R.string.species_rabbit,
+    "BIRD"    to R.string.species_bird,
+    "HAMSTER" to R.string.species_hamster,
+    "TURTLE"  to R.string.species_turtle,
+    "FISH"    to R.string.species_fish,
+    "OTHER"   to R.string.species_other
 )
 
 private val clinicalStateLabels = mapOf(
-    "ACTIVE_TREATMENT" to "Tratamento ativo",
-    "CHRONIC_DISEASE"  to "Doença crônica",
-    "POST_SURGICAL"    to "Pós-cirúrgico",
-    "RECOVERY"         to "Recuperação",
-    "PREVENTIVE"       to "Monitoramento preventivo"
+    "ACTIVE_TREATMENT" to R.string.pet_form_clinical_active_treatment,
+    "CHRONIC_DISEASE"  to R.string.pet_form_clinical_chronic,
+    "POST_SURGICAL"    to R.string.pet_form_clinical_post_surgical,
+    "RECOVERY"         to R.string.pet_form_clinical_recovery,
+    "PREVENTIVE"       to R.string.pet_form_clinical_preventive
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -124,44 +127,37 @@ fun PetFormScreen(
                 TextButton(onClick = {
                     viewModel.onBirthDateChange(pickerState.selectedDateMillis)
                     showBirthDatePicker = false
-                }) { Text("OK") }
+                }) { Text(stringResource(R.string.action_ok)) }
             },
             dismissButton = {
-                TextButton(onClick = { showBirthDatePicker = false }) { Text("Cancelar") }
+                TextButton(onClick = { showBirthDatePicker = false }) { Text(stringResource(R.string.action_cancel)) }
             }
         ) {
             DatePicker(state = pickerState)
         }
     }
 
-    // ── Lançadores para galeria e câmera ──────────────────────────────────────
-
-    // Seletor de foto da galeria — PickVisualMedia é a API moderna (API 21+)
     val galleryLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.PickVisualMedia()
     ) { uri -> uri?.let { viewModel.onPhotoFromGallery(it) } }
 
-    // Referência ao arquivo temporário criado antes de lançar a câmera
-    // var é necessário porque criamos um novo arquivo a cada vez que o botão é pressionado
     var cameraFile by remember { mutableStateOf<File?>(null) }
 
-    // TakePicture salva a foto no URI fornecido e retorna true/false de sucesso
     val cameraLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.TakePicture()
     ) { success ->
         if (success) cameraFile?.absolutePath?.let { viewModel.onPhotoFromCamera(it) }
     }
 
-    // Controla a exibição do diálogo "Galeria ou Câmera?"
     var showPhotoPickerDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (petId == null) "Novo pet" else "Editar pet") },
+                title = { Text(stringResource(if (petId == null) R.string.pet_form_new_title else R.string.pet_form_edit_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Voltar",
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.action_back),
                             tint = MaterialTheme.colorScheme.onPrimary)
                     }
                 },
@@ -184,19 +180,16 @@ fun PetFormScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
-            // ── Foto do pet ────────────────────────────────────────────────────
-            SectionTitle("Foto do pet")
+            SectionTitle(stringResource(R.string.pet_form_photo_section))
 
             Box(
-                modifier          = Modifier.fillMaxWidth(),
-                contentAlignment  = Alignment.Center
+                modifier         = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // Container externo — o clip do círculo fica no Box interno,
-                    // assim o overlay de câmera não é cortado pela máscara circular
                     Box(modifier = Modifier.size(96.dp)) {
                         Box(
                             modifier = Modifier
@@ -217,13 +210,12 @@ fun PetFormScreen(
                             } else {
                                 Icon(
                                     Icons.Default.Pets,
-                                    contentDescription = "Adicionar foto",
+                                    contentDescription = stringResource(R.string.pet_form_photo_add_cd),
                                     modifier           = Modifier.size(40.dp),
                                     tint               = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
-                        // Overlay fora do círculo clipeado — não sofre corte
                         Box(
                             modifier         = Modifier
                                 .align(Alignment.BottomEnd)
@@ -241,20 +233,19 @@ fun PetFormScreen(
                         }
                     }
                     Text(
-                        "Toque para alterar",
+                        stringResource(R.string.pet_form_photo_tap_hint),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
 
-            // ── Informações básicas ────────────────────────────────────────────
-            SectionTitle("Informações básicas")
+            SectionTitle(stringResource(R.string.pet_form_basic_section))
 
             OutlinedTextField(
                 value         = uiState.name,
                 onValueChange = viewModel::onNameChange,
-                label         = { Text("Nome do pet *") },
+                label         = { Text(stringResource(R.string.pet_form_name_label)) },
                 modifier      = Modifier.fillMaxWidth(),
                 singleLine    = true
             )
@@ -262,7 +253,7 @@ fun PetFormScreen(
             var speciesExpanded by remember { mutableStateOf(false) }
             val selectedSpeciesLabel = when {
                 uiState.species == "OTHER" && uiState.customSpecies.isNotBlank() -> uiState.customSpecies
-                else -> speciesOptions.firstOrNull { it.first == uiState.species }?.second ?: ""
+                else -> speciesOptions.firstOrNull { it.first == uiState.species }?.second?.let { stringResource(it) } ?: ""
             }
             ExposedDropdownMenuBox(
                 expanded = speciesExpanded,
@@ -272,7 +263,7 @@ fun PetFormScreen(
                     value = selectedSpeciesLabel,
                     onValueChange = {},
                     readOnly = true,
-                    label = { Text("Espécie *") },
+                    label = { Text(stringResource(R.string.pet_form_species_label)) },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = speciesExpanded) },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -282,9 +273,9 @@ fun PetFormScreen(
                     expanded = speciesExpanded,
                     onDismissRequest = { speciesExpanded = false }
                 ) {
-                    speciesOptions.forEach { (code, label) ->
+                    speciesOptions.forEach { (code, labelRes) ->
                         DropdownMenuItem(
-                            text = { Text(label) },
+                            text = { Text(stringResource(labelRes)) },
                             onClick = {
                                 if (code == "OTHER") viewModel.onCustomSpeciesChange("")
                                 viewModel.onSpeciesChange(code)
@@ -299,8 +290,8 @@ fun PetFormScreen(
                 OutlinedTextField(
                     value         = uiState.customSpecies,
                     onValueChange = { if (it.length <= 50) viewModel.onCustomSpeciesChange(it) },
-                    label         = { Text("Qual espécie? *") },
-                    placeholder   = { Text("Ex: Chinchila, Furão, Porquinho-da-índia...") },
+                    label         = { Text(stringResource(R.string.pet_form_custom_species_label)) },
+                    placeholder   = { Text(stringResource(R.string.pet_form_custom_species_hint)) },
                     modifier      = Modifier.fillMaxWidth(),
                     singleLine    = true,
                     supportingText = { Text("${uiState.customSpecies.length}/50") }
@@ -310,15 +301,14 @@ fun PetFormScreen(
             OutlinedTextField(
                 value         = uiState.breed,
                 onValueChange = viewModel::onBreedChange,
-                label         = { Text("Raça (opcional)") },
+                label         = { Text(stringResource(R.string.pet_form_breed_label)) },
                 modifier      = Modifier.fillMaxWidth(),
                 singleLine    = true
             )
 
-            // ── Data de nascimento ─────────────────────────────────────────────
-            SectionTitle("Data de nascimento (opcional)")
+            SectionTitle(stringResource(R.string.pet_form_birthdate_section))
             Text(
-                "Pode ser uma data aproximada.",
+                stringResource(R.string.pet_form_birthdate_approx),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -328,7 +318,7 @@ fun PetFormScreen(
                     onClick  = { showBirthDatePicker = true },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Informar data de nascimento")
+                    Text(stringResource(R.string.pet_form_birthdate_set_btn))
                 }
             } else {
                 Row(
@@ -340,14 +330,14 @@ fun PetFormScreen(
                         onClick  = { showBirthDatePicker = true },
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Nascimento: ${dateFmt.format(Date(birthDateMs))}")
+                        Text(stringResource(R.string.pet_form_birthdate_display, dateFmt.format(Date(birthDateMs))))
                     }
                     TextButton(onClick = { viewModel.onBirthDateChange(null) }) {
-                        Text("Remover")
+                        Text(stringResource(R.string.pet_form_birthdate_remove))
                     }
                 }
                 Text(
-                    "Idade: ${calculatePetAge(birthDateMs)}",
+                    stringResource(R.string.pet_form_age_display, calculatePetAge(context, birthDateMs)),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -356,40 +346,39 @@ fun PetFormScreen(
             OutlinedTextField(
                 value         = uiState.weightKg,
                 onValueChange = viewModel::onWeightChange,
-                label         = { Text("Peso atual (kg) *") },
+                label         = { Text(stringResource(R.string.pet_form_weight_label)) },
                 modifier      = Modifier.fillMaxWidth(),
                 singleLine    = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 suffix        = { Text("kg") }
             )
 
-            Text("Sexo *", style = MaterialTheme.typography.labelLarge,
+            Text(stringResource(R.string.pet_form_sex_label), style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 FilterChip(selected = uiState.sex == "MALE",
-                    onClick = { viewModel.onSexChange("MALE") }, label = { Text("Macho") })
+                    onClick = { viewModel.onSexChange("MALE") }, label = { Text(stringResource(R.string.sex_male)) })
                 FilterChip(selected = uiState.sex == "FEMALE",
-                    onClick = { viewModel.onSexChange("FEMALE") }, label = { Text("Fêmea") })
+                    onClick = { viewModel.onSexChange("FEMALE") }, label = { Text(stringResource(R.string.sex_female)) })
             }
 
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
                 Checkbox(checked = uiState.isNeutered, onCheckedChange = viewModel::onNeuteredChange)
-                Text("Castrado(a)", style = MaterialTheme.typography.bodyLarge,
+                Text(stringResource(R.string.sex_neutered), style = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier.padding(start = 4.dp))
             }
 
-            // ── Estados clínicos ───────────────────────────────────────────────
             Spacer(Modifier.height(4.dp))
-            SectionTitle("Estado clínico atual")
-            Text("Selecione todos que se aplicam:",
+            SectionTitle(stringResource(R.string.pet_form_clinical_section))
+            Text(stringResource(R.string.pet_form_clinical_select_all),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
 
-            clinicalStateLabels.forEach { (key, label) ->
+            clinicalStateLabels.forEach { (key, labelRes) ->
                 FilterChip(
                     selected = key in uiState.clinicalStates,
                     onClick  = { viewModel.onClinicalStateToggle(key) },
-                    label    = { Text(label) },
+                    label    = { Text(stringResource(labelRes)) },
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -407,7 +396,7 @@ fun PetFormScreen(
                     CircularProgressIndicator(modifier = Modifier.height(20.dp),
                         color = MaterialTheme.colorScheme.onPrimary)
                 } else {
-                    Text(if (petId == null) "Cadastrar pet" else "Salvar alterações")
+                    Text(stringResource(if (petId == null) R.string.pet_form_save_btn else R.string.pet_form_update_btn))
                 }
             }
 
@@ -415,32 +404,27 @@ fun PetFormScreen(
         }
     }
 
-    // Diálogo para escolher entre galeria e câmera
     if (showPhotoPickerDialog) {
         AlertDialog(
             onDismissRequest = { showPhotoPickerDialog = false },
-            title            = { Text("Foto do pet") },
-            text             = { Text("Como você quer adicionar a foto?") },
+            title            = { Text(stringResource(R.string.pet_form_photo_dialog_title)) },
+            text             = { Text(stringResource(R.string.pet_form_photo_dialog_msg)) },
             confirmButton    = {
                 Button(onClick = {
                     showPhotoPickerDialog = false
-                    // PickVisualMedia.ImageOnly filtra somente imagens
                     galleryLauncher.launch(
                         PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
                     )
                 }) {
                     Icon(Icons.Default.Photo, null, modifier = Modifier.size(18.dp))
-                    Text("  Galeria")
+                    Text(stringResource(R.string.pet_form_photo_gallery))
                 }
             },
             dismissButton = {
                 TextButton(onClick = {
                     showPhotoPickerDialog = false
-                    // Cria o arquivo onde a câmera vai salvar, depois lança o app de câmera
                     val file = viewModel.createCameraFile()
                     cameraFile = file
-                    // FileProvider.getUriForFile gera uma Uri "content://" que a câmera pode usar
-                    // sem precisar de permissão de acesso ao armazenamento
                     val uri = FileProvider.getUriForFile(
                         context,
                         "${context.packageName}.fileprovider",
@@ -449,7 +433,7 @@ fun PetFormScreen(
                     cameraLauncher.launch(uri)
                 }) {
                     Icon(Icons.Default.CameraAlt, null, modifier = Modifier.size(18.dp))
-                    Text("  Câmera")
+                    Text(stringResource(R.string.pet_form_photo_camera))
                 }
             }
         )
@@ -461,7 +445,7 @@ private fun SectionTitle(text: String) {
     Text(text, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
 }
 
-private fun calculatePetAge(birthDateMs: Long): String {
+private fun calculatePetAge(context: Context, birthDateMs: Long): String {
     val birth = Calendar.getInstance().also { it.timeInMillis = birthDateMs }
     val today = Calendar.getInstance()
     var years  = today.get(Calendar.YEAR)  - birth.get(Calendar.YEAR)
@@ -471,18 +455,17 @@ private fun calculatePetAge(birthDateMs: Long): String {
         if (months == 0) { years--; months = 11 } else months--
     }
     return when {
-        years > 0 && months > 0 -> "$years ${if (years == 1) "ano" else "anos"} e $months ${if (months == 1) "mês" else "meses"}"
-        years > 0               -> "$years ${if (years == 1) "ano" else "anos"}"
-        months > 0              -> "$months ${if (months == 1) "mês" else "meses"}"
-        else                    -> "menos de 1 mês"
+        years > 0 && months > 0 -> "$years ${if (years == 1) context.getString(R.string.age_year) else context.getString(R.string.age_years)} e $months ${if (months == 1) context.getString(R.string.age_month) else context.getString(R.string.age_months)}"
+        years > 0               -> "$years ${if (years == 1) context.getString(R.string.age_year) else context.getString(R.string.age_years)}"
+        months > 0              -> "$months ${if (months == 1) context.getString(R.string.age_month) else context.getString(R.string.age_months)}"
+        else                    -> context.getString(R.string.age_less_than_1_month)
     }
 }
 
 @Composable
 private fun DisclaimerText() {
     Text(
-        "⚠ Este app é uma ferramenta de organização e não substitui " +
-            "a consulta veterinária. Sempre siga as orientações do seu médico veterinário.",
+        stringResource(R.string.pet_form_disclaimer),
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant
     )

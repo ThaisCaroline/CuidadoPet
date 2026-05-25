@@ -36,50 +36,50 @@ object NotificationChannels {
         manager.createNotificationChannel(
             NotificationChannel(
                 CHANNEL_MEDICATIONS,
-                "Lembretes de medicamentos",
+                context.getString(com.cuidadopet.R.string.notif_channel_medications),
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                description = "Alertas de horário dos medicamentos do seu pet"
+                description = context.getString(com.cuidadopet.R.string.notif_channel_medications_desc)
             }
         )
 
         manager.createNotificationChannel(
             NotificationChannel(
                 CHANNEL_MEALS,
-                "Lembretes de alimentação",
+                context.getString(com.cuidadopet.R.string.notif_channel_meals),
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                description = "Lembretes dos horários de refeição do seu pet"
+                description = context.getString(com.cuidadopet.R.string.notif_channel_meals_desc)
             }
         )
 
         manager.createNotificationChannel(
             NotificationChannel(
                 CHANNEL_WATER,
-                "Lembretes de hidratação",
+                context.getString(com.cuidadopet.R.string.notif_channel_water),
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                description = "Lembretes para oferecer água ao seu pet"
+                description = context.getString(com.cuidadopet.R.string.notif_channel_water_desc)
             }
         )
 
         manager.createNotificationChannel(
             NotificationChannel(
                 CHANNEL_DAILY,
-                "Alertas diários",
+                context.getString(com.cuidadopet.R.string.notif_channel_daily),
                 NotificationManager.IMPORTANCE_DEFAULT
             ).apply {
-                description = "Resumo diário de alimentação e hidratação"
+                description = context.getString(com.cuidadopet.R.string.notif_channel_daily_desc)
             }
         )
 
         manager.createNotificationChannel(
             NotificationChannel(
                 CHANNEL_VACCINES,
-                "Lembretes de vacinas e vermífugos",
+                context.getString(com.cuidadopet.R.string.notif_channel_vaccines),
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                description = "Avisos de vacinas e vermífugos vencendo"
+                description = context.getString(com.cuidadopet.R.string.notif_channel_vaccines_desc)
             }
         )
     }

@@ -20,8 +20,10 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.cuidadopet.R
 import com.cuidadopet.ui.utils.adaptiveHorizontalPadding
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -30,10 +32,10 @@ fun PrivacyPolicyScreen(onNavigateBack: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Política de Privacidade") },
+                title = { Text(stringResource(R.string.privacy_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Voltar",
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.action_back),
                             tint = MaterialTheme.colorScheme.onPrimary)
                     }
                 },
@@ -54,57 +56,18 @@ fun PrivacyPolicyScreen(onNavigateBack: () -> Unit) {
         ) {
             Spacer(Modifier.height(8.dp))
 
-            PolicySection("CuidadoPet — Política de Privacidade",
-                "Última atualização: maio de 2026")
-
-            PolicySection("1. Sobre o aplicativo",
-                "O CuidadoPet é um aplicativo de organização de cuidados com animais de " +
-                "estimação domésticos. O app é local — todos os dados são armazenados " +
-                "exclusivamente no dispositivo do usuário. Não há servidores, contas de " +
-                "usuário ou sincronização na nuvem.")
-
-            PolicySection("2. Dados coletados",
-                "O CuidadoPet não coleta nem transmite nenhum dado pessoal ou de saúde " +
-                "para servidores externos.\n\n" +
-                "Os seguintes dados são criados e armazenados APENAS localmente no dispositivo:\n" +
-                "• Nome, espécie, raça e peso dos pets cadastrados\n" +
-                "• Registros de medicamentos e horários de administração\n" +
-                "• Planos alimentares e registros de refeições\n" +
-                "• Registros de hidratação\n" +
-                "• Entradas do diário de saúde e histórico de peso\n" +
-                "• Foto do pet (salva no armazenamento interno do app)")
-
-            PolicySection("3. Permissões do aplicativo",
-                "• Notificações: para enviar lembretes de medicamentos e refeições\n" +
-                "• Alarmes exatos: para garantir que os lembretes sejam ponteiros\n" +
-                "• Câmera: para tirar foto do pet (opcional)\n" +
-                "• Acesso a imagens: para escolher foto da galeria (opcional)\n" +
-                "• Inicialização do sistema: para reconfigurar alarmes após reinicialização")
-
-            PolicySection("4. Compartilhamento de dados",
-                "O app não compartilha dados com terceiros de forma automática.\n\n" +
-                "O tutor pode optar por compartilhar relatórios manualmente (WhatsApp, " +
-                "e-mail, etc.) usando as funções de exportação. Esse compartilhamento " +
-                "é sempre iniciado pela ação explícita do usuário.")
-
-            PolicySection("5. Aviso médico-veterinário",
-                "O CuidadoPet é uma ferramenta de organização pessoal e NÃO substitui " +
-                "avaliação, diagnóstico ou prescrição veterinária. As informações " +
-                "registradas no app são observações do tutor e não devem ser usadas " +
-                "como base para decisões médicas sem orientação profissional.")
-
-            PolicySection("6. Retenção e exclusão de dados",
-                "Todos os dados ficam no dispositivo. Para apagar os dados, o usuário " +
-                "pode desinstalar o aplicativo, o que remove todos os arquivos e o " +
-                "banco de dados local.")
-
-            PolicySection("7. Menores de idade",
-                "O aplicativo não coleta dados de menores de idade. O uso é destinado " +
-                "a tutores adultos responsáveis pelos animais.")
-
-            PolicySection("8. Contato",
-                "Dúvidas sobre esta política podem ser enviadas para o e-mail de " +
-                "suporte do desenvolvedor disponível na página do app na Google Play.")
+            PolicySection(
+                "${stringResource(R.string.app_name)} — ${stringResource(R.string.privacy_title)}",
+                stringResource(R.string.privacy_last_update)
+            )
+            PolicySection(stringResource(R.string.privacy_s1_title), stringResource(R.string.privacy_s1_body))
+            PolicySection(stringResource(R.string.privacy_s2_title), stringResource(R.string.privacy_s2_body))
+            PolicySection(stringResource(R.string.privacy_s3_title), stringResource(R.string.privacy_s3_body))
+            PolicySection(stringResource(R.string.privacy_s4_title), stringResource(R.string.privacy_s4_body))
+            PolicySection(stringResource(R.string.privacy_s5_title), stringResource(R.string.privacy_s5_body))
+            PolicySection(stringResource(R.string.privacy_s6_title), stringResource(R.string.privacy_s6_body))
+            PolicySection(stringResource(R.string.privacy_s7_title), stringResource(R.string.privacy_s7_body))
+            PolicySection(stringResource(R.string.privacy_s8_title), stringResource(R.string.privacy_s8_body))
 
             Spacer(Modifier.height(24.dp))
         }

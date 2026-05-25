@@ -56,12 +56,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.FileProvider
 import coil.compose.AsyncImage
+import com.cuidadopet.R
 import com.cuidadopet.data.db.entity.HealthPhotoEntity
 import com.cuidadopet.ui.utils.adaptiveHorizontalPadding
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -92,7 +94,7 @@ fun HealthEntryFormScreen(
         state.error?.let { snackbarHostState.showSnackbar(it); viewModel.clearError() }
     }
 
-    val title = if (entryId == null) "Nova entrada no diário" else "Editar entrada"
+    val title = stringResource(if (entryId == null) R.string.health_entry_new_title else R.string.health_entry_edit_title)
 
     Scaffold(
         topBar = {
@@ -100,7 +102,7 @@ fun HealthEntryFormScreen(
                 title = { Text(title) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -124,94 +126,86 @@ fun HealthEntryFormScreen(
         ) {
             Spacer(Modifier.height(8.dp))
 
-            // ── Comportamento ───────────────────────────────────────────
             ChipSelector(
-                title = "Comportamento geral",
+                title = stringResource(R.string.health_entry_behavior_section),
                 options = listOf(
-                    "NORMAL"    to "Normal, ativo",
-                    "LETHARGIC" to "Apático",
-                    "AGITATED"  to "Agitado",
-                    "SLEEPY"    to "Sonolento"
+                    "NORMAL"    to stringResource(R.string.health_behavior_normal),
+                    "LETHARGIC" to stringResource(R.string.health_behavior_lethargic),
+                    "AGITATED"  to stringResource(R.string.health_behavior_agitated),
+                    "SLEEPY"    to stringResource(R.string.health_behavior_sleepy)
                 ),
                 selected = state.behavior,
                 onSelect = viewModel::updateBehavior
             )
 
-            // ── Fezes ──────────────────────────────────────────────────
             ChipSelector(
-                title = "Fezes",
+                title = stringResource(R.string.health_entry_feces_section),
                 options = listOf(
-                    "NORMAL"   to "Normal",
-                    "SOFT"     to "Amolecidas",
-                    "DIARRHEA" to "Diarreia",
-                    "ABSENT"   to "Não evacuou",
-                    "BLOOD"    to "Com sangue ⚠️"
+                    "NORMAL"   to stringResource(R.string.health_feces_normal),
+                    "SOFT"     to stringResource(R.string.health_feces_soft),
+                    "DIARRHEA" to stringResource(R.string.health_feces_diarrhea),
+                    "ABSENT"   to stringResource(R.string.health_feces_absent),
+                    "BLOOD"    to stringResource(R.string.health_feces_blood)
                 ),
                 selected = state.fecesStatus,
                 onSelect = viewModel::updateFeces
             )
 
-            // ── Urina ──────────────────────────────────────────────────
             ChipSelector(
-                title = "Urina",
+                title = stringResource(R.string.health_entry_urine_section),
                 options = listOf(
-                    "NORMAL"    to "Normal",
-                    "INCREASED" to "Aumentada",
-                    "REDUCED"   to "Reduzida",
-                    "ABSENT"    to "Não urinou",
-                    "BLOOD"     to "Com sangue ⚠️"
+                    "NORMAL"    to stringResource(R.string.health_urine_normal),
+                    "INCREASED" to stringResource(R.string.health_urine_increased),
+                    "REDUCED"   to stringResource(R.string.health_urine_reduced),
+                    "ABSENT"    to stringResource(R.string.health_urine_absent),
+                    "BLOOD"     to stringResource(R.string.health_urine_blood)
                 ),
                 selected = state.urineStatus,
                 onSelect = viewModel::updateUrine
             )
 
-            // ── Vômitos ────────────────────────────────────────────────
             OutlinedTextField(
                 value = state.vomitCount,
                 onValueChange = { viewModel.updateVomitCount(it.filter { c -> c.isDigit() }.take(2)) },
-                label = { Text("Número de episódios de vômito") },
-                placeholder = { Text("0 = não vomitou") },
+                label = { Text(stringResource(R.string.health_entry_vomit_label)) },
+                placeholder = { Text(stringResource(R.string.health_entry_vomit_hint)) },
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 singleLine = true
             )
 
-            // ── Mobilidade ────────────────────────────────────────────
             ChipSelector(
-                title = "Mobilidade",
+                title = stringResource(R.string.health_entry_mobility_section),
                 options = listOf(
-                    "NORMAL"   to "Normal",
-                    "REDUCED"  to "Reduzida",
-                    "IMMOBILE" to "Imóvel"
+                    "NORMAL"   to stringResource(R.string.health_mobility_normal),
+                    "REDUCED"  to stringResource(R.string.health_mobility_reduced),
+                    "IMMOBILE" to stringResource(R.string.health_mobility_immobile)
                 ),
                 selected = state.mobility,
                 onSelect = viewModel::updateMobility
             )
 
-            // ── Sinais de dor ─────────────────────────────────────────
             ChipSelector(
-                title = "Sinais de dor",
+                title = stringResource(R.string.health_entry_pain_section),
                 options = listOf(
-                    "NONE"     to "Sem sinais",
-                    "APPARENT" to "Aparente",
-                    "EVIDENT"  to "Evidente"
+                    "NONE"     to stringResource(R.string.health_pain_none),
+                    "APPARENT" to stringResource(R.string.health_pain_apparent),
+                    "EVIDENT"  to stringResource(R.string.health_pain_evident)
                 ),
                 selected = state.painSigns,
                 onSelect = viewModel::updatePainSigns
             )
 
-            // ── Observações livres ────────────────────────────────────
             OutlinedTextField(
                 value = state.observations,
                 onValueChange = viewModel::updateObservations,
-                label = { Text("Observações (campo livre)") },
-                placeholder = { Text("Ex: dormiu o dia todo, não quis brincar...") },
+                label = { Text(stringResource(R.string.health_entry_obs_label)) },
+                placeholder = { Text(stringResource(R.string.health_entry_obs_hint)) },
                 modifier = Modifier.fillMaxWidth(),
                 maxLines = 5
             )
 
-            // ── Fotos ─────────────────────────────────────────────────
-            Text("Fotos da observação", style = MaterialTheme.typography.titleSmall)
+            Text(stringResource(R.string.health_entry_photos_section), style = MaterialTheme.typography.titleSmall)
             if (state.photos.isNotEmpty()) {
                 FlowRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -239,7 +233,7 @@ fun HealthEntryFormScreen(
                             ) {
                                 Icon(
                                     Icons.Default.Close,
-                                    contentDescription = "Excluir foto",
+                                    contentDescription = stringResource(R.string.health_entry_delete_photo_cd),
                                     tint = MaterialTheme.colorScheme.onError,
                                     modifier = Modifier.size(16.dp)
                                 )
@@ -258,17 +252,15 @@ fun HealthEntryFormScreen(
             ) {
                 Icon(Icons.Default.AddPhotoAlternate, contentDescription = null)
                 Spacer(Modifier.width(8.dp))
-                Text("Adicionar foto")
+                Text(stringResource(R.string.health_entry_add_photo_btn))
             }
 
-            // ── Aviso ─────────────────────────────────────────────────
             Text(
-                "Este diário é para observação do tutor. Não substitui avaliação veterinária.",
+                stringResource(R.string.health_entry_disclaimer),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
-            // ── Salvar ────────────────────────────────────────────────
             Button(
                 onClick = { viewModel.save(petId, entryId) },
                 modifier = Modifier.fillMaxWidth(),
@@ -281,7 +273,7 @@ fun HealthEntryFormScreen(
                         color = MaterialTheme.colorScheme.onPrimary
                     )
                 } else {
-                    Text("Salvar entrada")
+                    Text(stringResource(R.string.health_entry_save_btn))
                 }
             }
 
@@ -310,7 +302,7 @@ fun HealthEntryFormScreen(
                         .align(Alignment.TopStart)
                         .padding(8.dp)
                 ) {
-                    Icon(Icons.Default.Close, contentDescription = "Fechar", tint = Color.White)
+                    Icon(Icons.Default.Close, contentDescription = stringResource(R.string.health_entry_close_cd), tint = Color.White)
                 }
                 IconButton(
                     onClick = {
@@ -325,20 +317,19 @@ fun HealthEntryFormScreen(
                             putExtra(Intent.EXTRA_STREAM, uri)
                             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                         }
-                        context.startActivity(Intent.createChooser(intent, "Compartilhar foto"))
+                        context.startActivity(Intent.createChooser(intent, context.getString(R.string.health_entry_share_photo_chooser)))
                     },
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .padding(8.dp)
                 ) {
-                    Icon(Icons.Default.Share, contentDescription = "Compartilhar", tint = Color.White)
+                    Icon(Icons.Default.Share, contentDescription = stringResource(R.string.health_entry_share_photo_cd), tint = Color.White)
                 }
             }
         }
     }
 }
 
-// Seletor de chip reutilizável — toque no chip selecionado para desmarcar (nullable)
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun ChipSelector(
@@ -349,12 +340,10 @@ private fun ChipSelector(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(title, style = MaterialTheme.typography.titleSmall)
-        // FlowRow quebra automaticamente para a próxima linha quando não cabe
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             options.forEach { (key, label) ->
                 FilterChip(
                     selected = selected == key,
-                    // Tocar no chip já selecionado o desmarca (volta a null)
                     onClick = { onSelect(if (selected == key) null else key) },
                     label = { Text(label, style = MaterialTheme.typography.labelSmall) }
                 )

@@ -41,8 +41,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.cuidadopet.R
 import com.cuidadopet.ui.utils.adaptiveHorizontalPadding
 import com.cuidadopet.ui.utils.TimeInputField
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -69,16 +71,16 @@ fun WaterConfigFormScreen(
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Excluir plano de hidratação?") },
-            text = { Text("A configuração de água e os lembretes serão removidos. Os registros do histórico serão mantidos.") },
+            title = { Text(stringResource(R.string.dialog_delete_water_config_title)) },
+            text = { Text(stringResource(R.string.dialog_delete_water_config_msg)) },
             confirmButton = {
                 Button(
                     onClick = { showDeleteDialog = false; viewModel.delete(petId) },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
-                ) { Text("Excluir") }
+                ) { Text(stringResource(R.string.action_delete)) }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) { Text("Cancelar") }
+                TextButton(onClick = { showDeleteDialog = false }) { Text(stringResource(R.string.action_cancel)) }
             }
         )
     }
@@ -90,15 +92,15 @@ fun WaterConfigFormScreen(
         }
     }
 
-    val petName = state.petName.ifBlank { "Carregando..." }
+    val petName = state.petName.ifBlank { stringResource(R.string.loading) }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Configurar água — $petName") },
+                title = { Text(stringResource(R.string.water_config_title, petName)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -122,30 +124,27 @@ fun WaterConfigFormScreen(
         ) {
             Spacer(Modifier.height(8.dp))
 
-            // ── Meta diária ──────────────────────────────────────────────
             OutlinedTextField(
                 value = state.dailyTargetMl,
                 onValueChange = { viewModel.updateTargetMl(it.filter { c -> c.isDigit() }.take(5)) },
-                label = { Text("Meta diária de água (ml)") },
-                placeholder = { Text("Ex: 300") },
+                label = { Text(stringResource(R.string.water_config_daily_goal_label)) },
+                placeholder = { Text(stringResource(R.string.water_config_daily_goal_hint)) },
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                suffix = { Text("ml/dia") }
+                suffix = { Text(stringResource(R.string.water_config_daily_goal_suffix)) }
             )
 
-            // ── Lembretes ─────────────────────────────────────────────────
-            Text("Lembretes", style = MaterialTheme.typography.titleSmall)
+            Text(stringResource(R.string.water_config_reminders_section), style = MaterialTheme.typography.titleSmall)
 
-            // Toggle de ativar/desativar lembretes
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column {
-                    Text("Ativar lembretes", style = MaterialTheme.typography.bodyMedium)
+                    Text(stringResource(R.string.water_config_enable_reminders), style = MaterialTheme.typography.bodyMedium)
                     Text(
-                        "O app vai te lembrar de oferecer água",
+                        stringResource(R.string.water_config_enable_reminders_desc),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -156,37 +155,36 @@ fun WaterConfigFormScreen(
                 )
             }
 
-            // Campos de intervalo e horário de início — só exibidos com lembretes ativos
             if (state.remindersEnabled) {
                 OutlinedTextField(
                     value = state.reminderIntervalHours,
                     onValueChange = { viewModel.updateReminderInterval(it.filter { c -> c.isDigit() }.take(2)) },
-                    label = { Text("Lembrar a cada (horas)") },
+                    label = { Text(stringResource(R.string.water_config_interval_label)) },
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    suffix = { Text("h") },
+                    suffix = { Text(stringResource(R.string.water_config_interval_suffix)) },
                     supportingText = {
                         Text(
-                            "Ex: 2 = lembrete a cada 2 horas. Mínimo recomendado: 2h.",
+                            stringResource(R.string.water_config_interval_hint),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 )
 
-                // Campo de horário de início — âncora do primeiro lembrete do dia
                 TimeInputField(
                     value = state.reminderStartTime,
                     onValueChange = viewModel::updateReminderStartTime,
-                    label = "Horário de início dos lembretes",
+                    label = stringResource(R.string.water_config_start_time_label),
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                // Campo de horário de fim — alertas fora da janela são silenciados
+                val noRemindersText = stringResource(R.string.water_config_no_reminders_in_window)
+                val endTimeHint     = stringResource(R.string.water_config_end_time_hint)
                 TimeInputField(
                     value = state.reminderEndTime,
                     onValueChange = viewModel::updateReminderEndTime,
-                    label = "Horário de fim dos lembretes",
+                    label = stringResource(R.string.water_config_end_time_label),
                     modifier = Modifier.fillMaxWidth(),
                     supportingText = {
                         val interval = state.reminderIntervalHours.toIntOrNull() ?: 0
@@ -205,20 +203,21 @@ fun WaterConfigFormScreen(
                             }.filter { (min, _) -> min < endMin }.map { it.second }
                             if (times.isNotEmpty()) {
                                 Text(
-                                    "Lembretes: ${times.take(5).joinToString(", ")}${if (times.size > 5) "..." else ""}",
+                                    stringResource(R.string.water_config_reminders_preview,
+                                        times.take(5).joinToString(", ") + if (times.size > 5) "..." else ""),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             } else {
                                 Text(
-                                    "Nenhum lembrete nessa janela — ajuste o início ou o fim",
+                                    noRemindersText,
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.error
                                 )
                             }
                         } else {
                             Text(
-                                "Ex: 22:00 → silencia após as 22h",
+                                endTimeHint,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -227,7 +226,6 @@ fun WaterConfigFormScreen(
                 )
             }
 
-            // ── Botão salvar ──────────────────────────────────────────────
             Button(
                 onClick = { viewModel.save(petId) },
                 modifier = Modifier.fillMaxWidth(),
@@ -240,18 +238,17 @@ fun WaterConfigFormScreen(
                         color = MaterialTheme.colorScheme.onPrimary
                     )
                 } else {
-                    Text("Salvar configuração")
+                    Text(stringResource(R.string.water_config_save_btn))
                 }
             }
 
-            // ── Botão excluir plano ───────────────────────────────────────
             if (state.dailyTargetMl.isNotBlank()) {
                 OutlinedButton(
                     onClick = { showDeleteDialog = true },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
                 ) {
-                    Text("Excluir plano de hidratação")
+                    Text(stringResource(R.string.water_config_delete_btn))
                 }
             }
 

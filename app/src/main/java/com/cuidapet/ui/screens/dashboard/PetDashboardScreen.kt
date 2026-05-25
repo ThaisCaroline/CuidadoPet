@@ -13,7 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.Medication
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Summarize

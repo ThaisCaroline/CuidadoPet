@@ -1,9 +1,10 @@
 package com.cuidadopet.ui.screens.settings
 
+import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -52,7 +53,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
-import androidx.core.os.LocaleListCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cuidadopet.R
@@ -70,8 +70,8 @@ fun SettingsScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     var showLanguageDialog by remember { mutableStateOf(false) }
 
-    val appLocales = AppCompatDelegate.getApplicationLocales()
-    val currentTag = if (appLocales.isEmpty) "" else appLocales[0]?.language ?: ""
+    val prefs = remember { context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE) }
+    val currentTag = prefs.getString("language_tag", "") ?: ""
     val currentLanguageName = when (currentTag) {
         "pt" -> stringResource(R.string.language_pt)
         "en" -> stringResource(R.string.language_en)
@@ -124,10 +124,9 @@ fun SettingsScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable {
-                                    val locales = if (tag.isEmpty()) LocaleListCompat.getEmptyLocaleList()
-                                                  else LocaleListCompat.forLanguageTags(tag)
-                                    AppCompatDelegate.setApplicationLocales(locales)
+                                    prefs.edit().putString("language_tag", tag).apply()
                                     showLanguageDialog = false
+                                    (context as? Activity)?.recreate()
                                 }
                                 .padding(vertical = 4.dp),
                             verticalAlignment = Alignment.CenterVertically

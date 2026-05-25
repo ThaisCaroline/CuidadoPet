@@ -1,6 +1,7 @@
 package com.cuidadopet
 
 import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -46,6 +47,19 @@ class MainActivity : ComponentActivity() {
     private val updateLauncher = registerForActivityResult(
         ActivityResultContracts.StartIntentSenderForResult()
     ) { /* flexible update: o resultado não precisa de tratamento especial */ }
+
+    override fun attachBaseContext(newBase: Context) {
+        val tag = newBase.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+            .getString("language_tag", "") ?: ""
+        if (tag.isNotEmpty()) {
+            val locale = java.util.Locale.forLanguageTag(tag)
+            val config = android.content.res.Configuration(newBase.resources.configuration)
+            config.setLocale(locale)
+            super.attachBaseContext(newBase.createConfigurationContext(config))
+        } else {
+            super.attachBaseContext(newBase)
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()

@@ -538,6 +538,19 @@
     <string name="update_restart_now">Reiniciar agora</string>
     <string name="update_later">Depois</string>
 
+    <!-- ── Onboarding ───────────────────────────────────────────── -->
+    <string name="onboarding_skip">Pular</string>
+    <string name="onboarding_next">Próximo</string>
+    <string name="onboarding_start">Começar</string>
+    <string name="onboarding_1_title">Bem-vindo ao CuidadoPet</string>
+    <string name="onboarding_1_body">Tudo que seu pet precisa em um só lugar. Simples, organizado e sempre à mão.</string>
+    <string name="onboarding_2_title">Medicamentos em dia</string>
+    <string name="onboarding_2_body">Cadastre os remédios do seu pet e receba lembretes no horário certo para não perder nenhuma dose.</string>
+    <string name="onboarding_3_title">Alimentação e hidratação</string>
+    <string name="onboarding_3_body">Controle as refeições, petiscos extras e a ingestão de água do seu pet dia a dia.</string>
+    <string name="onboarding_4_title">Diário de saúde</string>
+    <string name="onboarding_4_body">Registre sintomas, peso e fotos para acompanhar a saúde do seu pet e compartilhar com o veterinário.</string>
+
     <!-- ── Idioma ─────────────────────────────────────────────── -->
     <string name="settings_language_title">Idioma</string>
     <string name="settings_language_current">Idioma atual: %1$s</string>

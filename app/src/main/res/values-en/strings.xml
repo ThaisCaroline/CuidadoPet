@@ -538,6 +538,19 @@
     <string name="update_restart_now">Restart now</string>
     <string name="update_later">Later</string>
 
+    <!-- ── Onboarding ───────────────────────────────────────────── -->
+    <string name="onboarding_skip">Skip</string>
+    <string name="onboarding_next">Next</string>
+    <string name="onboarding_start">Get started</string>
+    <string name="onboarding_1_title">Welcome to CuidadoPet</string>
+    <string name="onboarding_1_body">Everything your pet needs in one place. Simple, organised and always at hand.</string>
+    <string name="onboarding_2_title">Medications on time</string>
+    <string name="onboarding_2_body">Register your pet\'s medications and get reminders at the right time so you never miss a dose.</string>
+    <string name="onboarding_3_title">Feeding &amp; hydration</string>
+    <string name="onboarding_3_body">Track meals, treats and your pet\'s daily water intake.</string>
+    <string name="onboarding_4_title">Health diary</string>
+    <string name="onboarding_4_body">Record symptoms, weight and photos to monitor your pet\'s health and share with your vet.</string>
+
     <!-- ── Language ───────────────────────────────────────────── -->
     <string name="settings_language_title">Language</string>
     <string name="settings_language_current">Current language: %1$s</string>

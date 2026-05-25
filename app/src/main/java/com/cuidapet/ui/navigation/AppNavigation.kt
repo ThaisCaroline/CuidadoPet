@@ -1,6 +1,9 @@
 package com.cuidadopet.ui.navigation
 
+import android.content.Context
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -11,6 +14,7 @@ import com.cuidadopet.ui.screens.dashboard.PetDashboardScreen
 import com.cuidadopet.ui.screens.feeding.MealPlanFormScreen
 import com.cuidadopet.ui.screens.home.HomeScreen
 import com.cuidadopet.ui.screens.medication.MedicationFormScreen
+import com.cuidadopet.ui.screens.onboarding.OnboardingScreen
 import com.cuidadopet.ui.screens.pet.PetFormScreen
 import com.cuidadopet.ui.screens.health.HealthEntryFormScreen
 import com.cuidadopet.ui.screens.settings.PrivacyPolicyScreen
@@ -22,8 +26,11 @@ import com.cuidadopet.ui.screens.vaccine.VaccineListScreen
 import com.cuidadopet.ui.screens.paywall.PaywallScreen
 import com.cuidadopet.ui.screens.water.WaterConfigFormScreen
 
-// Todas as rotas do app centralizadas aqui
+private const val PREFS_NAME       = "app_prefs"
+private const val KEY_ONBOARDING   = "onboarding_done"
+
 object Routes {
+    const val ONBOARDING    = "onboarding"
     const val HOME          = "home"
     const val PET_FORM      = "pet_form?petId={petId}"
     const val DASHBOARD     = "dashboard/{petId}"
@@ -63,10 +70,28 @@ object Routes {
 fun AppNavigation(
     navController: NavHostController = rememberNavController()
 ) {
+    val context        = LocalContext.current
+    val prefs          = remember { context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE) }
+    val startDestination = remember {
+        if (prefs.getBoolean(KEY_ONBOARDING, false)) Routes.HOME else Routes.ONBOARDING
+    }
+
     NavHost(
-        navController = navController,
-        startDestination = Routes.HOME
+        navController    = navController,
+        startDestination = startDestination
     ) {
+
+        // ── Onboarding — exibido apenas no primeiro acesso ───────────────
+        composable(Routes.ONBOARDING) {
+            OnboardingScreen(
+                onFinish = {
+                    prefs.edit().putBoolean(KEY_ONBOARDING, true).apply()
+                    navController.navigate(Routes.HOME) {
+                        popUpTo(Routes.ONBOARDING) { inclusive = true }
+                    }
+                }
+            )
+        }
 
         // ── Home — lista de pets ─────────────────────────────────────────
         composable(Routes.HOME) {

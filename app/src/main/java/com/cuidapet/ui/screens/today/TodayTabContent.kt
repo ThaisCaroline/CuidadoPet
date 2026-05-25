@@ -58,6 +58,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import android.content.Context
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import com.cuidadopet.R
 import com.cuidadopet.ui.components.AdBanner
 import com.cuidadopet.ui.utils.adaptiveHorizontalPadding
 
@@ -99,10 +103,10 @@ fun TodayTabContent(
         Spacer(Modifier.height(8.dp))
 
         // ── Medicamentos do dia ───────────────────────────────────────────────
-        SectionHeader("Medicamentos hoje")
+        SectionHeader(stringResource(R.string.today_medications_section))
 
         if (state.doses.isEmpty()) {
-            EmptySection("Nenhuma dose programada para hoje.")
+            EmptySection(stringResource(R.string.today_no_doses))
         } else {
             state.doses.forEach { item ->
                 DoseCard(
@@ -113,10 +117,10 @@ fun TodayTabContent(
         }
 
         // ── Refeições do dia ──────────────────────────────────────────────────
-        SectionHeader("Refeições hoje")
+        SectionHeader(stringResource(R.string.today_meals_section))
 
         if (state.meals.isEmpty()) {
-            EmptySection("Nenhum plano alimentar configurado.\nConfigure na aba Alimentação.")
+            EmptySection(stringResource(R.string.today_no_meal_plan))
         } else {
             state.meals.forEach { item ->
                 MealCard(
@@ -146,7 +150,7 @@ fun TodayTabContent(
                             color = MaterialTheme.colorScheme.primary
                         )
                         Text(
-                            log.description ?: "Petisco",
+                            log.description ?: stringResource(R.string.today_snack_default),
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }
@@ -161,7 +165,7 @@ fun TodayTabContent(
                         IconButton(onClick = { viewModel.deleteSporadicMeal(log.id) }) {
                             Icon(
                                 Icons.Default.Delete,
-                                contentDescription = "Remover extra",
+                                contentDescription = stringResource(R.string.today_remove_extra_cd),
                                 tint = MaterialTheme.colorScheme.error,
                                 modifier = Modifier.size(18.dp)
                             )
@@ -177,7 +181,7 @@ fun TodayTabContent(
         ) {
             Icon(Icons.Default.Restaurant, contentDescription = null)
             Spacer(Modifier.width(4.dp))
-            Text("+ Extra")
+            Text(stringResource(R.string.today_add_extra))
         }
 
         if (showSporadicDialog) {
@@ -191,7 +195,7 @@ fun TodayTabContent(
         }
 
         // ── Hidratação do dia ─────────────────────────────────────────────────
-        SectionHeader("Hidratação hoje")
+        SectionHeader(stringResource(R.string.today_water_section))
 
         WaterCard(
             totalMl  = state.waterTotalMl,
@@ -258,19 +262,19 @@ private fun DoseCard(
             // Ícone / label de status
             when {
                 isTaken -> Icon(
-                    Icons.Default.Check, contentDescription = "Administrado",
+                    Icons.Default.Check, contentDescription = stringResource(R.string.dose_taken_cd),
                     tint = MaterialTheme.colorScheme.tertiary, modifier = Modifier.size(24.dp)
                 )
                 status == "NOT_TAKEN" -> Icon(
-                    Icons.Default.Close, contentDescription = "Não administrado",
+                    Icons.Default.Close, contentDescription = stringResource(R.string.dose_not_taken_cd),
                     tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(24.dp)
                 )
                 isVomited -> Icon(
-                    Icons.Default.Warning, contentDescription = "Vomitou após a dose",
+                    Icons.Default.Warning, contentDescription = stringResource(R.string.dose_vomited_cd),
                     tint = Color(0xFFF57F17), modifier = Modifier.size(24.dp)
                 )
                 else -> Text(
-                    "A REGISTRAR",
+                    stringResource(R.string.today_to_register),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -286,11 +290,11 @@ private fun DoseCard(
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     val formLabel = when (item.medication.form) {
-                        "ORAL"       -> "Oral"
-                        "TOPICAL"    -> "Tópico"
-                        "INJECTABLE" -> "Injetável"
-                        "EYE_DROP"   -> "Colírio"
-                        else         -> "Outro"
+                        "ORAL"       -> stringResource(R.string.dose_form_oral)
+                        "TOPICAL"    -> stringResource(R.string.dose_form_topical)
+                        "INJECTABLE" -> stringResource(R.string.dose_form_injectable)
+                        "EYE_DROP"   -> stringResource(R.string.dose_form_eye_drop)
+                        else         -> stringResource(R.string.dose_form_other)
                     }
                     Text(
                         "${item.medication.dose} ${item.medication.doseUnit} · $formLabel",
@@ -299,9 +303,9 @@ private fun DoseCard(
                     )
 
                     val guidelineText = when (item.medication.administrationGuideline) {
-                        "WITH_FOOD"  -> "Administrar com alimento"
-                        "FASTING"    -> "Administrar em jejum"
-                        "WITH_WATER" -> "Diluir em água"
+                        "WITH_FOOD"  -> stringResource(R.string.dose_guideline_with_food)
+                        "FASTING"    -> stringResource(R.string.dose_guideline_fasting)
+                        "WITH_WATER" -> stringResource(R.string.dose_guideline_with_water)
                         "OTHER"      -> item.medication.guidelineDetail
                         else         -> null
                     }
@@ -315,7 +319,7 @@ private fun DoseCard(
 
                     if (!item.medication.observations.isNullOrBlank()) {
                         Text(
-                            "Obs: ${item.medication.observations}",
+                            stringResource(R.string.dose_obs_prefix, item.medication.observations ?: ""),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.secondary
                         )
@@ -325,7 +329,7 @@ private fun DoseCard(
                     HorizontalDivider()
                     Spacer(Modifier.height(2.dp))
 
-                    Text("O que aconteceu com esta dose?", style = MaterialTheme.typography.bodyMedium)
+                    Text(stringResource(R.string.dose_question), style = MaterialTheme.typography.bodyMedium)
 
                     Spacer(Modifier.height(2.dp))
                     Button(
@@ -333,16 +337,16 @@ private fun DoseCard(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Icon(Icons.Default.Check, null, modifier = Modifier.size(16.dp))
-                        Text("  Administrou")
+                        Text(stringResource(R.string.dose_action_taken))
                     }
                     OutlinedButton(
                         onClick  = { onMark("VOMITED"); showDialog = false },
                         modifier = Modifier.fillMaxWidth()
-                    ) { Text("Administrou e vomitou") }
+                    ) { Text(stringResource(R.string.dose_action_vomited)) }
                     TextButton(
                         onClick  = { onMark("NOT_TAKEN"); showDialog = false },
                         modifier = Modifier.fillMaxWidth()
-                    ) { Text("Não administrou") }
+                    ) { Text(stringResource(R.string.dose_action_not_taken)) }
                 }
             },
             confirmButton = {}
@@ -390,8 +394,9 @@ private fun MealCard(
                     style = MaterialTheme.typography.bodyMedium
                 )
                 if (item.planFoodType.isNotBlank()) {
+                    val context = LocalContext.current
                     val foodLabel = buildString {
-                        append(foodTypeLabel(item.planFoodType))
+                        append(foodTypeLabel(context, item.planFoodType))
                         if (!item.planFoodDetails.isNullOrBlank()) append(" · ${item.planFoodDetails}")
                     }
                     Text(
@@ -408,13 +413,13 @@ private fun MealCard(
                     else             -> MaterialTheme.colorScheme.tertiary
                 }
                 Text(
-                    if (percentage == 0) "Recusou" else "$percentage% comido",
+                    if (percentage == 0) stringResource(R.string.today_meal_refused) else stringResource(R.string.today_meal_pct_eaten, percentage),
                     style = MaterialTheme.typography.labelSmall,
                     color = textColor
                 )
             } else {
                 Text(
-                    "A REGISTRAR",
+                    stringResource(R.string.today_to_register),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -428,23 +433,23 @@ private fun MealCard(
             title = { Text("${item.meal.timeOfDay} — ${item.meal.quantityGrams}${item.meal.quantityUnit}") },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text("Como foi esta refeição?", style = MaterialTheme.typography.bodyMedium)
+                    Text(stringResource(R.string.meal_question), style = MaterialTheme.typography.bodyMedium)
                     Spacer(Modifier.height(4.dp))
                     Button(onClick = { onMark(100, "ALL"); showDialog = false },
-                           modifier = Modifier.fillMaxWidth()) { Text("Comeu tudo (100%)") }
+                           modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.meal_100pct)) }
                     OutlinedButton(onClick = { onMark(75, "PARTIAL"); showDialog = false },
-                                   modifier = Modifier.fillMaxWidth()) { Text("Comeu bastante (75%)") }
+                                   modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.meal_75pct)) }
                     OutlinedButton(onClick = { onMark(50, "PARTIAL"); showDialog = false },
-                                   modifier = Modifier.fillMaxWidth()) { Text("Comeu metade (50%)") }
+                                   modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.meal_50pct)) }
                     OutlinedButton(onClick = { onMark(25, "PARTIAL"); showDialog = false },
-                                   modifier = Modifier.fillMaxWidth()) { Text("Comeu pouco (25%)") }
+                                   modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.meal_25pct)) }
                     TextButton(onClick = { onMark(0, "REFUSED"); showDialog = false },
-                               modifier = Modifier.fillMaxWidth()) { Text("Recusou") }
+                               modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.meal_refused)) }
                     Spacer(Modifier.height(4.dp))
                     TextButton(
                         onClick  = { showDialog = false },
                         modifier = Modifier.align(Alignment.CenterHorizontally)
-                    ) { Text("Cancelar") }
+                    ) { Text(stringResource(R.string.action_cancel)) }
                 }
             },
             confirmButton = {}
@@ -501,7 +506,7 @@ private fun WaterCard(
                 if (targetMl != null) {
                     val pct = (totalMl / targetMl * 100).toInt().coerceIn(0, 100)
                     Text(
-                        "meta: %.0f ml ($pct%%)".format(targetMl),
+                        stringResource(R.string.today_water_goal, targetMl, pct),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -525,7 +530,7 @@ private fun WaterCard(
             }
 
             // Botões de adição rápida
-            Text("Registrar:", style = MaterialTheme.typography.labelSmall)
+            Text(stringResource(R.string.today_register_label), style = MaterialTheme.typography.labelSmall)
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 listOf(10.0, 20.0, 30.0, 40.0, 50.0).forEach { ml ->
                     OutlinedButton(
@@ -559,8 +564,8 @@ private fun WaterCard(
                         }
                         customMl = sb.toString()
                     },
-                    label          = { Text("Outro valor") },
-                    placeholder    = { Text("Ex: 80") },
+                    label          = { Text(stringResource(R.string.today_custom_amount)) },
+                    placeholder    = { Text(stringResource(R.string.today_custom_amount_hint)) },
                     suffix         = { Text("ml") },
                     modifier       = Modifier.weight(1f),
                     singleLine     = true,
@@ -572,7 +577,7 @@ private fun WaterCard(
                         if (ml != null && ml > 0) { onAdd(ml); customMl = "" }
                     },
                     modifier = Modifier.height(56.dp)
-                ) { Text("+ Adicionar") }
+                ) { Text(stringResource(R.string.today_add_amount_btn)) }
             }
         }
     }
@@ -580,12 +585,12 @@ private fun WaterCard(
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-private fun foodTypeLabel(code: String): String = when (code) {
-    "DRY_KIBBLE"  -> "Ração seca"
-    "WET_FOOD"    -> "Ração úmida"
-    "NATURAL"     -> "Alimentação natural/caseira"
-    "THERAPEUTIC" -> "Dieta terapêutica"
-    else          -> "Outro"
+private fun foodTypeLabel(context: Context, code: String): String = when (code) {
+    "DRY_KIBBLE"  -> context.getString(R.string.food_type_dry_kibble)
+    "WET_FOOD"    -> context.getString(R.string.food_type_wet_food)
+    "NATURAL"     -> context.getString(R.string.food_type_natural_homemade)
+    "THERAPEUTIC" -> context.getString(R.string.food_type_therapeutic)
+    else          -> context.getString(R.string.food_type_other)
 }
 
 @Composable
@@ -617,14 +622,14 @@ private fun SporadicMealDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Registrar extra") },
+        title = { Text(stringResource(R.string.meal_extra_dialog_title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(
                     value = description,
                     onValueChange = { description = it },
-                    label = { Text("Descrição (opcional)") },
-                    placeholder = { Text("Ex: petisco") },
+                    label = { Text(stringResource(R.string.meal_extra_description_label)) },
+                    placeholder = { Text(stringResource(R.string.meal_extra_description_hint)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
@@ -635,8 +640,8 @@ private fun SporadicMealDialog(
                     OutlinedTextField(
                         value = amount,
                         onValueChange = { amount = it.filter { c -> c.isDigit() || c == '.' } },
-                        label = { Text("Quantidade (opcional)") },
-                        placeholder = { Text("Ex: 30") },
+                        label = { Text(stringResource(R.string.meal_extra_amount_label)) },
+                        placeholder = { Text(stringResource(R.string.meal_extra_amount_hint)) },
                         modifier = Modifier.weight(1f),
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
@@ -655,11 +660,11 @@ private fun SporadicMealDialog(
         },
         confirmButton = {
             Button(onClick = { onConfirm(description, amount.toDoubleOrNull(), unit) }) {
-                Text("Salvar")
+                Text(stringResource(R.string.action_save))
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancelar") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
         }
     )
 }

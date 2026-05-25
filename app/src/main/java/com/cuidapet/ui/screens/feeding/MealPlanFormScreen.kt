@@ -41,19 +41,20 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.cuidadopet.R
 import com.cuidadopet.ui.utils.adaptiveHorizontalPadding
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
-// Tipos de alimento disponíveis para seleção — cada um com rótulo exibido na tela
 private val foodTypeOptions = listOf(
-    "DRY_KIBBLE"   to "Ração seca",
-    "WET_FOOD"     to "Ração úmida",
-    "NATURAL"      to "Natural/Caseira",
-    "THERAPEUTIC"  to "Dieta terapêutica",
-    "OTHER"        to "Outro"
+    "DRY_KIBBLE"  to R.string.food_type_dry_kibble,
+    "WET_FOOD"    to R.string.food_type_wet_food,
+    "NATURAL"     to R.string.food_type_natural_homemade,
+    "THERAPEUTIC" to R.string.food_type_therapeutic,
+    "OTHER"       to R.string.food_type_other
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -69,12 +70,10 @@ fun MealPlanFormScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // Navega de volta automaticamente após salvar com sucesso
     LaunchedEffect(state.isSaved) {
         if (state.isSaved) onNavigateBack()
     }
 
-    // Exibe erros via Snackbar
     LaunchedEffect(state.error) {
         state.error?.let {
             snackbarHostState.showSnackbar(it)
@@ -82,16 +81,16 @@ fun MealPlanFormScreen(
         }
     }
 
-    val petName    = state.petName.ifBlank { "Carregando..." }
-    val isEditing  = state.editingPlanId != null
+    val petName   = state.petName.ifBlank { stringResource(R.string.loading) }
+    val isEditing = state.editingPlanId != null
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (isEditing) "Editar plano de $petName" else "Novo plano de $petName") },
+                title = { Text(stringResource(if (isEditing) R.string.meal_plan_edit_title else R.string.meal_plan_new_title, petName)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -115,87 +114,80 @@ fun MealPlanFormScreen(
         ) {
             Spacer(Modifier.height(8.dp))
 
-            // ── Tipo de alimento ──────────────────────────────────────────
-            Text("Tipo de alimento", style = MaterialTheme.typography.titleSmall)
+            Text(stringResource(R.string.meal_plan_food_type_section), style = MaterialTheme.typography.titleSmall)
             FoodTypeSelector(
                 selected = state.foodType,
                 onSelect = viewModel::updateFoodType
             )
 
-            // ── Detalhes do alimento ──────────────────────────────────────
             val foodDetailsPlaceholder = when (state.foodType) {
-                "DRY_KIBBLE"   -> "Ex: Royal Canin Adult Medium, ND..."
-                "WET_FOOD"     -> "Ex: Ração Úmida GranPlus, Hills lata..."
-                "NATURAL"      -> "Ex: frango com batata-doce e cenoura..."
-                "THERAPEUTIC"  -> "Ex: Hills Prescription k/d, Royal Canin Renal..."
-                else           -> "Descreva o alimento..."
+                "DRY_KIBBLE"  -> stringResource(R.string.meal_plan_food_details_hint_dry)
+                "WET_FOOD"    -> stringResource(R.string.meal_plan_food_details_hint_wet)
+                "NATURAL"     -> stringResource(R.string.meal_plan_food_details_hint_natural)
+                "THERAPEUTIC" -> stringResource(R.string.meal_plan_food_details_hint_therapeutic)
+                else          -> stringResource(R.string.meal_plan_food_details_hint_other)
             }
             OutlinedTextField(
                 value         = state.foodDetails,
                 onValueChange = { if (it.length <= 150) viewModel.updateFoodDetails(it) },
-                label         = { Text("Marca / detalhes do alimento (opcional)") },
+                label         = { Text(stringResource(R.string.meal_plan_food_details_label)) },
                 placeholder   = { Text(foodDetailsPlaceholder) },
                 modifier      = Modifier.fillMaxWidth(),
                 singleLine    = true,
                 supportingText = { Text("${state.foodDetails.length}/150") }
             )
 
-            // ── Restrições alimentares ────────────────────────────────────
             OutlinedTextField(
                 value = state.restrictions,
                 onValueChange = viewModel::updateRestrictions,
-                label = { Text("Restrições alimentares (opcional)") },
-                placeholder = { Text("Ex: sem sódio, sem frango...") },
+                label = { Text(stringResource(R.string.meal_plan_restrictions_label)) },
+                placeholder = { Text(stringResource(R.string.meal_plan_restrictions_hint)) },
                 modifier = Modifier.fillMaxWidth(),
                 maxLines = 3
             )
 
             Text(
-                "Todos os valores abaixo são metas diárias. Siga sempre a orientação do veterinário.",
+                stringResource(R.string.meal_plan_goals_note),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
-            // ── Unidade de quantidade ────────────────────────────────────
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 FilterChip(
                     selected = state.quantityUnit == "g",
                     onClick  = { viewModel.updateQuantityUnit("g") },
-                    label    = { Text("Gramas (g)") }
+                    label    = { Text(stringResource(R.string.meal_plan_unit_grams)) }
                 )
                 FilterChip(
                     selected = state.quantityUnit == "ml",
                     onClick  = { viewModel.updateQuantityUnit("ml") },
-                    label    = { Text("Mililitros (ml)") }
+                    label    = { Text(stringResource(R.string.meal_plan_unit_ml)) }
                 )
             }
 
-            // ── Meta diária de ração ──────────────────────────────────────
             OutlinedTextField(
                 value = state.dailyQuantityGrams,
                 onValueChange = { viewModel.updateDailyQuantity(it.filter { c -> c.isDigit() }.take(5)) },
-                label = { Text("Meta diária de ração (${state.quantityUnit})") },
-                placeholder = { Text("Ex: 300") },
+                label = { Text(stringResource(R.string.meal_plan_daily_qty_label, state.quantityUnit)) },
+                placeholder = { Text(stringResource(R.string.meal_plan_daily_qty_hint)) },
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 suffix = { Text("${state.quantityUnit}/dia") }
             )
 
-            // ── Meta calórica diária ──────────────────────────────────────
             OutlinedTextField(
                 value = state.dailyKcalTarget,
                 onValueChange = { viewModel.updateDailyKcal(it.filter { c -> c.isDigit() }.take(5)) },
-                label = { Text("Meta calórica diária (opcional)") },
-                placeholder = { Text("Ex: 450") },
+                label = { Text(stringResource(R.string.meal_plan_daily_kcal_label)) },
+                placeholder = { Text(stringResource(R.string.meal_plan_daily_kcal_hint)) },
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                suffix = { Text("kcal/dia") }
+                suffix = { Text(stringResource(R.string.meal_plan_daily_kcal_suffix)) }
             )
 
-            // ── Refeições do dia ──────────────────────────────────────────
-            Text("Refeições do dia", style = MaterialTheme.typography.titleSmall)
+            Text(stringResource(R.string.meal_plan_meals_section), style = MaterialTheme.typography.titleSmall)
             Text(
-                "Configure os horários e as quantidades de cada refeição.",
+                stringResource(R.string.meal_plan_meals_hint),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -211,17 +203,15 @@ fun MealPlanFormScreen(
                 )
             }
 
-            // Botão para adicionar mais refeições ao plano
             TextButton(
                 onClick = viewModel::addMealEntry,
                 modifier = Modifier.align(Alignment.Start)
             ) {
                 Icon(Icons.Default.Add, contentDescription = null)
                 Spacer(Modifier.width(4.dp))
-                Text("Adicionar refeição")
+                Text(stringResource(R.string.meal_plan_add_meal_btn))
             }
 
-            // ── Botão salvar ──────────────────────────────────────────────
             Button(
                 onClick = { viewModel.savePlan(petId, state.petName) },
                 modifier = Modifier.fillMaxWidth(),
@@ -234,7 +224,7 @@ fun MealPlanFormScreen(
                         color = MaterialTheme.colorScheme.onPrimary
                     )
                 } else {
-                    Text(if (isEditing) "Salvar plano" else "Adicionar plano")
+                    Text(stringResource(if (isEditing) R.string.meal_plan_save_btn else R.string.meal_plan_add_btn))
                 }
             }
 
@@ -243,31 +233,28 @@ fun MealPlanFormScreen(
     }
 }
 
-// Chips de seleção do tipo de alimento
 @Composable
 private fun FoodTypeSelector(
     selected: String,
     onSelect: (String) -> Unit
 ) {
-    // Divide em duas linhas para não extravasar a tela
     val chunked = foodTypeOptions.chunked(3)
     chunked.forEach { row ->
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            row.forEach { (key, label) ->
+            row.forEach { (key, labelRes) ->
                 FilterChip(
                     selected = selected == key,
                     onClick = { onSelect(key) },
-                    label = { Text(label, style = MaterialTheme.typography.labelSmall) }
+                    label = { Text(stringResource(labelRes), style = MaterialTheme.typography.labelSmall) }
                 )
             }
         }
     }
 }
 
-// Linha de uma refeição: campo de horário + campo de quantidade + botão de remover
 @Composable
 private fun MealEntryRow(
     entry: MealTimeEntry,
@@ -285,8 +272,8 @@ private fun MealEntryRow(
         TimeInputField(
             value = entry.time,
             onValueChange = onTimeChange,
-            label = "Horário",
-            placeholder = "07:00",
+            label = stringResource(R.string.meal_plan_time_label),
+            placeholder = stringResource(R.string.meal_plan_time_hint),
             modifier = Modifier.weight(1f)
         )
 
@@ -296,24 +283,22 @@ private fun MealEntryRow(
                 val filtered = new.filter { it.isDigit() }.take(5)
                 onQuantityChange(filtered)
             },
-            label = { Text(if (unit == "ml") "Mililitros" else "Gramas") },
-            placeholder = { Text("150") },
+            label = { Text(stringResource(if (unit == "ml") R.string.meal_plan_ml_label else R.string.meal_plan_grams_label)) },
+            placeholder = { Text(stringResource(R.string.meal_plan_qty_hint)) },
             modifier = Modifier.weight(1f),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             singleLine = true,
             suffix = { Text(unit) }
         )
 
-        // Botão de remover — desabilitado se só restar uma refeição
         if (canRemove) {
             IconButton(onClick = onRemove) {
                 Icon(
                     Icons.Default.Delete,
-                    contentDescription = "Remover refeição",
+                    contentDescription = stringResource(R.string.meal_plan_remove_meal_cd),
                     tint = MaterialTheme.colorScheme.error
                 )
             }
         }
     }
 }
-

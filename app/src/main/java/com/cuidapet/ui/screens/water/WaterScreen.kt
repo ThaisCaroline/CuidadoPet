@@ -47,6 +47,9 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import kotlin.math.min
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import com.cuidadopet.R
 import com.cuidadopet.ui.components.AdBanner
 import com.cuidadopet.ui.utils.adaptiveHorizontalPadding
 
@@ -101,7 +104,7 @@ fun WaterTabContent(
 
         // Botões de registro rápido + campo livre
         item {
-            Text("Registrar consumo", style = MaterialTheme.typography.titleSmall)
+            Text(stringResource(R.string.water_register_title), style = MaterialTheme.typography.titleSmall)
             Spacer(Modifier.height(4.dp))
             QuickAddButtons(onAdd = { ml -> viewModel.addWaterLog(petId, ml) })
             Spacer(Modifier.height(8.dp))
@@ -113,7 +116,7 @@ fun WaterTabContent(
             item {
                 HorizontalDivider()
                 Text(
-                    "Registros de hoje",
+                    stringResource(R.string.water_records_today),
                     style = MaterialTheme.typography.titleSmall,
                     modifier = Modifier.padding(top = 4.dp)
                 )
@@ -146,18 +149,18 @@ private fun NoWaterConfigContent(
         verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = "Hidratação não configurada",
+            text = stringResource(R.string.water_not_configured_title),
             style = MaterialTheme.typography.titleMedium
         )
         Spacer(Modifier.height(8.dp))
         Text(
-            text = "Configure a meta diária de água para acompanhar a hidratação do seu pet.",
+            text = stringResource(R.string.water_not_configured_msg),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Spacer(Modifier.height(24.dp))
         Button(onClick = onConfigureWater) {
-            Text("Configurar hidratação")
+            Text(stringResource(R.string.water_configure_btn))
         }
     }
 }
@@ -186,11 +189,11 @@ private fun WaterProgressCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Água hoje", style = MaterialTheme.typography.titleSmall)
+                Text(stringResource(R.string.water_today_title), style = MaterialTheme.typography.titleSmall)
                 IconButton(onClick = onConfigureWater) {
                     Icon(
                         Icons.Default.Settings,
-                        contentDescription = "Configurar hidratação",
+                        contentDescription = stringResource(R.string.water_configure_cd),
                         tint = MaterialTheme.colorScheme.onSecondaryContainer
                     )
                 }
@@ -222,14 +225,15 @@ private fun WaterProgressCard(
             )
 
             Text(
-                "$percentage% da meta diária",
+                stringResource(R.string.water_pct_goal, percentage),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             // Status de hidratação
+            val context = LocalContext.current
             Text(
-                status.toDisplayText(),
+                status.toDisplayText(context),
                 style = MaterialTheme.typography.bodyMedium
             )
         }
@@ -272,7 +276,7 @@ private fun CustomAmountInput(onAdd: (Double) -> Unit) {
         OutlinedTextField(
             value = text,
             onValueChange = { text = it.filter { c -> c.isDigit() } },
-            label = { Text("Outro valor") },
+            label = { Text(stringResource(R.string.water_other_amount)) },
             suffix = { Text("ml") },
             singleLine = true,
             modifier = Modifier.weight(1f),
@@ -287,7 +291,7 @@ private fun CustomAmountInput(onAdd: (Double) -> Unit) {
                 }
             },
             enabled = text.toDoubleOrNull() != null && (text.toDoubleOrNull() ?: 0.0) > 0
-        ) { Text("Registrar") }
+        ) { Text(stringResource(R.string.water_register_btn)) }
     }
 }
 
@@ -327,7 +331,7 @@ private fun WaterLogRow(
         IconButton(onClick = onDelete) {
             Icon(
                 Icons.Default.Delete,
-                contentDescription = "Remover registro",
+                contentDescription = stringResource(R.string.water_remove_record_cd),
                 tint = MaterialTheme.colorScheme.error
             )
         }

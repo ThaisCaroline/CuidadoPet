@@ -71,7 +71,7 @@ class MedicationAlarmReceiver : BroadcastReceiver() {
 
         val notification = NotificationCompat.Builder(context, NotificationChannels.CHANNEL_MEDICATIONS)
             .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle("Hora do medicamento!")
+            .setContentTitle(context.getString(R.string.notif_medication_title))
             .setContentText(contentText)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setDefaults(NotificationCompat.DEFAULT_ALL)

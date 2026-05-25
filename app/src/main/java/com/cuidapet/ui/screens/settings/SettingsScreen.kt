@@ -3,6 +3,8 @@ package com.cuidadopet.ui.screens.settings
 import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,9 +19,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Upload
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -30,23 +32,30 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
+import androidx.core.os.LocaleListCompat
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.cuidadopet.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -59,6 +68,15 @@ fun SettingsScreen(
     val isPremium by viewModel.isPremium.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
+    var showLanguageDialog by remember { mutableStateOf(false) }
+
+    val appLocales = AppCompatDelegate.getApplicationLocales()
+    val currentTag = if (appLocales.isEmpty) "" else appLocales[0]?.language ?: ""
+    val currentLanguageName = when (currentTag) {
+        "pt" -> stringResource(R.string.language_pt)
+        "en" -> stringResource(R.string.language_en)
+        else -> stringResource(R.string.language_system)
+    }
 
     val importLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -78,7 +96,7 @@ fun SettingsScreen(
                 putExtra(Intent.EXTRA_STREAM, uri)
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
-            context.startActivity(Intent.createChooser(intent, "Salvar backup"))
+            context.startActivity(Intent.createChooser(intent, context.getString(R.string.settings_save_backup_chooser)))
             viewModel.onShareHandled()
         }
     }
@@ -90,13 +108,55 @@ fun SettingsScreen(
         }
     }
 
+    if (showLanguageDialog) {
+        val options = listOf(
+            "" to R.string.language_system,
+            "pt" to R.string.language_pt,
+            "en" to R.string.language_en
+        )
+        AlertDialog(
+            onDismissRequest = { showLanguageDialog = false },
+            title = { Text(stringResource(R.string.settings_language_title)) },
+            text = {
+                Column {
+                    options.forEach { (tag, labelRes) ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    val locales = if (tag.isEmpty()) LocaleListCompat.getEmptyLocaleList()
+                                                  else LocaleListCompat.forLanguageTags(tag)
+                                    AppCompatDelegate.setApplicationLocales(locales)
+                                    showLanguageDialog = false
+                                }
+                                .padding(vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = currentTag == tag,
+                                onClick = null
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text(stringResource(labelRes))
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showLanguageDialog = false }) {
+                    Text(stringResource(R.string.action_cancel))
+                }
+            }
+        )
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Configurações") },
+                title = { Text(stringResource(R.string.settings_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
                     }
                 }
             )
@@ -110,42 +170,37 @@ fun SettingsScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            if (isPremium) {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+            // TODO: descomentar quando o premium estiver ativo
+            // if (isPremium) {
+            //     Card(...) { /* badge premium */ }
+            // } else {
+            //     Card(...) { /* upsell premium */ }
+            // }
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { showLanguageDialog = true }
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
-                        modifier = Modifier.padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(Icons.Default.Star, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                        Spacer(Modifier.width(8.dp))
-                        Text("Você é Premium", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                    }
-                }
-            } else {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
-                ) {
-                    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Star, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                            Spacer(Modifier.width(8.dp))
-                            Text("CuidadoPet Premium", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                        }
-                        listOf("Planos alimentares ilimitados", "Medicamentos ilimitados", "Sem anúncios").forEach { benefit ->
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.CheckCircle, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
-                                Spacer(Modifier.width(6.dp))
-                                Text(benefit, style = MaterialTheme.typography.bodySmall)
-                            }
-                        }
-                        Spacer(Modifier.height(4.dp))
-                        Button(onClick = onOpenPaywall, modifier = Modifier.fillMaxWidth()) {
-                            Text("Ver planos")
-                        }
+                    Icon(Icons.Default.Language, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                    Spacer(Modifier.width(12.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            text = stringResource(R.string.settings_language_title),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Text(
+                            text = currentLanguageName,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
             }
@@ -156,14 +211,13 @@ fun SettingsScreen(
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = "Backup e Restauração",
+                        text = stringResource(R.string.settings_backup_title),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold
                     )
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        text = "Exporte um backup completo com todos os pets, medicamentos, registros e fotos. " +
-                                "Use a importação para restaurar os dados em outra instalação do app.",
+                        text = stringResource(R.string.settings_backup_desc),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -181,7 +235,7 @@ fun SettingsScreen(
                             ) {
                                 Icon(Icons.Default.Upload, contentDescription = null)
                                 Spacer(Modifier.width(8.dp))
-                                Text("Exportar backup")
+                                Text(stringResource(R.string.settings_export_btn))
                             }
                             OutlinedButton(
                                 onClick = { importLauncher.launch("*/*") },
@@ -192,7 +246,7 @@ fun SettingsScreen(
                             ) {
                                 Icon(Icons.Default.Download, contentDescription = null)
                                 Spacer(Modifier.width(8.dp))
-                                Text("Importar backup")
+                                Text(stringResource(R.string.settings_import_btn))
                             }
                         }
                     }
@@ -207,17 +261,17 @@ fun SettingsScreen(
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = "Como levar seus dados para outro celular",
+                        text = stringResource(R.string.settings_how_to_title),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold
                     )
                     Spacer(Modifier.height(8.dp))
                     listOf(
-                        "1. Toque em \"Exportar backup\" e escolha onde salvar o arquivo",
-                        "2. Envie o arquivo para o novo celular (WhatsApp, e-mail, Google Drive...)",
-                        "3. No novo celular, abra o CuidadoPet e vá em Configurações",
-                        "4. Toque em \"Importar backup\" e selecione o arquivo enviado",
-                        "5. Pronto! Todos os seus pets e registros estarão restaurados"
+                        stringResource(R.string.settings_how_to_step1),
+                        stringResource(R.string.settings_how_to_step2),
+                        stringResource(R.string.settings_how_to_step3),
+                        stringResource(R.string.settings_how_to_step4),
+                        stringResource(R.string.settings_how_to_step5)
                     ).forEach { step ->
                         Row(modifier = Modifier.padding(vertical = 2.dp)) {
                             Text(

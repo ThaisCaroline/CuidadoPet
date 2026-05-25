@@ -42,9 +42,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.cuidadopet.R
 import com.cuidadopet.ui.utils.adaptiveHorizontalPadding
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -82,10 +84,10 @@ fun VaccineFormScreen(
                 TextButton(onClick = {
                     viewModel.onAdministeredAtChange(pickerState.selectedDateMillis)
                     showAdministeredDatePicker = false
-                }) { Text("OK") }
+                }) { Text(stringResource(R.string.action_ok)) }
             },
             dismissButton = {
-                TextButton(onClick = { showAdministeredDatePicker = false }) { Text("Cancelar") }
+                TextButton(onClick = { showAdministeredDatePicker = false }) { Text(stringResource(R.string.action_cancel)) }
             }
         ) {
             DatePicker(state = pickerState)
@@ -102,10 +104,10 @@ fun VaccineFormScreen(
                 TextButton(onClick = {
                     viewModel.onNextDueDateChange(pickerState.selectedDateMillis)
                     showNextDueDatePicker = false
-                }) { Text("OK") }
+                }) { Text(stringResource(R.string.action_ok)) }
             },
             dismissButton = {
-                TextButton(onClick = { showNextDueDatePicker = false }) { Text("Cancelar") }
+                TextButton(onClick = { showNextDueDatePicker = false }) { Text(stringResource(R.string.action_cancel)) }
             }
         ) {
             DatePicker(state = pickerState)
@@ -115,12 +117,12 @@ fun VaccineFormScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (vaccineId == null) "Nova vacina/vermífugo" else "Editar registro") },
+                title = { Text(stringResource(if (vaccineId == null) R.string.vaccine_form_new_title else R.string.vaccine_form_edit_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Voltar",
+                            contentDescription = stringResource(R.string.action_back),
                             tint = MaterialTheme.colorScheme.onPrimary
                         )
                     }
@@ -144,34 +146,31 @@ fun VaccineFormScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
-            // ── Tipo ─────────────────────────────────────────────────────────
-            SectionTitle("Tipo")
+            SectionTitle(stringResource(R.string.vaccine_form_type_section))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 FilterChip(
                     selected = uiState.type == "VACCINE",
                     onClick  = { viewModel.onTypeChange("VACCINE") },
-                    label    = { Text("Vacina") }
+                    label    = { Text(stringResource(R.string.vaccine_type_vaccine)) }
                 )
                 FilterChip(
                     selected = uiState.type == "DEWORMER",
                     onClick  = { viewModel.onTypeChange("DEWORMER") },
-                    label    = { Text("Vermífugo") }
+                    label    = { Text(stringResource(R.string.vaccine_type_dewormer)) }
                 )
             }
 
-            // ── Nome ─────────────────────────────────────────────────────────
             OutlinedTextField(
                 value         = uiState.name,
                 onValueChange = { if (it.length <= 30) viewModel.onNameChange(it) },
-                label         = { Text(if (uiState.type == "VACCINE") "Nome da vacina *" else "Nome do vermífugo *") },
-                placeholder   = { Text(if (uiState.type == "VACCINE") "Ex: Antirrábica, V10..." else "Ex: Drontal Plus...") },
+                label         = { Text(stringResource(if (uiState.type == "VACCINE") R.string.vaccine_name_vaccine_label else R.string.vaccine_name_dewormer_label)) },
+                placeholder   = { Text(stringResource(if (uiState.type == "VACCINE") R.string.vaccine_name_vaccine_hint else R.string.vaccine_name_dewormer_hint)) },
                 modifier      = Modifier.fillMaxWidth(),
                 singleLine    = true,
                 supportingText = { Text("${uiState.name.length}/30") }
             )
 
-            // ── Aplicada? ─────────────────────────────────────────────────────
-            SectionTitle("Aplicação")
+            SectionTitle(stringResource(R.string.vaccine_application_section))
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier          = Modifier.fillMaxWidth()
@@ -181,34 +180,35 @@ fun VaccineFormScreen(
                     onCheckedChange = viewModel::onIsAdministeredChange
                 )
                 Text(
-                    "Já foi administrada",
+                    stringResource(R.string.vaccine_administered),
                     style    = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier.padding(start = 4.dp)
                 )
             }
 
             if (uiState.isAdministered) {
+                val selectHint = stringResource(R.string.vaccine_applied_date_select)
                 OutlinedButton(
                     onClick  = { showAdministeredDatePicker = true },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        "Data de aplicação: ${
-                            uiState.administeredAt?.let { dateFmt.format(Date(it)) } ?: "Toque para selecionar"
-                        }"
+                        stringResource(
+                            R.string.vaccine_applied_date_btn,
+                            uiState.administeredAt?.let { dateFmt.format(Date(it)) } ?: selectHint
+                        )
                     )
                 }
             }
 
-            // ── Próxima dose ──────────────────────────────────────────────────
-            SectionTitle("Próxima dose (opcional)")
+            SectionTitle(stringResource(R.string.vaccine_next_dose_section))
             val nextDueDate = uiState.nextDueDate
             if (nextDueDate == null) {
                 OutlinedButton(
                     onClick  = { showNextDueDatePicker = true },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Definir data da próxima dose")
+                    Text(stringResource(R.string.vaccine_set_next_dose_btn))
                 }
             } else {
                 Row(
@@ -220,14 +220,13 @@ fun VaccineFormScreen(
                         onClick  = { showNextDueDatePicker = true },
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Próxima dose: ${dateFmt.format(Date(nextDueDate))}")
+                        Text(stringResource(R.string.vaccine_next_dose_btn, dateFmt.format(Date(nextDueDate))))
                     }
                     TextButton(onClick = { viewModel.onNextDueDateChange(null) }) {
-                        Text("Remover")
+                        Text(stringResource(R.string.action_remove))
                     }
                 }
 
-                // Lembrete — só aparece se há data de próxima dose
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier          = Modifier.fillMaxWidth()
@@ -237,20 +236,19 @@ fun VaccineFormScreen(
                         onCheckedChange = viewModel::onReminderEnabledChange
                     )
                     Text(
-                        "Lembrete na data da próxima dose",
+                        stringResource(R.string.vaccine_reminder_label),
                         style    = MaterialTheme.typography.bodyLarge,
                         modifier = Modifier.padding(start = 12.dp)
                     )
                 }
             }
 
-            // ── Observações ───────────────────────────────────────────────────
-            SectionTitle("Observações (opcional)")
+            SectionTitle(stringResource(R.string.vaccine_notes_section))
             OutlinedTextField(
                 value          = uiState.notes,
                 onValueChange  = { if (it.length <= 300) viewModel.onNotesChange(it) },
-                label          = { Text("Observações") },
-                placeholder    = { Text("Lote, clínica, reações...") },
+                label          = { Text(stringResource(R.string.vaccine_notes_section)) },
+                placeholder    = { Text(stringResource(R.string.vaccine_notes_hint)) },
                 modifier       = Modifier.fillMaxWidth(),
                 minLines       = 2,
                 maxLines       = 4,
@@ -268,7 +266,7 @@ fun VaccineFormScreen(
                     CircularProgressIndicator(modifier = Modifier.height(20.dp),
                         color = MaterialTheme.colorScheme.onPrimary)
                 } else {
-                    Text(if (vaccineId == null) "Salvar" else "Atualizar")
+                    Text(stringResource(if (vaccineId == null) R.string.action_save else R.string.action_update))
                 }
             }
 

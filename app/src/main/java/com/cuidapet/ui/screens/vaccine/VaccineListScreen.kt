@@ -45,6 +45,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.ui.res.stringResource
+import com.cuidadopet.R
 import com.cuidadopet.data.db.entity.VaccineEntity
 import com.cuidadopet.ui.components.AdBanner
 import com.cuidadopet.ui.utils.adaptiveHorizontalPadding
@@ -69,15 +71,15 @@ fun VaccineListScreen(
     deleteTarget?.let { vaccine ->
         AlertDialog(
             onDismissRequest = { deleteTarget = null },
-            title            = { Text("Excluir registro") },
-            text             = { Text("Deseja excluir \"${vaccine.name}\"?") },
+            title            = { Text(stringResource(R.string.dialog_delete_vaccine_title)) },
+            text             = { Text(stringResource(R.string.dialog_delete_vaccine_msg, vaccine.name)) },
             confirmButton    = {
                 TextButton(onClick = { viewModel.delete(vaccine); deleteTarget = null }) {
-                    Text("Excluir", color = MaterialTheme.colorScheme.error)
+                    Text(stringResource(R.string.action_delete), color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { deleteTarget = null }) { Text("Cancelar") }
+                TextButton(onClick = { deleteTarget = null }) { Text(stringResource(R.string.action_cancel)) }
             }
         )
     }
@@ -85,12 +87,12 @@ fun VaccineListScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Vacinas e Vermífugos") },
+                title = { Text(stringResource(R.string.vaccine_list_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Voltar",
+                            contentDescription = stringResource(R.string.action_back),
                             tint = MaterialTheme.colorScheme.onPrimary
                         )
                     }
@@ -103,7 +105,7 @@ fun VaccineListScreen(
         },
         floatingActionButton = {
             FloatingActionButton(onClick = onAddVaccine) {
-                Icon(Icons.Default.Add, contentDescription = "Adicionar")
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.vaccine_list_add_cd))
             }
         }
     ) { innerPadding ->
@@ -121,12 +123,12 @@ fun VaccineListScreen(
                     )
                     Spacer(Modifier.height(12.dp))
                     Text(
-                        "Nenhum registro ainda.",
+                        stringResource(R.string.vaccine_list_empty),
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        "Toque em + para adicionar.",
+                        stringResource(R.string.vaccine_list_empty_hint),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -144,7 +146,7 @@ fun VaccineListScreen(
                 if (vaccinesList.isNotEmpty()) {
                     item {
                         Text(
-                            "Vacinas",
+                            stringResource(R.string.vaccine_section_vaccines),
                             style = MaterialTheme.typography.titleSmall,
                             color = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.padding(bottom = 4.dp)
@@ -165,7 +167,7 @@ fun VaccineListScreen(
                             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                         }
                         Text(
-                            "Vermífugos",
+                            stringResource(R.string.vaccine_section_dewormers),
                             style = MaterialTheme.typography.titleSmall,
                             color = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.padding(bottom = 4.dp)
@@ -212,14 +214,14 @@ private fun VaccineCard(
                         if (vaccine.reminderEnabled) {
                             Icon(
                                 Icons.Default.Notifications,
-                                contentDescription = "Alertas ativos",
+                                contentDescription = stringResource(R.string.vaccine_alerts_on_cd),
                                 modifier = Modifier.size(14.dp),
                                 tint = MaterialTheme.colorScheme.primary
                             )
                         } else {
                             Icon(
                                 Icons.Default.NotificationsOff,
-                                contentDescription = "Alertas desativados",
+                                contentDescription = stringResource(R.string.vaccine_alerts_off_cd),
                                 modifier = Modifier.size(14.dp),
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -228,20 +230,20 @@ private fun VaccineCard(
                 }
                 if (vaccine.administeredAt != null) {
                     Text(
-                        "Aplicada: ${dateFmt.format(Date(vaccine.administeredAt))}",
+                        stringResource(R.string.vaccine_applied_date, dateFmt.format(Date(vaccine.administeredAt))),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 } else {
                     Text(
-                        "Ainda não administrada",
+                        stringResource(R.string.vaccine_not_applied),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
                 if (vaccine.nextDueDate != null) {
                     Text(
-                        "Próxima dose: ${dateFmt.format(Date(vaccine.nextDueDate))}",
+                        stringResource(R.string.vaccine_next_dose, dateFmt.format(Date(vaccine.nextDueDate))),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -255,11 +257,11 @@ private fun VaccineCard(
                 }
             }
             IconButton(onClick = onEdit) {
-                Icon(Icons.Default.Edit, contentDescription = "Editar",
+                Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.action_edit),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             IconButton(onClick = onDelete) {
-                Icon(Icons.Default.Delete, contentDescription = "Excluir",
+                Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.action_delete),
                     tint = MaterialTheme.colorScheme.error)
             }
         }

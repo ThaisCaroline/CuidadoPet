@@ -1,3 +1,547 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">CuidadoPet</string>
+
+    <!-- ── Ações comuns ──────────────────────────────────────── -->
+    <string name="action_save">Salvar</string>
+    <string name="action_cancel">Cancelar</string>
+    <string name="action_delete">Excluir</string>
+    <string name="action_edit">Editar</string>
+    <string name="action_back">Voltar</string>
+    <string name="action_add">Adicionar</string>
+    <string name="action_remove">Remover</string>
+    <string name="action_update">Atualizar</string>
+    <string name="action_configure">Configurar</string>
+    <string name="action_register">Registrar</string>
+    <string name="action_share">Compartilhar</string>
+    <string name="action_ok">OK</string>
+    <string name="loading">Carregando…</string>
+
+    <!-- ── Home ─────────────────────────────────────────────── -->
+    <string name="home_title">CuidadoPet</string>
+    <string name="home_menu_be_premium">Seja Premium</string>
+    <string name="home_menu_settings">Configurações</string>
+    <string name="home_menu_privacy">Política de privacidade</string>
+    <string name="home_add_pet_cd">Adicionar pet</string>
+    <string name="home_pet_options_cd">Opções do pet</string>
+    <string name="home_no_pets_title">Nenhum pet cadastrado</string>
+    <string name="home_no_pets_hint">Toque no + para adicionar\nseu primeiro pet</string>
+    <string name="dialog_delete_pet_title">Excluir pet?</string>
+    <string name="dialog_delete_pet_msg">\"%1$s\" e todos os dados vinculados (medicamentos, registros de saúde, água e alimentação) serão excluídos permanentemente.</string>
+
+    <!-- ── Espécies ───────────────────────────────────────────── -->
+    <string name="species_dog">Cachorro</string>
+    <string name="species_cat">Gato</string>
+    <string name="species_rabbit">Coelho</string>
+    <string name="species_bird">Pássaro</string>
+    <string name="species_hamster">Hamster</string>
+    <string name="species_turtle">Tartaruga</string>
+    <string name="species_fish">Peixe</string>
+    <string name="species_other">Outro</string>
+
+    <!-- ── Sexo ──────────────────────────────────────────────── -->
+    <string name="sex_male">Macho</string>
+    <string name="sex_female">Fêmea</string>
+    <string name="sex_neutered">Castrado(a)</string>
+
+    <!-- ── Idade ─────────────────────────────────────────────── -->
+    <string name="age_year">ano</string>
+    <string name="age_years">anos</string>
+    <string name="age_month">mês</string>
+    <string name="age_months">meses</string>
+    <string name="age_less_than_1_month">menos de 1 mês</string>
+
+    <!-- ── Dashboard / Abas ──────────────────────────────────── -->
+    <string name="tab_today">Hoje</string>
+    <string name="tab_medication">Medicação</string>
+    <string name="tab_meals">Refeições</string>
+    <string name="tab_water">Água</string>
+    <string name="tab_health">Saúde</string>
+    <string name="dashboard_edit_pet_cd">Editar pet</string>
+    <string name="dashboard_vaccines_cd">Vacinas e vermífugos</string>
+    <string name="dashboard_report_cd">Relatório</string>
+
+    <!-- ── Aba Hoje ──────────────────────────────────────────── -->
+    <string name="today_medications_section">Medicamentos hoje</string>
+    <string name="today_meals_section">Refeições hoje</string>
+    <string name="today_water_section">Hidratação hoje</string>
+    <string name="today_no_doses">Nenhuma dose programada para hoje.</string>
+    <string name="today_no_meal_plan">Nenhum plano alimentar configurado.\nConfigure na aba Alimentação.</string>
+    <string name="today_snack_default">Petisco</string>
+    <string name="today_remove_extra_cd">Remover extra</string>
+    <string name="today_add_extra">+ Extra</string>
+    <string name="today_to_register">A REGISTRAR</string>
+    <string name="today_water_goal">meta: %.0f ml (%d%%)</string>
+    <string name="today_register_label">Registrar:</string>
+    <string name="today_custom_amount">Outro valor</string>
+    <string name="today_custom_amount_hint">Ex: 80</string>
+    <string name="today_add_amount_btn">+ Adicionar</string>
+    <string name="today_meal_pct_eaten">%d%% comido</string>
+    <string name="today_meal_refused">Recusou</string>
+
+    <!-- ── Dose / Medicamento ────────────────────────────────── -->
+    <string name="dose_form_oral">Oral</string>
+    <string name="dose_form_topical">Tópico</string>
+    <string name="dose_form_injectable">Injetável</string>
+    <string name="dose_form_eye_drop">Colírio</string>
+    <string name="dose_form_other">Outro</string>
+    <string name="dose_guideline_with_food">Administrar com alimento</string>
+    <string name="dose_guideline_fasting">Administrar em jejum</string>
+    <string name="dose_guideline_with_water">Diluir em água</string>
+    <string name="dose_obs_prefix">Obs: %1$s</string>
+    <string name="dose_question">O que aconteceu com esta dose?</string>
+    <string name="dose_action_taken">  Administrou</string>
+    <string name="dose_action_vomited">Administrou e vomitou</string>
+    <string name="dose_action_not_taken">Não administrou</string>
+    <string name="dose_status_taken">Administrado</string>
+    <string name="dose_status_not_taken">Não administrado</string>
+    <string name="dose_status_vomited">Administrado (vomitou)</string>
+    <string name="dose_status_pending">Pendente</string>
+    <string name="dose_status_taken_icon">✓ Administrado</string>
+    <string name="dose_status_not_taken_icon">✗ Não administrado</string>
+    <string name="dose_status_vomited_icon">⚠ Administrado (vomitou)</string>
+    <string name="dose_taken_cd">Administrado</string>
+    <string name="dose_not_taken_cd">Não administrado</string>
+    <string name="dose_vomited_cd">Vomitou após a dose</string>
+
+    <!-- ── Tipos de alimento ─────────────────────────────────── -->
+    <string name="food_type_dry_kibble">Ração seca</string>
+    <string name="food_type_wet_food">Ração úmida</string>
+    <string name="food_type_natural">Alimentação natural</string>
+    <string name="food_type_natural_homemade">Alimentação natural/caseira</string>
+    <string name="food_type_therapeutic">Dieta terapêutica</string>
+    <string name="food_type_other">Outro</string>
+
+    <!-- ── Refeição ──────────────────────────────────────────── -->
+    <string name="meal_question">Como foi esta refeição?</string>
+    <string name="meal_100pct">Comeu tudo (100%)</string>
+    <string name="meal_75pct">Comeu bastante (75%)</string>
+    <string name="meal_50pct">Comeu metade (50%)</string>
+    <string name="meal_25pct">Comeu pouco (25%)</string>
+    <string name="meal_refused">Recusou</string>
+    <string name="meal_extra_dialog_title">Registrar extra</string>
+    <string name="meal_extra_description_label">Descrição (opcional)</string>
+    <string name="meal_extra_description_hint">Ex: petisco</string>
+    <string name="meal_extra_amount_label">Quantidade (opcional)</string>
+    <string name="meal_extra_amount_hint">Ex: 30</string>
+
+    <!-- ── Lista de Medicamentos ─────────────────────────────── -->
+    <string name="med_list_add_cd">Adicionar medicamento</string>
+    <string name="med_list_empty_title">Nenhum medicamento ativo</string>
+    <string name="med_list_empty_hint">Toque no + para adicionar\num medicamento prescrito</string>
+    <string name="med_list_reminder_on_cd">Lembrete ativo</string>
+    <string name="med_list_reminder_off_cd">Lembrete desativado</string>
+    <string name="med_list_interval">A cada %1$dh</string>
+    <string name="med_list_continuous">Uso contínuo</string>
+    <string name="med_list_with_deadline">Com prazo</string>
+    <string name="med_list_since">Desde %1$s</string>
+    <string name="med_list_from_to">%1$s → %2$s</string>
+    <string name="med_list_completed">Concluído</string>
+    <string name="med_list_edit_cd">Editar</string>
+    <string name="med_list_delete_cd">Excluir</string>
+    <string name="dialog_med_limit_title">Limite atingido</string>
+    <string name="dialog_med_limit_msg">Você atingiu o limite de 20 medicamentos do plano gratuito.</string>
+    <string name="dialog_med_limit_premium">Ver Premium</string>
+    <string name="dialog_med_limit_later">Agora não</string>
+    <string name="dialog_med_delete_title">Excluir medicamento?</string>
+    <string name="dialog_med_delete_msg">\"%1$s\" será desativado e não aparecerá mais na lista. O histórico de doses registradas é mantido.</string>
+
+    <!-- ── Formulário de Medicamento ─────────────────────────── -->
+    <string name="med_form_new_title">Novo medicamento</string>
+    <string name="med_form_edit_title">Editar medicamento</string>
+    <string name="med_form_section_med">Medicamento</string>
+    <string name="med_form_disclaimer">⚠ Medicamentos devem ser prescritos por médico veterinário. Este app não sugere nem recomenda medicamentos.</string>
+    <string name="med_form_name_label">Nome (ex: Amoxicilina, Prednisolona) *</string>
+    <string name="med_form_route_section">Forma de administração *</string>
+    <string name="med_form_dose_section">Dose *</string>
+    <string name="med_form_dose_qty_label">Quantidade</string>
+    <string name="med_form_dose_qty_hint">Ex: 0,5</string>
+    <string name="med_form_dose_unit_label">Unidade</string>
+    <string name="med_form_frequency_section">Frequência *</string>
+    <string name="med_form_freq_interval">A cada X horas</string>
+    <string name="med_form_freq_fixed">Horários fixos</string>
+    <string name="med_form_interval_label">Intervalo entre doses *</string>
+    <string name="med_form_interval_suffix">horas</string>
+    <string name="med_form_first_dose_label">Horário da primeira dose (opcional)</string>
+    <string name="med_form_first_dose_hint">Se não informado, o primeiro alarme é agendado a partir de agora.</string>
+    <string name="med_form_fixed_time_label">Horário %1$d</string>
+    <string name="med_form_remove_time_cd">Remover horário</string>
+    <string name="med_form_add_time_btn"> Adicionar horário</string>
+    <string name="med_form_duration_section">Duração do tratamento</string>
+    <string name="med_form_continuous">Uso contínuo (sem data de fim)</string>
+    <string name="med_form_duration_label">Duração *</string>
+    <string name="med_form_duration_suffix">dias</string>
+    <string name="med_form_guideline_section">Orientação de administração</string>
+    <string name="med_form_guideline_with_food">Com alimentação</string>
+    <string name="med_form_guideline_fasting">Em jejum</string>
+    <string name="med_form_guideline_with_water">Com água</string>
+    <string name="med_form_guideline_other">Outra</string>
+    <string name="med_form_guideline_detail_label">Detalhe a orientação</string>
+    <string name="med_form_obs_label">Observações (opcional)</string>
+    <string name="med_form_obs_hint">Ex: esconder na comida, amarga — usar seringa</string>
+    <string name="med_form_save_btn">Cadastrar medicamento</string>
+    <string name="med_form_update_btn">Salvar alterações</string>
+    <string name="med_form_notif_title">Receber alertas?</string>
+    <string name="med_form_notif_msg">O app enviará uma notificação nos horários configurados para lembrar você de administrar o medicamento. Deseja ativar os alertas?</string>
+    <string name="med_form_notif_enable">Ativar e salvar</string>
+    <string name="med_form_notif_skip">Salvar sem alertas</string>
+
+    <!-- ── Alimentação ───────────────────────────────────────── -->
+    <string name="feeding_no_plan_title">Nenhum plano alimentar configurado</string>
+    <string name="feeding_no_plan_msg">Configure o plano para registrar as refeições e acompanhar a alimentação do seu pet.</string>
+    <string name="feeding_configure_plan_btn">Configurar plano alimentar</string>
+    <string name="feeding_restrictions">Restrições: %1$s</string>
+    <string name="feeding_edit_btn"> Editar</string>
+    <string name="feeding_add_plan_btn"> Adicionar plano alimentar</string>
+    <string name="dialog_feeding_plan_limit_msg">Você atingiu o limite de 5 planos do plano gratuito.</string>
+    <string name="dialog_delete_plan_title">Excluir plano alimentar?</string>
+    <string name="dialog_delete_plan_msg">O plano e todas as refeições configuradas serão removidos. Os registros do histórico serão mantidos.</string>
+
+    <!-- ── Formulário de Plano Alimentar ─────────────────────── -->
+    <string name="meal_plan_edit_title">Editar plano de %1$s</string>
+    <string name="meal_plan_new_title">Novo plano de %1$s</string>
+    <string name="meal_plan_food_type_section">Tipo de alimento</string>
+    <string name="meal_plan_food_details_label">Marca / detalhes do alimento (opcional)</string>
+    <string name="meal_plan_restrictions_label">Restrições alimentares (opcional)</string>
+    <string name="meal_plan_restrictions_hint">Ex: sem sódio, sem frango…</string>
+    <string name="meal_plan_goals_note">Todos os valores abaixo são metas diárias. Siga sempre a orientação do veterinário.</string>
+    <string name="meal_plan_unit_grams">Gramas (g)</string>
+    <string name="meal_plan_unit_ml">Mililitros (ml)</string>
+    <string name="meal_plan_daily_qty_label">Meta diária de ração (%1$s)</string>
+    <string name="meal_plan_daily_qty_hint">Ex: 300</string>
+    <string name="meal_plan_daily_kcal_label">Meta calórica diária (opcional)</string>
+    <string name="meal_plan_daily_kcal_hint">Ex: 450</string>
+    <string name="meal_plan_daily_kcal_suffix">kcal/dia</string>
+    <string name="meal_plan_meals_section">Refeições do dia</string>
+    <string name="meal_plan_meals_hint">Configure os horários e as quantidades de cada refeição.</string>
+    <string name="meal_plan_add_meal_btn">Adicionar refeição</string>
+    <string name="meal_plan_save_btn">Salvar plano</string>
+    <string name="meal_plan_add_btn">Adicionar plano</string>
+    <string name="meal_plan_time_label">Horário</string>
+    <string name="meal_plan_time_hint">07:00</string>
+    <string name="meal_plan_ml_label">Mililitros</string>
+    <string name="meal_plan_grams_label">Gramas</string>
+    <string name="meal_plan_qty_hint">150</string>
+    <string name="meal_plan_remove_meal_cd">Remover refeição</string>
+    <string name="meal_plan_food_details_hint_dry">Ex: Royal Canin Adult Medium, ND…</string>
+    <string name="meal_plan_food_details_hint_wet">Ex: Ração Úmida GranPlus, Hills lata…</string>
+    <string name="meal_plan_food_details_hint_natural">Ex: frango com batata-doce e cenoura…</string>
+    <string name="meal_plan_food_details_hint_therapeutic">Ex: Hills Prescription k/d, Royal Canin Renal…</string>
+    <string name="meal_plan_food_details_hint_other">Descreva o alimento…</string>
+
+    <!-- ── Água ──────────────────────────────────────────────── -->
+    <string name="water_not_configured_title">Hidratação não configurada</string>
+    <string name="water_not_configured_msg">Configure a meta diária de água para acompanhar a hidratação do seu pet.</string>
+    <string name="water_configure_btn">Configurar hidratação</string>
+    <string name="water_configure_cd">Configurar hidratação</string>
+    <string name="water_today_title">Água hoje</string>
+    <string name="water_pct_goal">%1$d%% da meta diária</string>
+    <string name="water_register_title">Registrar consumo</string>
+    <string name="water_records_today">Registros de hoje</string>
+    <string name="water_other_amount">Outro valor</string>
+    <string name="water_register_btn">Registrar</string>
+    <string name="water_remove_record_cd">Remover registro</string>
+
+    <!-- ── Status de Hidratação ──────────────────────────────── -->
+    <string name="hydration_sufficient">Hidratação adequada</string>
+    <string name="hydration_partial">Abaixo da meta — continue oferecendo água</string>
+    <string name="hydration_below_minimum">Muito pouca água hoje — monitore com atenção</string>
+    <string name="hydration_above_recommended">Consumo elevado — consulte o veterinário se persistir</string>
+    <string name="hydration_no_record">Nenhum registro hoje</string>
+
+    <!-- ── Configuração de Água ──────────────────────────────── -->
+    <string name="water_config_title">Configurar água — %1$s</string>
+    <string name="water_config_daily_goal_label">Meta diária de água (ml)</string>
+    <string name="water_config_daily_goal_hint">Ex: 300</string>
+    <string name="water_config_daily_goal_suffix">ml/dia</string>
+    <string name="water_config_reminders_section">Lembretes</string>
+    <string name="water_config_enable_reminders">Ativar lembretes</string>
+    <string name="water_config_enable_reminders_desc">O app vai te lembrar de oferecer água</string>
+    <string name="water_config_interval_label">Lembrar a cada (horas)</string>
+    <string name="water_config_interval_suffix">h</string>
+    <string name="water_config_interval_hint">Ex: 2 = lembrete a cada 2 horas. Mínimo recomendado: 2h.</string>
+    <string name="water_config_start_time_label">Horário de início dos lembretes</string>
+    <string name="water_config_end_time_label">Horário de fim dos lembretes</string>
+    <string name="water_config_reminders_preview">Lembretes: %1$s</string>
+    <string name="water_config_no_reminders_in_window">Nenhum lembrete nessa janela — ajuste o início ou o fim</string>
+    <string name="water_config_end_time_hint">Ex: 22:00 → silencia após as 22h</string>
+    <string name="water_config_save_btn">Salvar configuração</string>
+    <string name="water_config_delete_btn">Excluir plano de hidratação</string>
+    <string name="dialog_delete_water_config_title">Excluir plano de hidratação?</string>
+    <string name="dialog_delete_water_config_msg">A configuração de água e os lembretes serão removidos. Os registros do histórico serão mantidos.</string>
+
+    <!-- ── Vacinas ────────────────────────────────────────────── -->
+    <string name="vaccine_list_title">Vacinas e Vermífugos</string>
+    <string name="vaccine_list_add_cd">Adicionar</string>
+    <string name="vaccine_list_empty">Nenhum registro ainda.</string>
+    <string name="vaccine_list_empty_hint">Toque em + para adicionar.</string>
+    <string name="vaccine_section_vaccines">Vacinas</string>
+    <string name="vaccine_section_dewormers">Vermífugos</string>
+    <string name="vaccine_alerts_on_cd">Alertas ativos</string>
+    <string name="vaccine_alerts_off_cd">Alertas desativados</string>
+    <string name="vaccine_applied_date">Aplicada: %1$s</string>
+    <string name="vaccine_not_applied">Ainda não administrada</string>
+    <string name="vaccine_next_dose">Próxima dose: %1$s</string>
+    <string name="dialog_delete_vaccine_title">Excluir registro</string>
+    <string name="dialog_delete_vaccine_msg">Deseja excluir \"%1$s\"?</string>
+    <string name="vaccine_form_new_title">Nova vacina/vermífugo</string>
+    <string name="vaccine_form_edit_title">Editar registro</string>
+    <string name="vaccine_type_vaccine">Vacina</string>
+    <string name="vaccine_type_dewormer">Vermífugo</string>
+    <string name="vaccine_form_type_section">Tipo</string>
+    <string name="vaccine_name_vaccine_label">Nome da vacina *</string>
+    <string name="vaccine_name_dewormer_label">Nome do vermífugo *</string>
+    <string name="vaccine_name_vaccine_hint">Ex: Antirrábica, V10…</string>
+    <string name="vaccine_name_dewormer_hint">Ex: Drontal Plus…</string>
+    <string name="vaccine_application_section">Aplicação</string>
+    <string name="vaccine_administered">Já foi administrada</string>
+    <string name="vaccine_applied_date_btn">Data de aplicação: %1$s</string>
+    <string name="vaccine_applied_date_select">Toque para selecionar</string>
+    <string name="vaccine_next_dose_section">Próxima dose (opcional)</string>
+    <string name="vaccine_set_next_dose_btn">Definir data da próxima dose</string>
+    <string name="vaccine_next_dose_btn">Próxima dose: %1$s</string>
+    <string name="vaccine_reminder_label">Lembrete na data da próxima dose</string>
+    <string name="vaccine_notes_section">Observações (opcional)</string>
+    <string name="vaccine_notes_hint">Lote, clínica, reações…</string>
+
+    <!-- ── Saúde ──────────────────────────────────────────────── -->
+    <string name="health_diary_title">Diário de saúde</string>
+    <string name="health_new_entry_btn"> Nova entrada</string>
+    <string name="health_empty">Nenhuma entrada registrada ainda.\nUse o botão acima para começar.</string>
+    <string name="health_current_weight">Peso atual</string>
+    <string name="health_no_weight">Não registrado</string>
+    <string name="health_weight_history_btn"> Histórico de peso</string>
+    <string name="health_remove_entry_cd">Remover entrada</string>
+    <string name="health_behavior_prefix">Comportamento: %1$s</string>
+    <string name="health_feces_prefix">Fezes: %1$s</string>
+    <string name="health_urine_prefix">Urina: %1$s</string>
+    <string name="health_vomit_count">Vômitos: %1$d episódio(s)</string>
+    <string name="health_mobility_prefix">Mobilidade: %1$s</string>
+    <string name="health_pain_prefix">Dor: %1$s</string>
+    <string name="health_obs_prefix">Obs: %1$s</string>
+    <string name="health_behavior_normal">Normal, ativo</string>
+    <string name="health_behavior_lethargic">Apático</string>
+    <string name="health_behavior_agitated">Agitado</string>
+    <string name="health_behavior_sleepy">Sonolento</string>
+    <string name="health_feces_normal">Normal</string>
+    <string name="health_feces_soft">Amolecidas</string>
+    <string name="health_feces_diarrhea">Diarreia</string>
+    <string name="health_feces_absent">Não evacuou</string>
+    <string name="health_feces_blood">Com sangue ⚠️</string>
+    <string name="health_urine_normal">Normal</string>
+    <string name="health_urine_increased">Aumentada</string>
+    <string name="health_urine_reduced">Reduzida</string>
+    <string name="health_urine_absent">Não urinou</string>
+    <string name="health_urine_blood">Com sangue ⚠️</string>
+    <string name="health_mobility_normal">Normal</string>
+    <string name="health_mobility_reduced">Reduzida</string>
+    <string name="health_mobility_immobile">Imóvel</string>
+    <string name="health_pain_none">Sem sinais</string>
+    <string name="health_pain_apparent">Aparente</string>
+    <string name="health_pain_evident">Evidente</string>
+
+    <!-- ── Formulário de Entrada de Saúde ─────────────────────── -->
+    <string name="health_entry_new_title">Nova entrada no diário</string>
+    <string name="health_entry_edit_title">Editar entrada</string>
+    <string name="health_entry_behavior_section">Comportamento geral</string>
+    <string name="health_entry_feces_section">Fezes</string>
+    <string name="health_entry_urine_section">Urina</string>
+    <string name="health_entry_vomit_label">Número de episódios de vômito</string>
+    <string name="health_entry_vomit_hint">0 = não vomitou</string>
+    <string name="health_entry_mobility_section">Mobilidade</string>
+    <string name="health_entry_pain_section">Sinais de dor</string>
+    <string name="health_entry_obs_label">Observações (campo livre)</string>
+    <string name="health_entry_obs_hint">Ex: dormiu o dia todo, não quis brincar…</string>
+    <string name="health_entry_photos_section">Fotos da observação</string>
+    <string name="health_entry_add_photo_btn">Adicionar foto</string>
+    <string name="health_entry_disclaimer">Este diário é para observação do tutor. Não substitui avaliação veterinária.</string>
+    <string name="health_entry_save_btn">Salvar entrada</string>
+    <string name="health_entry_delete_photo_cd">Excluir foto</string>
+    <string name="health_entry_close_cd">Fechar</string>
+    <string name="health_entry_share_photo_cd">Compartilhar</string>
+    <string name="health_entry_share_photo_chooser">Compartilhar foto</string>
+
+    <!-- ── Histórico de Peso ─────────────────────────────────── -->
+    <string name="weight_history_title">Histórico de peso</string>
+    <string name="weight_history_add_cd">Registrar peso</string>
+    <string name="weight_history_empty">Nenhum peso registrado ainda.\nToque no + para adicionar o primeiro.</string>
+    <string name="weight_history_chart_title">Evolução do peso</string>
+    <string name="weight_history_records_title">Registros</string>
+    <string name="weight_history_min_note">O histórico precisa ter ao menos um registro.</string>
+    <string name="weight_history_delta_up">▲ +%.2f kg</string>
+    <string name="weight_history_delta_down">▼ %.2f kg</string>
+    <string name="weight_history_delta_same">— igual</string>
+    <string name="weight_history_remove_cd">Remover</string>
+    <string name="weight_dialog_title">Registrar peso</string>
+    <string name="weight_dialog_label">Peso</string>
+    <string name="weight_dialog_hint">Ex: 4,3</string>
+    <string name="weight_dialog_error">Informe um peso válido (ex: 4,3).</string>
+    <string name="weight_dialog_notes_label">Observação (opcional)</string>
+    <string name="weight_dialog_notes_hint">Ex: pesado na clínica</string>
+
+    <!-- ── Formulário de Pet ─────────────────────────────────── -->
+    <string name="pet_form_new_title">Novo pet</string>
+    <string name="pet_form_edit_title">Editar pet</string>
+    <string name="pet_form_photo_section">Foto do pet</string>
+    <string name="pet_form_photo_tap_hint">Toque para alterar</string>
+    <string name="pet_form_photo_add_cd">Adicionar foto</string>
+    <string name="pet_form_basic_section">Informações básicas</string>
+    <string name="pet_form_name_label">Nome do pet *</string>
+    <string name="pet_form_species_label">Espécie *</string>
+    <string name="pet_form_custom_species_label">Qual espécie? *</string>
+    <string name="pet_form_custom_species_hint">Ex: Chinchila, Furão, Porquinho-da-índia…</string>
+    <string name="pet_form_breed_label">Raça (opcional)</string>
+    <string name="pet_form_birthdate_section">Data de nascimento (opcional)</string>
+    <string name="pet_form_birthdate_approx">Pode ser uma data aproximada.</string>
+    <string name="pet_form_birthdate_set_btn">Informar data de nascimento</string>
+    <string name="pet_form_birthdate_display">Nascimento: %1$s</string>
+    <string name="pet_form_birthdate_remove">Remover</string>
+    <string name="pet_form_age_display">Idade: %1$s</string>
+    <string name="pet_form_weight_label">Peso atual (kg) *</string>
+    <string name="pet_form_sex_label">Sexo *</string>
+    <string name="pet_form_neutered">Castrado(a)</string>
+    <string name="pet_form_clinical_section">Estado clínico atual</string>
+    <string name="pet_form_clinical_select_all">Selecione todos que se aplicam:</string>
+    <string name="pet_form_clinical_active_treatment">Tratamento ativo</string>
+    <string name="pet_form_clinical_chronic">Doença crônica</string>
+    <string name="pet_form_clinical_post_surgical">Pós-cirúrgico</string>
+    <string name="pet_form_clinical_recovery">Recuperação</string>
+    <string name="pet_form_clinical_preventive">Monitoramento preventivo</string>
+    <string name="pet_form_save_btn">Cadastrar pet</string>
+    <string name="pet_form_update_btn">Salvar alterações</string>
+    <string name="pet_form_disclaimer">⚠ Este app é uma ferramenta de organização e não substitui a consulta veterinária. Sempre siga as orientações do seu médico veterinário.</string>
+    <string name="pet_form_photo_dialog_title">Foto do pet</string>
+    <string name="pet_form_photo_dialog_msg">Como você quer adicionar a foto?</string>
+    <string name="pet_form_photo_gallery">  Galeria</string>
+    <string name="pet_form_photo_camera">  Câmera</string>
+
+    <!-- ── Configurações ─────────────────────────────────────── -->
+    <string name="settings_title">Configurações</string>
+    <string name="settings_premium_badge">Você é Premium</string>
+    <string name="settings_premium_title">CuidadoPet Premium</string>
+    <string name="settings_premium_benefit_plans">Planos alimentares ilimitados</string>
+    <string name="settings_premium_benefit_meds">Medicamentos ilimitados</string>
+    <string name="settings_premium_benefit_no_ads">Sem anúncios</string>
+    <string name="settings_premium_view_plans">Ver planos</string>
+    <string name="settings_backup_title">Backup e Restauração</string>
+    <string name="settings_backup_desc">Exporte um backup completo com todos os pets, medicamentos, registros e fotos. Use a importação para restaurar os dados em outra instalação do app.</string>
+    <string name="settings_export_btn">Exportar backup</string>
+    <string name="settings_import_btn">Importar backup</string>
+    <string name="settings_how_to_title">Como levar seus dados para outro celular</string>
+    <string name="settings_how_to_step1">1. Toque em \"Exportar backup\" e escolha onde salvar o arquivo</string>
+    <string name="settings_how_to_step2">2. Envie o arquivo para o novo celular (WhatsApp, e-mail, Google Drive…)</string>
+    <string name="settings_how_to_step3">3. No novo celular, abra o CuidadoPet e vá em Configurações</string>
+    <string name="settings_how_to_step4">4. Toque em \"Importar backup\" e selecione o arquivo enviado</string>
+    <string name="settings_how_to_step5">5. Pronto! Todos os seus pets e registros estarão restaurados</string>
+    <string name="settings_save_backup_chooser">Salvar backup</string>
+
+    <!-- ── Paywall ────────────────────────────────────────────── -->
+    <string name="paywall_title">CuidadoPet Premium</string>
+    <string name="paywall_what_you_get">O que você ganha</string>
+    <string name="paywall_unavailable">Planos indisponíveis no momento. Tente novamente mais tarde.</string>
+    <string name="paywall_restore">Restaurar compras</string>
+    <string name="paywall_monthly">Mensal</string>
+    <string name="paywall_annual">Anual</string>
+    <string name="paywall_lifetime">Vitalício</string>
+
+    <!-- ── Relatório ─────────────────────────────────────────── -->
+    <string name="report_title">Relatório</string>
+    <string name="report_loading_error">Não foi possível carregar os dados.</string>
+    <string name="report_period_label">Período do relatório</string>
+    <string name="report_period_7d">7 dias</string>
+    <string name="report_period_14d">14 dias</string>
+    <string name="report_period_30d">30 dias</string>
+    <string name="report_header">Relatório de %1$s</string>
+    <string name="report_section_medications">Medicamentos em uso</string>
+    <string name="report_no_medications">Nenhum</string>
+    <string name="report_section_feeding">Alimentação</string>
+    <string name="report_no_plan">Sem plano configurado.</string>
+    <string name="report_restrictions">Restrições: %1$s</string>
+    <string name="report_section_feeding_period">Alimentação no período</string>
+    <string name="report_no_meals">Nenhuma refeição registrada no período.</string>
+    <string name="report_section_water">Hidratação no período</string>
+    <string name="report_no_water">Nenhum registro.</string>
+    <string name="report_section_health">Diário de saúde</string>
+    <string name="report_health_entries_no_notes">%1$d registros — sem anotações de texto.</string>
+    <string name="report_section_weight">Histórico de peso</string>
+    <string name="report_no_weight">Nenhuma pesagem registrada.</string>
+    <string name="report_section_vaccines">Vacinas e Vermífugos — última dose</string>
+    <string name="report_vaccines_label">Vacinas:</string>
+    <string name="report_dewormers_label">Vermífugos:</string>
+    <string name="report_section_photos">Fotos registradas</string>
+    <string name="report_disclaimer">⚠️ Este relatório é um registro de observações do tutor e não substitui avaliação, diagnóstico ou prescrição veterinária.</string>
+    <string name="report_share_text_btn">Compartilhar como texto (WhatsApp)</string>
+    <string name="report_generating_pdf">  Gerando PDF…</string>
+    <string name="report_generate_pdf_btn">Gerar e compartilhar PDF</string>
+    <string name="report_edit_med_log_title">Editar administração</string>
+    <string name="report_delete_log_btn">Excluir registro</string>
+    <string name="report_edit_food_total_title">Editar total — %1$s</string>
+    <string name="report_food_total_label">Total do dia (%1$s)</string>
+    <string name="report_edit_water_total_title">Editar total — %1$s</string>
+    <string name="report_water_total_label">Total do dia (ml)</string>
+    <string name="report_edit_weight_title">Editar pesagem</string>
+    <string name="report_weight_label">Peso (kg)</string>
+    <string name="report_weight_notes_label">Observações (opcional)</string>
+    <string name="report_share_chooser">Compartilhar relatório</string>
+    <string name="report_share_pdf_chooser">Compartilhar PDF</string>
+
+    <!-- ── Canais de Notificação ─────────────────────────────── -->
+    <string name="notif_channel_medications">Lembretes de medicamentos</string>
+    <string name="notif_channel_medications_desc">Alertas de horário dos medicamentos do seu pet</string>
+    <string name="notif_channel_meals">Lembretes de alimentação</string>
+    <string name="notif_channel_meals_desc">Lembretes dos horários de refeição do seu pet</string>
+    <string name="notif_channel_water">Lembretes de hidratação</string>
+    <string name="notif_channel_water_desc">Lembretes para oferecer água ao seu pet</string>
+    <string name="notif_channel_daily">Alertas diários</string>
+    <string name="notif_channel_daily_desc">Resumo diário de alimentação e hidratação</string>
+    <string name="notif_channel_vaccines">Lembretes de vacinas e vermífugos</string>
+    <string name="notif_channel_vaccines_desc">Avisos de vacinas e vermífugos vencendo</string>
+
+    <!-- ── Textos de Notificação ─────────────────────────────── -->
+    <string name="notif_water_title">Hora de oferecer água para %1$s</string>
+    <string name="notif_water_body">Lembre de hidratar seu pet%1$s</string>
+    <string name="notif_water_target"> (meta: %1$d ml/dia)</string>
+    <string name="notif_meal_title">Hora de alimentar %1$s 🍽️</string>
+    <string name="notif_meal_body">Refeição das %1$s%2$s</string>
+    <string name="notif_meal_quantity"> (%1$dg)</string>
+    <string name="notif_medication_title">Hora do medicamento!</string>
+    <string name="notif_vaccine_7days">Faltam 7 dias para %1$s</string>
+    <string name="notif_vaccine_3days">Faltam 3 dias para %1$s</string>
+    <string name="notif_vaccine_now">Está na hora: %1$s</string>
+    <string name="notif_vaccine_title">Lembrete de %1$s — %2$s</string>
+    <string name="notif_vaccine_type_vaccine">vacina</string>
+    <string name="notif_vaccine_type_dewormer">vermífugo</string>
+
+    <!-- ── Política de Privacidade ───────────────────────────── -->
+    <string name="privacy_title">Política de Privacidade</string>
+    <string name="privacy_last_update">Última atualização: maio de 2026</string>
+    <string name="privacy_s1_title">1. Sobre o aplicativo</string>
+    <string name="privacy_s1_body">O CuidadoPet é um aplicativo de organização de cuidados com animais de estimação domésticos. O app é local — todos os dados são armazenados exclusivamente no dispositivo do usuário. Não há servidores, contas de usuário ou sincronização na nuvem.</string>
+    <string name="privacy_s2_title">2. Dados coletados</string>
+    <string name="privacy_s2_body">O CuidadoPet não coleta nem transmite nenhum dado pessoal ou de saúde para servidores externos.\n\nOs seguintes dados são criados e armazenados APENAS localmente no dispositivo:\n• Nome, espécie, raça e peso dos pets cadastrados\n• Registros de medicamentos e horários de administração\n• Planos alimentares e registros de refeições\n• Registros de hidratação\n• Entradas do diário de saúde e histórico de peso\n• Foto do pet (salva no armazenamento interno do app)</string>
+    <string name="privacy_s3_title">3. Permissões do aplicativo</string>
+    <string name="privacy_s3_body">• Notificações: para enviar lembretes de medicamentos e refeições\n• Alarmes exatos: para garantir que os lembretes sejam pontuais\n• Câmera: para tirar foto do pet (opcional)\n• Acesso a imagens: para escolher foto da galeria (opcional)\n• Inicialização do sistema: para reconfigurar alarmes após reinicialização</string>
+    <string name="privacy_s4_title">4. Compartilhamento de dados</string>
+    <string name="privacy_s4_body">O app não compartilha dados com terceiros de forma automática.\n\nO tutor pode optar por compartilhar relatórios manualmente (WhatsApp, e-mail, etc.) usando as funções de exportação. Esse compartilhamento é sempre iniciado pela ação explícita do usuário.</string>
+    <string name="privacy_s5_title">5. Aviso médico-veterinário</string>
+    <string name="privacy_s5_body">O CuidadoPet é uma ferramenta de organização pessoal e NÃO substitui avaliação, diagnóstico ou prescrição veterinária. As informações registradas no app são observações do tutor e não devem ser usadas como base para decisões médicas sem orientação profissional.</string>
+    <string name="privacy_s6_title">6. Retenção e exclusão de dados</string>
+    <string name="privacy_s6_body">Todos os dados ficam no dispositivo. Para apagar os dados, o usuário pode desinstalar o aplicativo, o que remove todos os arquivos e o banco de dados local.</string>
+    <string name="privacy_s7_title">7. Menores de idade</string>
+    <string name="privacy_s7_body">O aplicativo não coleta dados de menores de idade. O uso é destinado a tutores adultos responsáveis pelos animais.</string>
+    <string name="privacy_s8_title">8. Contato</string>
+    <string name="privacy_s8_body">Dúvidas sobre esta política podem ser enviadas para o e-mail de suporte do desenvolvedor disponível na página do app na Google Play.</string>
+
+    <!-- ── MainActivity ──────────────────────────────────────── -->
+    <string name="update_ready_title">Atualização pronta</string>
+    <string name="update_ready_msg">Uma nova versão foi baixada. Reinicie o app para aplicar a atualização.</string>
+    <string name="update_restart_now">Reiniciar agora</string>
+    <string name="update_later">Depois</string>
+
+    <!-- ── Idioma ─────────────────────────────────────────────── -->
+    <string name="settings_language_title">Idioma</string>
+    <string name="settings_language_current">Idioma atual: %1$s</string>
+    <string name="language_system">Padrão do sistema</string>
+    <string name="language_pt">Português</string>
+    <string name="language_en">Inglês</string>
 </resources>

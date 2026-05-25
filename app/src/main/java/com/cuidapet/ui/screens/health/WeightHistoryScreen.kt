@@ -49,6 +49,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.ui.res.stringResource
+import com.cuidadopet.R
 import com.cuidadopet.data.db.entity.WeightRecordEntity
 import com.cuidadopet.ui.components.AdBanner
 import com.cuidadopet.ui.utils.adaptiveHorizontalPadding
@@ -98,17 +100,17 @@ fun WeightHistoryScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Histórico de peso") },
+                title = { Text(stringResource(R.string.weight_history_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
                     }
                 },
                 actions = {
                     IconButton(onClick = { showAddDialog = true }) {
                         Icon(
                             Icons.Default.Add,
-                            contentDescription = "Registrar peso",
+                            contentDescription = stringResource(R.string.weight_history_add_cd),
                             tint = MaterialTheme.colorScheme.onPrimary
                         )
                     }
@@ -135,19 +137,19 @@ fun WeightHistoryScreen(
 
             if (state.records.isEmpty()) {
                 Text(
-                    "Nenhum peso registrado ainda.\nToque no + para adicionar o primeiro.",
+                    stringResource(R.string.weight_history_empty),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             } else {
-                Text("Evolução do peso", style = MaterialTheme.typography.titleSmall,
+                Text(stringResource(R.string.weight_history_chart_title), style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold)
 
                 WeightChart(records = state.records, chartModelProducer = chartModelProducer)
 
                 HorizontalDivider()
 
-                Text("Registros", style = MaterialTheme.typography.titleSmall,
+                Text(stringResource(R.string.weight_history_records_title), style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold)
 
                 state.records.reversed().forEachIndexed { revIdx, record ->
@@ -173,7 +175,7 @@ fun WeightHistoryScreen(
                             modifier = Modifier.size(14.dp)
                         )
                         Text(
-                            "O histórico precisa ter ao menos um registro.",
+                            stringResource(R.string.weight_history_min_note),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -287,9 +289,9 @@ private fun WeightRecordRow(
 
             if (delta != null) {
                 val (label, color) = when {
-                    delta > 0.05  -> "▲ +${"%.2f".format(delta)} kg"  to MaterialTheme.colorScheme.primary
-                    delta < -0.05 -> "▼ ${"%.2f".format(-delta)} kg" to MaterialTheme.colorScheme.error
-                    else          -> "— igual"                         to MaterialTheme.colorScheme.onSurfaceVariant
+                    delta > 0.05  -> stringResource(R.string.weight_history_delta_up, delta)   to MaterialTheme.colorScheme.primary
+                    delta < -0.05 -> stringResource(R.string.weight_history_delta_down, -delta) to MaterialTheme.colorScheme.error
+                    else          -> stringResource(R.string.weight_history_delta_same)          to MaterialTheme.colorScheme.onSurfaceVariant
                 }
                 Text(
                     label,
@@ -303,7 +305,7 @@ private fun WeightRecordRow(
             IconButton(onClick = onDelete, enabled = canDelete) {
                 Icon(
                     Icons.Default.Delete,
-                    contentDescription = "Remover",
+                    contentDescription = stringResource(R.string.weight_history_remove_cd),
                     tint = if (canDelete) MaterialTheme.colorScheme.error
                            else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
                 )
@@ -325,7 +327,7 @@ private fun AddWeightDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Registrar peso") },
+        title = { Text(stringResource(R.string.weight_dialog_title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(
@@ -342,19 +344,19 @@ private fun AddWeightDialog(
                         weightText = sb.toString()
                         error = false
                     },
-                    label           = { Text("Peso") },
-                    placeholder     = { Text("Ex: 4,3") },
+                    label           = { Text(stringResource(R.string.weight_dialog_label)) },
+                    placeholder     = { Text(stringResource(R.string.weight_dialog_hint)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine      = true,
                     suffix          = { Text("kg") },
                     isError         = error,
-                    supportingText  = { if (error) Text("Informe um peso válido (ex: 4,3).") }
+                    supportingText  = { if (error) Text(stringResource(R.string.weight_dialog_error)) }
                 )
                 OutlinedTextField(
                     value         = notes,
                     onValueChange = { notes = it },
-                    label         = { Text("Observação (opcional)") },
-                    placeholder   = { Text("Ex: pesado na clínica") },
+                    label         = { Text(stringResource(R.string.weight_dialog_notes_label)) },
+                    placeholder   = { Text(stringResource(R.string.weight_dialog_notes_hint)) },
                     singleLine    = true
                 )
             }
@@ -364,10 +366,10 @@ private fun AddWeightDialog(
                 val kg = weightText.toDoubleOrNull()
                 if (kg == null || kg < 0.1 || kg > 200) { error = true; return@Button }
                 onConfirm(kg, notes)
-            }) { Text("Salvar") }
+            }) { Text(stringResource(R.string.action_save)) }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancelar") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
         }
     )
 }

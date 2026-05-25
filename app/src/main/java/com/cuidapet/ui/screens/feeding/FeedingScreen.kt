@@ -38,6 +38,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import android.content.Context
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import com.cuidadopet.R
 import com.cuidadopet.data.db.entity.MealEntity
 import com.cuidadopet.data.db.entity.MealPlanEntity
 import com.cuidadopet.ui.components.AdBanner
@@ -77,13 +81,13 @@ fun FeedingTabContent(
     if (showPlanLimitDialog) {
         AlertDialog(
             onDismissRequest = { showPlanLimitDialog = false },
-            title = { Text("Limite atingido") },
-            text  = { Text("Você atingiu o limite de 5 planos do plano gratuito.") },
+            title = { Text(stringResource(R.string.dialog_med_limit_title)) },
+            text  = { Text(stringResource(R.string.dialog_feeding_plan_limit_msg)) },
             confirmButton = {
-                Button(onClick = { showPlanLimitDialog = false; onOpenPaywall() }) { Text("Ver Premium") }
+                Button(onClick = { showPlanLimitDialog = false; onOpenPaywall() }) { Text(stringResource(R.string.dialog_med_limit_premium)) }
             },
             dismissButton = {
-                TextButton(onClick = { showPlanLimitDialog = false }) { Text("Agora não") }
+                TextButton(onClick = { showPlanLimitDialog = false }) { Text(stringResource(R.string.dialog_med_limit_later)) }
             }
         )
     }
@@ -121,7 +125,7 @@ fun FeedingTabContent(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Icon(Icons.Default.Add, contentDescription = null)
-                Text(" Adicionar plano alimentar")
+                Text(stringResource(R.string.feeding_add_plan_btn))
             }
         }
 
@@ -143,18 +147,18 @@ private fun NoPlanContent(
         verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = "Nenhum plano alimentar configurado",
+            text = stringResource(R.string.feeding_no_plan_title),
             style = MaterialTheme.typography.titleMedium
         )
         Spacer(Modifier.height(8.dp))
         Text(
-            text = "Configure o plano para registrar as refeições e acompanhar a alimentação do seu pet.",
+            text = stringResource(R.string.feeding_no_plan_msg),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Spacer(Modifier.height(24.dp))
         Button(onClick = onConfigurePlan) {
-            Text("Configurar plano alimentar")
+            Text(stringResource(R.string.feeding_configure_plan_btn))
         }
     }
 }
@@ -170,16 +174,16 @@ private fun PlanSectionHeader(
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Excluir plano alimentar?") },
-            text = { Text("O plano e todas as refeições configuradas serão removidos. Os registros do histórico serão mantidos.") },
+            title = { Text(stringResource(R.string.dialog_delete_plan_title)) },
+            text = { Text(stringResource(R.string.dialog_delete_plan_msg)) },
             confirmButton = {
                 Button(
                     onClick = { showDeleteDialog = false; onDelete() },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
-                ) { Text("Excluir") }
+                ) { Text(stringResource(R.string.action_delete)) }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) { Text("Cancelar") }
+                TextButton(onClick = { showDeleteDialog = false }) { Text(stringResource(R.string.action_cancel)) }
             }
         )
     }
@@ -189,9 +193,10 @@ private fun PlanSectionHeader(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
+        val context = LocalContext.current
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                foodTypeLabel(plan.foodType),
+                foodTypeLabel(context, plan.foodType),
                 style = MaterialTheme.typography.titleSmall
             )
             if (!plan.foodDetails.isNullOrBlank()) {
@@ -203,7 +208,7 @@ private fun PlanSectionHeader(
             }
             if (!plan.restrictions.isNullOrBlank()) {
                 Text(
-                    "Restrições: ${plan.restrictions}",
+                    stringResource(R.string.feeding_restrictions, plan.restrictions),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.error
                 )
@@ -215,14 +220,14 @@ private fun PlanSectionHeader(
                 contentPadding = ButtonDefaults.TextButtonContentPadding
             ) {
                 Icon(Icons.Default.Edit, contentDescription = null)
-                Text(" Editar", style = MaterialTheme.typography.labelSmall)
+                Text(stringResource(R.string.feeding_edit_btn), style = MaterialTheme.typography.labelSmall)
             }
             OutlinedButton(
                 onClick = { showDeleteDialog = true },
                 contentPadding = ButtonDefaults.TextButtonContentPadding,
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
             ) {
-                Text("Excluir", style = MaterialTheme.typography.labelSmall)
+                Text(stringResource(R.string.action_delete), style = MaterialTheme.typography.labelSmall)
             }
         }
     }
@@ -254,10 +259,10 @@ private fun MealInfoCard(meal: MealEntity) {
     }
 }
 
-private fun foodTypeLabel(code: String): String = when (code) {
-    "DRY_KIBBLE"  -> "Ração seca"
-    "WET_FOOD"    -> "Ração úmida"
-    "NATURAL"     -> "Alimentação natural/caseira"
-    "THERAPEUTIC" -> "Dieta terapêutica"
-    else          -> "Outro"
+private fun foodTypeLabel(context: Context, code: String): String = when (code) {
+    "DRY_KIBBLE"  -> context.getString(R.string.food_type_dry_kibble)
+    "WET_FOOD"    -> context.getString(R.string.food_type_wet_food)
+    "NATURAL"     -> context.getString(R.string.food_type_natural_homemade)
+    "THERAPEUTIC" -> context.getString(R.string.food_type_therapeutic)
+    else          -> context.getString(R.string.food_type_other)
 }

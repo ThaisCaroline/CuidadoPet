@@ -51,6 +51,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -119,7 +120,11 @@ fun PetFormScreen(
 
     if (showBirthDatePicker) {
         val pickerState = rememberDatePickerState(
-            initialSelectedDateMillis = uiState.birthDate ?: System.currentTimeMillis()
+            initialSelectedDateMillis = uiState.birthDate ?: System.currentTimeMillis(),
+            selectableDates = object : SelectableDates {
+                override fun isSelectableDate(utcTimeMillis: Long) =
+                    utcTimeMillis <= System.currentTimeMillis()
+            }
         )
         DatePickerDialog(
             onDismissRequest = { showBirthDatePicker = false },
@@ -152,6 +157,7 @@ fun PetFormScreen(
     var showPhotoPickerDialog by remember { mutableStateOf(false) }
 
     Scaffold(
+        modifier = Modifier.imePadding(),
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(if (petId == null) R.string.pet_form_new_title else R.string.pet_form_edit_title)) },
@@ -174,7 +180,6 @@ fun PetFormScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .imePadding()
                 .padding(horizontal = adaptiveHorizontalPadding(), vertical = 8.dp)
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)

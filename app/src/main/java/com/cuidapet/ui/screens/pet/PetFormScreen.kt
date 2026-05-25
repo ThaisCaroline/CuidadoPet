@@ -157,7 +157,6 @@ fun PetFormScreen(
     var showPhotoPickerDialog by remember { mutableStateOf(false) }
 
     Scaffold(
-        modifier = Modifier.imePadding(),
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(if (petId == null) R.string.pet_form_new_title else R.string.pet_form_edit_title)) },
@@ -173,13 +172,14 @@ fun PetFormScreen(
                 )
             )
         },
-        snackbarHost = { SnackbarHost(snackbarHostState) }
+        snackbarHost = { SnackbarHost(snackbarHostState, modifier = Modifier.imePadding()) }
     ) { innerPadding ->
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+                .imePadding()
                 .padding(horizontal = adaptiveHorizontalPadding(), vertical = 8.dp)
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)

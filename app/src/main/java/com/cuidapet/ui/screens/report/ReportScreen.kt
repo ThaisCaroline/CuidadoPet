@@ -439,7 +439,7 @@ private fun ReportContent(
                             }
                             if (index > 0) Spacer(Modifier.height(4.dp))
                             Text(
-                                line,
+                                "  $line",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )

@@ -3,6 +3,9 @@ package com.cuidadopet.ui.screens.settings
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.os.Build
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.os.LocaleListCompat
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
@@ -124,9 +127,14 @@ fun SettingsScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable {
+                                    val localeList = if (tag.isEmpty()) LocaleListCompat.getEmptyLocaleList()
+                                                    else LocaleListCompat.forLanguageTags(tag)
+                                    AppCompatDelegate.setApplicationLocales(localeList)
                                     prefs.edit().putString("language_tag", tag).apply()
                                     showLanguageDialog = false
-                                    (context as? Activity)?.recreate()
+                                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                                        (context as? Activity)?.recreate()
+                                    }
                                 }
                                 .padding(vertical = 4.dp),
                             verticalAlignment = Alignment.CenterVertically

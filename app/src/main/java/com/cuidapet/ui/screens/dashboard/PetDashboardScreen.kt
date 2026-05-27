@@ -62,7 +62,8 @@ private data class DashboardTab(
 
 private val dashboardTabs = listOf(
     DashboardTab(0, R.string.tab_today,      { Icon(Icons.Default.Home,            contentDescription = stringResource(R.string.tab_today)) }),
-    DashboardTab(1, R.string.tab_medication, { Icon(Icons.Default.Medication,       contentDescription = stringResource(R.string.tab_medication)) }),
+    DashboardTab(1, R.string.tab_medication, { Icon(Icons.Default.
+    Medication,       contentDescription = stringResource(R.string.tab_medication)) }),
     DashboardTab(2, R.string.tab_meals,      { Icon(Icons.Default.Restaurant,       contentDescription = stringResource(R.string.tab_meals)) }),
     DashboardTab(3, R.string.tab_water,      { Icon(Icons.Default.WaterDrop,        contentDescription = stringResource(R.string.tab_water)) }),
     DashboardTab(4, R.string.tab_health,     { Icon(Icons.Default.Favorite,         contentDescription = stringResource(R.string.tab_health)) })

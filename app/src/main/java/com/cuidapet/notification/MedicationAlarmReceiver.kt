@@ -43,6 +43,7 @@ class MedicationAlarmReceiver : BroadcastReceiver() {
         const val EXTRA_END_DATE         = "end_date"
         const val EXTRA_IS_CONTINUOUS    = "is_continuous"
         const val EXTRA_REMINDER_ENABLED = "reminder_enabled"
+        const val EXTRA_SCHEDULED_AT     = "scheduled_at"
     }
 
     override fun onReceive(context: Context, intent: Intent) {
@@ -69,6 +70,17 @@ class MedicationAlarmReceiver : BroadcastReceiver() {
         val doseText    = if (dose.isNotBlank()) " • $dose $doseUnit" else ""
         val contentText = "$petName — $medicationName$doseText"
 
+        val adminIntent = Intent(context, MedicationAdminReceiver::class.java).apply {
+            putExtra(MedicationAdminReceiver.EXTRA_MEDICATION_ID, medicationId)
+            putExtra(MedicationAdminReceiver.EXTRA_SCHEDULED_AT, System.currentTimeMillis())
+        }
+        val adminPendingIntent = PendingIntent.getBroadcast(
+            context,
+            (medicationId + 20000L).toInt(),
+            adminIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
         val notification = NotificationCompat.Builder(context, NotificationChannels.CHANNEL_MEDICATIONS)
             .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(context.getString(R.string.notif_medication_title))
@@ -76,6 +88,7 @@ class MedicationAlarmReceiver : BroadcastReceiver() {
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setDefaults(NotificationCompat.DEFAULT_ALL)
             .setContentIntent(pendingIntent)
+            .addAction(0, context.getString(R.string.action_administered), adminPendingIntent)
             .setAutoCancel(true)
             .build()
 

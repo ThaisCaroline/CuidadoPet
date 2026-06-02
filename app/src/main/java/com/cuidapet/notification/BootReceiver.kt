@@ -31,6 +31,7 @@ class BootReceiver : BroadcastReceiver() {
     @Inject lateinit var feedingRepository: FeedingRepository
     @Inject lateinit var alarmScheduler: AlarmScheduler
     @Inject lateinit var mealAlarmScheduler: MealAlarmScheduler
+    @Inject lateinit var birthdayAlarmScheduler: BirthdayAlarmScheduler
 
     override fun onReceive(context: Context, intent: Intent) {
         // Filtra para garantir que só processamos o boot — o receiver pode receber
@@ -55,14 +56,14 @@ class BootReceiver : BroadcastReceiver() {
         }
     }
 
-    // Percorre todos os pets e reagenda medicamentos e refeições de cada um.
+    // Percorre todos os pets e reagenda medicamentos, refeições e aniversários de cada um.
     private suspend fun reagendarTodosOsAlarmes() {
-        // .first() pega o estado atual do Flow (consulta pontual, não listener)
         val pets = petRepository.getAllPets().first()
 
         pets.forEach { pet ->
             reagendarMedicamentos(pet.id, pet.name)
             reagendarRefeicoes(pet.id, pet.name)
+            if (pet.birthDate != null) birthdayAlarmScheduler.scheduleBirthday(pet)
         }
     }
 

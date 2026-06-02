@@ -146,8 +146,18 @@ dependencies {
     // AppCompat — necessário para AppCompatDelegate.setApplicationLocales() (seleção de idioma)
     implementation("androidx.appcompat:appcompat:1.7.0")
 
+    // Konfetti — animação de confetes para Compose
+    implementation("nl.dionsegijn:konfetti-compose:2.0.4")
+
+    // Glance — widget para a tela inicial do Android
+    implementation("androidx.glance:glance-appwidget:1.1.0")
+    implementation("androidx.glance:glance-material3:1.1.0")
+
     // Play In-App Updates — popup de atualização quando há nova versão na Play Store
     implementation("com.google.android.play:app-update-ktx:2.1.0")
+
+    // Play In-App Review — solicita avaliação na Play Store sem sair do app
+    implementation("com.google.android.play:review-ktx:2.0.1")
 
     // AdMob — anúncios banner e intersticial
     implementation("com.google.android.gms:play-services-ads:23.6.0")

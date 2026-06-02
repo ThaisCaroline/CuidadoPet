@@ -169,6 +169,9 @@
     <string name="med_form_add_time_btn"> Adicionar horário</string>
     <string name="med_form_duration_section">Duração do tratamento</string>
     <string name="med_form_continuous">Uso contínuo (sem data de fim)</string>
+    <string name="med_form_start_date_label">Data de início</string>
+    <string name="med_form_start_date_cd">Selecionar data de início</string>
+    <string name="med_form_start_date_hint">Ajuste se o tratamento começou antes de hoje</string>
     <string name="med_form_duration_label">Duração *</string>
     <string name="med_form_duration_suffix">dias</string>
     <string name="med_form_guideline_section">Orientação de administração</string>
@@ -496,6 +499,8 @@
     <string name="notif_channel_daily_desc">Resumo diário de alimentação e hidratação</string>
     <string name="notif_channel_vaccines">Lembretes de vacinas e vermífugos</string>
     <string name="notif_channel_vaccines_desc">Avisos de vacinas e vermífugos vencendo</string>
+    <string name="notif_channel_birthdays">Aniversários</string>
+    <string name="notif_channel_birthdays_desc">Lembretes do aniversário dos seus pets</string>
 
     <!-- ── Textos de Notificação ─────────────────────────────── -->
     <string name="notif_water_title">Hora de oferecer água para %1$s</string>
@@ -511,6 +516,32 @@
     <string name="notif_vaccine_title">Lembrete de %1$s — %2$s</string>
     <string name="notif_vaccine_type_vaccine">vacina</string>
     <string name="notif_vaccine_type_dewormer">vermífugo</string>
+    <string name="notif_birthday_title">Hoje é aniversário do seu pet!</string>
+    <string name="notif_birthday_body">%s está de aniversário hoje. Dê um carinho especial!</string>
+    <string name="birthday_banner_title">Feliz aniversário, %s!</string>
+    <string name="birthday_banner_subtitle">Dê um carinho especial hoje.</string>
+    <string name="action_dismiss">Fechar</string>
+    <string name="action_administered">Administrado</string>
+    <string name="widget_description">Medicamentos ativos dos seus pets</string>
+    <string name="home_profile_incomplete">Adicione foto e data de nascimento</string>
+    <string name="notif_care_title">Tudo bem com %s?</string>
+    <string name="notif_care_body">Não vi nenhum registro de cuidado dele hoje. Fiquei preocupado!</string>
+    <!-- Re-engagement journey -->
+    <string name="notif_reengagement_d7_title">Ei, tudo bem por aí?</string>
+    <string name="notif_reengagement_d7_1">Está tudo bem com %1$s? Faz uma semana que você não dá notícias.</string>
+    <string name="notif_reengagement_d7_2">Uma semana sem novidades de %1$s. Está tudo bem com vocês?</string>
+    <string name="notif_reengagement_d7_3">Ei, tudo certo? Os registros de cuidados de %1$s ficaram parados essa semana.</string>
+    <string name="notif_reengagement_d11_title">Sentimos sua falta!</string>
+    <string name="notif_reengagement_d11_1">Não esqueça de %1$s! Estamos aqui pra ajudar com os cuidados.</string>
+    <string name="notif_reengagement_d11_2">Mais de uma semana… que tal registrar como %1$s está hoje?</string>
+    <string name="notif_reengagement_d11_3">%1$s merece toda atenção. Que tal retomar os cuidados hoje?</string>
+    <string name="notif_reengagement_d15_title">Até logo!</string>
+    <string name="notif_reengagement_d15_1">Parece que essas notificações não estão funcionando. Vamos pausá-las por enquanto.</string>
+    <string name="notif_reengagement_d15_2">Sem pressão! Vamos dar uma pausa. Quando quiser, o CuidaPet estará aqui por %1$s.</string>
+    <string name="notif_reengagement_d15_3">Não queremos incomodar. Se um dia quiser voltar, %1$s vai estar esperando.</string>
+    <string name="reengagement_pets_fallback">seus pets</string>
+    <string name="reengagement_pets_two">%1$s e %2$s</string>
+    <string name="reengagement_pets_multiple">%1$s e seus outros pets</string>
 
     <!-- ── Política de Privacidade ───────────────────────────── -->
     <string name="privacy_title">Política de Privacidade</string>

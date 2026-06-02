@@ -29,8 +29,20 @@ import com.google.android.play.core.install.InstallStateUpdatedListener
 import com.google.android.play.core.install.model.AppUpdateType
 import com.google.android.play.core.install.model.InstallStatus
 import com.google.android.play.core.install.model.UpdateAvailability
+import com.google.android.play.core.review.ReviewManagerFactory
+import com.cuidadopet.notification.CareReminderWorker
+import java.util.Calendar
+import androidx.glance.appwidget.GlanceAppWidgetManager
+import androidx.lifecycle.lifecycleScope
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
+import com.cuidadopet.notification.ReEngagementWorker
+import com.cuidadopet.widget.TodayWidget
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
+import java.util.concurrent.TimeUnit
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -69,6 +81,29 @@ class MainActivity : ComponentActivity() {
         appUpdateManager = AppUpdateManagerFactory.create(this)
         appUpdateManager.registerListener(installStateListener)
         checkForUpdate()
+
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            ReEngagementWorker.WORK_NAME,
+            ExistingPeriodicWorkPolicy.KEEP,
+            PeriodicWorkRequestBuilder<ReEngagementWorker>(24, TimeUnit.HOURS).build()
+        )
+
+        // Care reminder às 19h — dispara se o tutor não registrou cuidados no dia
+        val now = Calendar.getInstance()
+        val target = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 19)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+            if (!after(now)) add(Calendar.DAY_OF_MONTH, 1)
+        }
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            CareReminderWorker.WORK_NAME,
+            ExistingPeriodicWorkPolicy.KEEP,
+            PeriodicWorkRequestBuilder<CareReminderWorker>(24, TimeUnit.HOURS)
+                .setInitialDelay(target.timeInMillis - now.timeInMillis, TimeUnit.MILLISECONDS)
+                .build()
+        )
 
         setContent {
             CuidadoPetTheme {
@@ -111,17 +146,51 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        // Caso o download já tenha concluído em segundo plano antes de abrir o app
         appUpdateManager.appUpdateInfo.addOnSuccessListener { info ->
             if (info.installStatus() == InstallStatus.DOWNLOADED) {
                 updateDownloaded.value = true
             }
+        }
+        val prefs = getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+        val now2 = System.currentTimeMillis()
+        prefs.edit()
+            .putLong("last_app_open", now2)
+            .putInt("reengagement_stage", 0)
+            .apply()
+        if (prefs.getLong("first_app_open", 0L) == 0L) {
+            prefs.edit().putLong("first_app_open", now2).apply()
+        }
+
+        requestReviewIfEligible()
+
+        lifecycleScope.launch {
+            val manager = GlanceAppWidgetManager(this@MainActivity)
+            val ids = manager.getGlanceIds(TodayWidget::class.java)
+            ids.forEach { TodayWidget().update(this@MainActivity, it) }
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
         appUpdateManager.unregisterListener(installStateListener)
+    }
+
+    private fun requestReviewIfEligible() {
+        val prefs = getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+        if (prefs.getBoolean("review_requested", false)) return
+        val firstOpen = prefs.getLong("first_app_open", 0L)
+        if (firstOpen == 0L) return
+        val sevenDays = 7L * 24 * 60 * 60 * 1000L
+        if (System.currentTimeMillis() - firstOpen < sevenDays) return
+
+        val reviewManager = ReviewManagerFactory.create(this)
+        reviewManager.requestReviewFlow().addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                reviewManager.launchReviewFlow(this, task.result).addOnCompleteListener {
+                    prefs.edit().putBoolean("review_requested", true).apply()
+                }
+            }
+        }
     }
 
     private fun checkForUpdate() {

@@ -22,10 +22,14 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -57,6 +61,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 import com.cuidadopet.R
 import com.cuidadopet.ui.utils.adaptiveHorizontalPadding
 import com.cuidadopet.ui.utils.TimeInputField
@@ -82,6 +91,19 @@ fun MedicationFormScreen(
 
     var doseUnitExpanded by remember { mutableStateOf(false) }
     var showNotifDialog by remember { mutableStateOf(false) }
+    var showDatePicker by remember { mutableStateOf(false) }
+
+    val datePickerState = rememberDatePickerState()
+    val dateFmt = remember { SimpleDateFormat("dd/MM/yyyy", Locale("pt", "BR")) }
+
+    LaunchedEffect(uiState.startDateMillis) {
+        val local = Calendar.getInstance().apply { timeInMillis = uiState.startDateMillis }
+        val utc = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
+            set(local.get(Calendar.YEAR), local.get(Calendar.MONTH), local.get(Calendar.DAY_OF_MONTH), 0, 0, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        datePickerState.selectedDateMillis = utc.timeInMillis
+    }
 
     val notifPermLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -111,6 +133,30 @@ fun MedicationFormScreen(
         uiState.errorMessage?.let {
             snackbarHostState.showSnackbar(it)
             viewModel.clearError()
+        }
+    }
+
+    if (showDatePicker) {
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    datePickerState.selectedDateMillis?.let { utcMillis ->
+                        val utcCal = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply { timeInMillis = utcMillis }
+                        val localCal = Calendar.getInstance().apply {
+                            set(utcCal.get(Calendar.YEAR), utcCal.get(Calendar.MONTH), utcCal.get(Calendar.DAY_OF_MONTH), 0, 0, 0)
+                            set(Calendar.MILLISECOND, 0)
+                        }
+                        viewModel.onStartDateChange(localCal.timeInMillis)
+                    }
+                    showDatePicker = false
+                }) { Text(stringResource(R.string.action_ok)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) { Text(stringResource(R.string.action_cancel)) }
+            }
+        ) {
+            DatePicker(state = datePickerState)
         }
     }
 
@@ -336,6 +382,20 @@ fun MedicationFormScreen(
                 )
                 Text(stringResource(R.string.med_form_continuous))
             }
+
+            OutlinedTextField(
+                value = dateFmt.format(Date(uiState.startDateMillis)),
+                onValueChange = {},
+                readOnly = true,
+                label = { Text(stringResource(R.string.med_form_start_date_label)) },
+                trailingIcon = {
+                    IconButton(onClick = { showDatePicker = true }) {
+                        Icon(Icons.Default.CalendarToday, contentDescription = stringResource(R.string.med_form_start_date_cd))
+                    }
+                },
+                supportingText = { Text(stringResource(R.string.med_form_start_date_hint)) },
+                modifier = Modifier.fillMaxWidth()
+            )
 
             if (!uiState.isContinuous) {
                 OutlinedTextField(

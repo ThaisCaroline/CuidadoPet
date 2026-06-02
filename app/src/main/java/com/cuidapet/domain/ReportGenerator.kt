@@ -87,7 +87,13 @@ object ReportGenerator {
                     "  A cada ${med.frequencyHours}h"
                 else
                     "  Horários: ${med.fixedTimes?.cleanJson() ?: ""}"
-                sb.appendLine(freq)
+                val periodLabel = if (med.isContinuous)
+                    "desde ${dateFmt.format(Date(med.startDate))}"
+                else if (med.endDate != null)
+                    "${dateFmt.format(Date(med.startDate))} a ${dateFmt.format(Date(med.endDate))}"
+                else
+                    "início: ${dateFmt.format(Date(med.startDate))}"
+                sb.appendLine("$freq · $periodLabel")
                 if (!med.observations.isNullOrBlank()) sb.appendLine("  ${med.observations}")
                 val logsThisMed = report.medicationLogs
                     .filter { it.medicationId == med.id }
@@ -374,7 +380,13 @@ object ReportGenerator {
                     "A cada ${med.frequencyHours}h"
                 else
                     "Horários: ${med.fixedTimes?.cleanJson() ?: ""}"
-                text(freq, paintSmall, 12f)
+                val periodLabel = if (med.isContinuous)
+                    "desde ${dateFmt.format(Date(med.startDate))}"
+                else if (med.endDate != null)
+                    "${dateFmt.format(Date(med.startDate))} a ${dateFmt.format(Date(med.endDate))}"
+                else
+                    "início: ${dateFmt.format(Date(med.startDate))}"
+                text("$freq · $periodLabel", paintSmall, 12f)
                 if (!med.observations.isNullOrBlank()) text("Obs: ${med.observations}", paintSmall, 12f)
                 val logsThisMed = report.medicationLogs
                     .filter { it.medicationId == med.id }

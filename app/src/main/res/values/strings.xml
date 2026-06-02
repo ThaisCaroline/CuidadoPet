@@ -543,6 +543,15 @@
     <string name="reengagement_pets_two">%1$s e %2$s</string>
     <string name="reengagement_pets_multiple">%1$s e seus outros pets</string>
 
+    <!-- ── Widget ───────────────────────────────────────────────── -->
+    <string name="widget_all_up_to_date">Tudo em dia!</string>
+    <string name="widget_no_active_meds">Nenhum medicamento ativo</string>
+    <string name="widget_time_tomorrow">Amanhã</string>
+    <string name="widget_time_now">Agora</string>
+    <string name="widget_time_in_hours">Em %1$dh</string>
+    <string name="widget_time_in_hours_minutes">Em %1$dh %2$dmin</string>
+    <string name="widget_time_in_minutes">Em %1$dmin</string>
+
     <!-- ── Política de Privacidade ───────────────────────────── -->
     <string name="privacy_title">Política de Privacidade</string>
     <string name="privacy_last_update">Última atualização: maio de 2026</string>

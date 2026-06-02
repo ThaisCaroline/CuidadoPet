@@ -110,15 +110,16 @@ private fun computeNextDoseTime(med: MedicationEntity, now: Long): Long? {
     }
 }
 
-private fun formatTimeUntil(nextMs: Long): String {
+private fun formatTimeUntil(context: Context, nextMs: Long): String {
     val diff = (nextMs - System.currentTimeMillis()).coerceAtLeast(0L)
     val hours = diff / 3_600_000L
     val minutes = (diff % 3_600_000L) / 60_000L
     return when {
-        hours >= 24 -> "Amanhã"
-        hours > 0   -> "Em ${hours}h${if (minutes > 0) " ${minutes}min" else ""}"
-        minutes > 0 -> "Em ${minutes}min"
-        else        -> "Agora"
+        hours >= 24              -> context.getString(R.string.widget_time_tomorrow)
+        hours > 0 && minutes > 0 -> context.getString(R.string.widget_time_in_hours_minutes, hours, minutes)
+        hours > 0                -> context.getString(R.string.widget_time_in_hours, hours)
+        minutes > 0              -> context.getString(R.string.widget_time_in_minutes, minutes)
+        else                     -> context.getString(R.string.widget_time_now)
     }
 }
 
@@ -151,7 +152,7 @@ private fun WidgetContent(nextDose: NextDose?) {
             Column(modifier = GlanceModifier.fillMaxWidth()) {
                 if (nextDose == null) {
                     Text(
-                        text  = "Tudo em dia!",
+                        text  = context.getString(R.string.widget_all_up_to_date),
                         style = TextStyle(
                             color      = GlanceTheme.colors.onPrimary,
                             fontWeight = FontWeight.Bold,
@@ -160,7 +161,7 @@ private fun WidgetContent(nextDose: NextDose?) {
                     )
                     Spacer(GlanceModifier.height(2.dp))
                     Text(
-                        text  = "Nenhum medicamento ativo",
+                        text  = context.getString(R.string.widget_no_active_meds),
                         style = TextStyle(
                             color    = GlanceTheme.colors.onPrimary,
                             fontSize = 10.sp
@@ -169,7 +170,7 @@ private fun WidgetContent(nextDose: NextDose?) {
                 } else {
                     // Tempo relativo — destaque principal
                     Text(
-                        text  = formatTimeUntil(nextDose.timeMs),
+                        text  = formatTimeUntil(context, nextDose.timeMs),
                         style = TextStyle(
                             color      = GlanceTheme.colors.onPrimary,
                             fontWeight = FontWeight.Bold,

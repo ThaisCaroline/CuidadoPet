@@ -32,6 +32,28 @@
             android:name=".notification.MealAlarmReceiver"
             android:exported="false" />
 
+        <!-- BroadcastReceiver que recebe os alarmes de aniversário e exibe a notificação -->
+        <receiver
+            android:name=".notification.BirthdayAlarmReceiver"
+            android:exported="false" />
+
+        <!-- BroadcastReceiver que processa o botão "Administrado" na notificação de medicamento -->
+        <receiver
+            android:name=".notification.MedicationAdminReceiver"
+            android:exported="false" />
+
+        <!-- Widget: mostra medicamentos ativos na tela inicial do Android -->
+        <receiver
+            android:name=".widget.TodayWidgetReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/today_widget_info" />
+        </receiver>
+
         <!-- BootReceiver: reagenda todos os alarmes após o celular reiniciar.
              exported=true é obrigatório para o sistema Android poder disparar o BOOT_COMPLETED.
              Sem isso, os lembretes de medicamento e refeição somem após reinicialização. -->

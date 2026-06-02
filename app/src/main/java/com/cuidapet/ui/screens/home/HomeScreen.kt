@@ -1,6 +1,13 @@
 package com.cuidadopet.ui.screens.home
 
+import android.content.Context
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,13 +19,17 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Cake
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Star
@@ -45,18 +56,26 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.shape.CircleShape
-import android.content.Context
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.cuidadopet.R
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.delay
+import nl.dionsegijn.konfetti.compose.KonfettiView
+import nl.dionsegijn.konfetti.core.Party
+import nl.dionsegijn.konfetti.core.Position
+import nl.dionsegijn.konfetti.core.emitter.Emitter
+import java.util.concurrent.TimeUnit
 import com.cuidadopet.data.db.entity.PetEntity
 import com.cuidadopet.ui.components.PetAvatar
 import com.cuidadopet.ui.utils.adaptiveHorizontalPadding
@@ -73,7 +92,50 @@ fun HomeScreen(
 ) {
     val viewModel: HomeViewModel = hiltViewModel()
     val pets by viewModel.pets.collectAsStateWithLifecycle()
+    val birthdayPets by viewModel.birthdayPets.collectAsStateWithLifecycle()
+    // Filtra pets cujo banner já foi mostrado hoje (persiste entre aberturas do app)
+    // remember(birthdayPets) garante que o filtro só recalcula quando o banco muda,
+    // não quando SharedPreferences é escrito — evita o banner sumir antes de aparecer
+    val visibleBirthdayPets = remember(birthdayPets) {
+        birthdayPets.filter { !viewModel.wasBirthdayBannerShownToday(it.id) }
+    }
+    var dismissedBirthdays by remember { mutableStateOf(emptySet<Long>()) }
     var pendingDelete by remember { mutableStateOf<PetEntity?>(null) }
+
+    // Marca banner como visto hoje na primeira vez que aparece
+    LaunchedEffect(visibleBirthdayPets) {
+        visibleBirthdayPets.forEach { viewModel.markBirthdayBannerShown(it.id) }
+    }
+
+    var showConfetti by remember { mutableStateOf(false) }
+    var confettiShown by remember { mutableStateOf(false) }
+    LaunchedEffect(visibleBirthdayPets.isNotEmpty()) {
+        if (visibleBirthdayPets.isNotEmpty() && !confettiShown) {
+            showConfetti = true
+            confettiShown = true
+            delay(3500)
+            showConfetti = false
+        }
+    }
+
+    val confettiParties = remember {
+        listOf(
+            Party(
+                speed = 0f, maxSpeed = 55f, damping = 0.9f,
+                angle = 270, spread = 60,
+                colors = listOf(0xFFFFA0C4.toInt(), 0xFFFFD966.toInt(), 0xFFB39DDB.toInt(), 0xFF80CBC4.toInt(), 0xFFFFAB40.toInt()),
+                emitter = Emitter(duration = 250L, TimeUnit.MILLISECONDS).max(120),
+                position = Position.Relative(0.2, 0.0)
+            ),
+            Party(
+                speed = 0f, maxSpeed = 55f, damping = 0.9f,
+                angle = 270, spread = 60,
+                colors = listOf(0xFFFFA0C4.toInt(), 0xFFFFD966.toInt(), 0xFFB39DDB.toInt(), 0xFF80CBC4.toInt(), 0xFFFFAB40.toInt()),
+                emitter = Emitter(duration = 250L, TimeUnit.MILLISECONDS).max(120),
+                position = Position.Relative(0.8, 0.0)
+            )
+        )
+    }
 
     if (pendingDelete != null) {
         AlertDialog(
@@ -171,18 +233,85 @@ fun HomeScreen(
             }
         }
     ) { innerPadding ->
-        if (pets.isEmpty()) {
-            EmptyPetsContent(modifier = Modifier.padding(innerPadding))
-        } else {
-            PetList(
-                pets = pets,
-                onPetClick = onPetClick,
-                onDeletePet = { pendingDelete = it },
-                modifier = Modifier.padding(innerPadding)
+        Column(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
+            visibleBirthdayPets.forEach { pet ->
+                AnimatedVisibility(
+                    visible = !dismissedBirthdays.contains(pet.id),
+                    enter = slideInVertically() + fadeIn(),
+                    exit  = slideOutVertically() + fadeOut()
+                ) {
+                    BirthdayBanner(
+                        petName   = pet.name,
+                        onDismiss = { dismissedBirthdays = dismissedBirthdays + pet.id }
+                    )
+                }
+            }
+            if (pets.isEmpty()) {
+                EmptyPetsContent(modifier = Modifier.weight(1f))
+            } else {
+                PetList(
+                    pets       = pets,
+                    onPetClick = onPetClick,
+                    onDeletePet = { pendingDelete = it },
+                    modifier   = Modifier.weight(1f)
+                )
+            }
+        }
+    }
+    if (showConfetti) {
+        KonfettiView(
+            modifier = Modifier.fillMaxSize(),
+            parties  = confettiParties
+        )
+    }
+    } // Box
+}
+
+@Composable
+private fun BirthdayBanner(
+    petName: String,
+    onDismiss: () -> Unit
+) {
+    val gradientColors = listOf(
+        MaterialTheme.colorScheme.primaryContainer,
+        MaterialTheme.colorScheme.secondaryContainer
+    )
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Brush.horizontalGradient(gradientColors))
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector        = Icons.Default.Cake,
+            contentDescription = null,
+            tint               = MaterialTheme.colorScheme.onPrimaryContainer,
+            modifier           = Modifier.size(28.dp)
+        )
+        Spacer(Modifier.width(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text       = stringResource(R.string.birthday_banner_title, petName),
+                style      = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold,
+                color      = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+            Text(
+                text  = stringResource(R.string.birthday_banner_subtitle),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+            )
+        }
+        IconButton(onClick = onDismiss) {
+            Icon(
+                imageVector        = Icons.Default.Close,
+                contentDescription = stringResource(R.string.action_dismiss),
+                tint               = MaterialTheme.colorScheme.onPrimaryContainer,
+                modifier           = Modifier.size(18.dp)
             )
         }
     }
-    } // Box
 }
 
 @Composable
@@ -282,6 +411,14 @@ private fun PetCard(
                 Spacer(Modifier.height(2.dp))
                 Text("${pet.weightKg} kg", style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (pet.photoPath == null || pet.birthDate == null) {
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        text  = stringResource(R.string.home_profile_incomplete),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.75f)
+                    )
+                }
             }
 
             Box {

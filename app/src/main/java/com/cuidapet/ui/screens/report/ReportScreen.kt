@@ -312,10 +312,26 @@ private fun ReportContent(
                 Text(stringResource(R.string.report_no_medications), style = MaterialTheme.typography.bodySmall)
             } else {
                 val timeFmtLocal = remember { SimpleDateFormat("dd/MM HH:mm", Locale.forLanguageTag("pt-BR")) }
+                val dateFmtLocal = remember { SimpleDateFormat("dd/MM/yyyy", Locale.forLanguageTag("pt-BR")) }
                 report.activeMedications.forEach { med ->
                     Text(
                         "• ${med.name} — ${med.dose} ${med.doseUnit}",
                         style = MaterialTheme.typography.bodySmall
+                    )
+                    val freqText = if (med.frequencyType == "INTERVAL")
+                        "A cada ${med.frequencyHours}h"
+                    else
+                        "Horários: ${med.fixedTimes?.removeSurrounding("[", "]")?.replace("\"", "")?.replace(",", ", ") ?: ""}"
+                    val periodLabel = if (med.isContinuous)
+                        "desde ${dateFmtLocal.format(Date(med.startDate))}"
+                    else if (med.endDate != null)
+                        "${dateFmtLocal.format(Date(med.startDate))} a ${dateFmtLocal.format(Date(med.endDate))}"
+                    else
+                        "início: ${dateFmtLocal.format(Date(med.startDate))}"
+                    Text(
+                        "  $freqText · $periodLabel",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     val logsThisMed = report.medicationLogs
                         .filter { it.medicationId == med.id }

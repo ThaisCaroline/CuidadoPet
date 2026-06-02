@@ -17,6 +17,7 @@ object NotificationChannels {
     const val CHANNEL_WATER       = "water_reminders_v2"
     const val CHANNEL_DAILY       = "daily_alerts_v2"
     const val CHANNEL_VACCINES    = "vaccine_reminders_v1"
+    const val CHANNEL_BIRTHDAYS   = "birthday_reminders_v1"
 
     // IDs das notificações — usados para atualizar ou cancelar uma notificação específica
     const val NOTIFICATION_BASE_MEDICATION = 1000  // + medicationId para ser único
@@ -24,6 +25,9 @@ object NotificationChannels {
     const val NOTIFICATION_BASE_WATER      = 3000
     const val NOTIFICATION_DAILY_SUMMARY   = 4000
     const val NOTIFICATION_BASE_VACCINE    = 5000  // + vaccineId para ser único
+    const val NOTIFICATION_BASE_BIRTHDAY   = 6000  // + petId para ser único
+    const val NOTIFICATION_REENGAGEMENT   = 7000
+    const val NOTIFICATION_BASE_CARE      = 8000  // + petId para ser único
 
     fun createAll(context: Context) {
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE)
@@ -80,6 +84,16 @@ object NotificationChannels {
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
                 description = context.getString(com.cuidadopet.R.string.notif_channel_vaccines_desc)
+            }
+        )
+
+        manager.createNotificationChannel(
+            NotificationChannel(
+                CHANNEL_BIRTHDAYS,
+                context.getString(com.cuidadopet.R.string.notif_channel_birthdays),
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = context.getString(com.cuidadopet.R.string.notif_channel_birthdays_desc)
             }
         )
     }

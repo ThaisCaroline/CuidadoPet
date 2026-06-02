@@ -54,7 +54,8 @@ object DatabaseModule {
         @ApplicationContext context: Context,
         keyManager: DatabaseKeyManager
     ): AppDatabase {
-        val passphrase = SQLiteDatabase.getBytes(keyManager.getOrCreateKey())
+        val passphrase = SQLiteDatabase.
+        getBytes(keyManager.getOrCreateKey())
         val factory    = SupportFactory(passphrase)
         return Room.databaseBuilder(
             context,

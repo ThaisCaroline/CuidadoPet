@@ -33,7 +33,7 @@ data class MedicationFormState(
     val isLoading: Boolean = false,
     val isSaved: Boolean = false,
     val errorMessage: String? = null,
-    val originalStartDate: Long? = null
+    val startDateMillis: Long = System.currentTimeMillis()
 )
 
 @HiltViewModel
@@ -42,7 +42,9 @@ class MedicationFormViewModel @Inject constructor(
     private val petRepository: PetRepository
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(MedicationFormState())
+    private val _uiState = MutableStateFlow(
+        MedicationFormState(startDateMillis = midnightOf(System.currentTimeMillis()))
+    )
     val uiState: StateFlow<MedicationFormState> = _uiState.asStateFlow()
 
     // Carrega medicamento existente para edição
@@ -86,7 +88,7 @@ class MedicationFormViewModel @Inject constructor(
                         guidelineDetail   = med.guidelineDetail ?: "",
                         observations      = med.observations ?: "",
                         reminderEnabled   = med.reminderEnabled,
-                        originalStartDate = med.startDate
+                        startDateMillis   = midnightOf(med.startDate)
                     )
                 }
             }
@@ -117,6 +119,7 @@ class MedicationFormViewModel @Inject constructor(
     fun onGuidelineDetailChange(v: String) = _uiState.update { it.copy(guidelineDetail = v) }
     fun onObservationsChange(v: String)    = _uiState.update { it.copy(observations = v) }
     fun onReminderEnabledChange(v: Boolean) = _uiState.update { it.copy(reminderEnabled = v) }
+    fun onStartDateChange(millis: Long)     = _uiState.update { it.copy(startDateMillis = millis) }
     fun clearError()                       = _uiState.update { it.copy(errorMessage = null) }
 
     // Atualiza um horário fixo específico pelo índice — aplica auto-formato HH:mm
@@ -156,6 +159,14 @@ class MedicationFormViewModel @Inject constructor(
             else -> s
         }
     }
+
+    private fun midnightOf(millis: Long): Long = Calendar.getInstance().apply {
+        timeInMillis = millis
+        set(Calendar.HOUR_OF_DAY, 0)
+        set(Calendar.MINUTE, 0)
+        set(Calendar.SECOND, 0)
+        set(Calendar.MILLISECOND, 0)
+    }.timeInMillis
 
     // Converte "HH:mm" para timestamp de hoje naquele horário
     private fun parseStartTime(timeStr: String): Long {
@@ -251,10 +262,19 @@ class MedicationFormViewModel @Inject constructor(
             // Busca o nome do pet para personalizar a notificação
             val petName = petRepository.getPetById(petId).first()?.name ?: "seu pet"
 
-            val startDate = when {
-                existingMedicationId != null && state.originalStartDate != null -> state.originalStartDate
-                state.frequencyType == "INTERVAL" && state.intervalStartTime.isNotBlank() -> parseStartTime(state.intervalStartTime)
-                else -> System.currentTimeMillis()
+            val startDate = if (state.frequencyType == "INTERVAL" && state.intervalStartTime.isNotBlank()) {
+                val parts = state.intervalStartTime.split(":")
+                val h = parts.getOrNull(0)?.toIntOrNull() ?: 0
+                val m = parts.getOrNull(1)?.toIntOrNull() ?: 0
+                Calendar.getInstance().apply {
+                    timeInMillis = state.startDateMillis
+                    set(Calendar.HOUR_OF_DAY, h)
+                    set(Calendar.MINUTE, m)
+                    set(Calendar.SECOND, 0)
+                    set(Calendar.MILLISECOND, 0)
+                }.timeInMillis
+            } else {
+                state.startDateMillis
             }
             val endDate = if (state.isContinuous) null
                           else startDate + (state.durationDays.toLongOrNull() ?: 7) * 24 * 60 * 60 * 1000L

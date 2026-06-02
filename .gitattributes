@@ -1,0 +1,18 @@
+# Força LF em todos os arquivos de texto — evita conversões LF↔CRLF no Windows
+* text=auto eol=lf
+
+# Binários — sem conversão de linha
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.gif binary
+*.ico binary
+*.jks binary
+*.keystore binary
+*.pdf binary
+*.zip binary
+*.jar binary
+*.aar binary
+*.apk binary
+*.aab binary

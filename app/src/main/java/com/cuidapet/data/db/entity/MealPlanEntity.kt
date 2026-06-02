@@ -54,5 +54,11 @@ data class MealPlanEntity(
     // Se true, este é o plano alimentar atual do pet
     val isActive: Boolean = true,
 
+    @androidx.room.ColumnInfo(name = "reminder_enabled", defaultValue = "1")
+    val reminderEnabled: Boolean = true,
+
+    @androidx.room.ColumnInfo(name = "is_super_reminder", defaultValue = "0")
+    val isSuperReminder: Boolean = false,
+
     val createdAt: Long = System.currentTimeMillis()
 )

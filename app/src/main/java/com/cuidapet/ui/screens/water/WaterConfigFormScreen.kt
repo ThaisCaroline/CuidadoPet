@@ -28,6 +28,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -156,6 +157,27 @@ fun WaterConfigFormScreen(
             }
 
             if (state.remindersEnabled) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Checkbox(
+                        checked         = state.isSuperReminder,
+                        onCheckedChange = viewModel::updateSuperReminder
+                    )
+                    Column {
+                        Text(
+                            stringResource(R.string.super_reminder_label),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Text(
+                            stringResource(R.string.super_reminder_desc),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
                 OutlinedTextField(
                     value = state.reminderIntervalHours,
                     onValueChange = { viewModel.updateReminderInterval(it.filter { c -> c.isDigit() }.take(2)) },

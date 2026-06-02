@@ -69,7 +69,9 @@ class FeedingRepository @Inject constructor(
             oldMeals.forEach { mealAlarmScheduler.cancelMeal(it.id) }
         }
 
-        newMeals.forEach { mealAlarmScheduler.scheduleMeal(it, petName) }
+        if (plan.reminderEnabled) {
+            newMeals.forEach { mealAlarmScheduler.scheduleMeal(it, petName, plan.isSuperReminder) }
+        }
     }
 
     suspend fun deleteMealPlan(petId: Long, planId: Long) {

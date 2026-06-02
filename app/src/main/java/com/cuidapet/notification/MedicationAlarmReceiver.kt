@@ -42,60 +42,66 @@ class MedicationAlarmReceiver : BroadcastReceiver() {
         const val EXTRA_START_DATE       = "start_date"
         const val EXTRA_END_DATE         = "end_date"
         const val EXTRA_IS_CONTINUOUS    = "is_continuous"
-        const val EXTRA_REMINDER_ENABLED = "reminder_enabled"
-        const val EXTRA_SCHEDULED_AT     = "scheduled_at"
+        const val EXTRA_REMINDER_ENABLED  = "reminder_enabled"
+        const val EXTRA_IS_SUPER_REMINDER = "is_super_reminder"
+        const val EXTRA_SCHEDULED_AT      = "scheduled_at"
     }
 
     override fun onReceive(context: Context, intent: Intent) {
-        val medicationId   = intent.getLongExtra(EXTRA_MEDICATION_ID, -1L)
-        val medicationName = intent.getStringExtra(EXTRA_MEDICATION_NAME) ?: "Medicamento"
-        val petName        = intent.getStringExtra(EXTRA_PET_NAME) ?: "seu pet"
-        val dose           = intent.getStringExtra(EXTRA_DOSE) ?: ""
-        val doseUnit       = intent.getStringExtra(EXTRA_DOSE_UNIT) ?: ""
+        val medicationId    = intent.getLongExtra(EXTRA_MEDICATION_ID, -1L)
+        val medicationName  = intent.getStringExtra(EXTRA_MEDICATION_NAME) ?: "Medicamento"
+        val petName         = intent.getStringExtra(EXTRA_PET_NAME) ?: "seu pet"
+        val dose            = intent.getStringExtra(EXTRA_DOSE) ?: ""
+        val doseUnit        = intent.getStringExtra(EXTRA_DOSE_UNIT) ?: ""
+        val isSuperReminder = intent.getBooleanExtra(EXTRA_IS_SUPER_REMINDER, false)
 
         if (medicationId == -1L) return
 
         // ── Exibe a notificação ───────────────────────────────────────────────
 
-        val openAppIntent = Intent(context, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        val scheduledAt = System.currentTimeMillis()
+        val notifId = NotificationChannels.NOTIFICATION_BASE_MEDICATION + medicationId.toInt()
+
+        if (isSuperReminder) {
+            showSuperReminderNotification(
+                context  = context,
+                type     = SuperReminderActivity.TYPE_MEDICATION,
+                id       = medicationId,
+                notifId  = NotificationChannels.NOTIFICATION_BASE_SUPER + medicationId.toInt(),
+                petName  = petName,
+                label    = medicationName,
+                dose     = if (dose.isNotBlank()) "$dose $doseUnit" else "",
+                scheduledAt = scheduledAt
+            )
+        } else {
+            val openAppIntent = Intent(context, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            }
+            val pendingIntent = PendingIntent.getActivity(
+                context, medicationId.toInt(), openAppIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            val doseText = if (dose.isNotBlank()) " • $dose $doseUnit" else ""
+            val adminIntent = Intent(context, MedicationAdminReceiver::class.java).apply {
+                putExtra(MedicationAdminReceiver.EXTRA_MEDICATION_ID, medicationId)
+                putExtra(MedicationAdminReceiver.EXTRA_SCHEDULED_AT, scheduledAt)
+            }
+            val adminPendingIntent = PendingIntent.getBroadcast(
+                context, (medicationId + 20000L).toInt(), adminIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            val notification = NotificationCompat.Builder(context, NotificationChannels.CHANNEL_MEDICATIONS)
+                .setSmallIcon(R.drawable.ic_notification)
+                .setContentTitle(context.getString(R.string.notif_medication_title))
+                .setContentText("$petName — $medicationName$doseText")
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setDefaults(NotificationCompat.DEFAULT_ALL)
+                .setContentIntent(pendingIntent)
+                .addAction(0, context.getString(R.string.action_administered), adminPendingIntent)
+                .setAutoCancel(true)
+                .build()
+            NotificationManagerCompat.from(context).notify(notifId, notification)
         }
-        val pendingIntent = PendingIntent.getActivity(
-            context,
-            medicationId.toInt(),
-            openAppIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
-        val doseText    = if (dose.isNotBlank()) " • $dose $doseUnit" else ""
-        val contentText = "$petName — $medicationName$doseText"
-
-        val adminIntent = Intent(context, MedicationAdminReceiver::class.java).apply {
-            putExtra(MedicationAdminReceiver.EXTRA_MEDICATION_ID, medicationId)
-            putExtra(MedicationAdminReceiver.EXTRA_SCHEDULED_AT, System.currentTimeMillis())
-        }
-        val adminPendingIntent = PendingIntent.getBroadcast(
-            context,
-            (medicationId + 20000L).toInt(),
-            adminIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
-        val notification = NotificationCompat.Builder(context, NotificationChannels.CHANNEL_MEDICATIONS)
-            .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle(context.getString(R.string.notif_medication_title))
-            .setContentText(contentText)
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setDefaults(NotificationCompat.DEFAULT_ALL)
-            .setContentIntent(pendingIntent)
-            .addAction(0, context.getString(R.string.action_administered), adminPendingIntent)
-            .setAutoCancel(true)
-            .build()
-
-        NotificationManagerCompat.from(context).notify(
-            NotificationChannels.NOTIFICATION_BASE_MEDICATION + medicationId.toInt(),
-            notification
-        )
 
         // ── Reagenda o próximo alarme ─────────────────────────────────────────
         // Busca dados atuais do banco para não reagendar com horário desatualizado

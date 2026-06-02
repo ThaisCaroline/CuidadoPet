@@ -49,7 +49,7 @@ import com.cuidadopet.data.db.entity.SporadicMealLogEntity
         HealthPhotoEntity::class,
         VaccineEntity::class
     ],
-    version = 10,
+    version = 11,
     exportSchema = true
 )
 // RoomDatabase é a classe base que o Room exige.

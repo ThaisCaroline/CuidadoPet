@@ -48,5 +48,8 @@ data class WaterConfigEntity(
     // Se os lembretes estão ativos ou silenciados
     val remindersEnabled: Boolean = true,
 
+    @androidx.room.ColumnInfo(name = "is_super_reminder", defaultValue = "0")
+    val isSuperReminder: Boolean = false,
+
     val updatedAt: Long = System.currentTimeMillis()
 )

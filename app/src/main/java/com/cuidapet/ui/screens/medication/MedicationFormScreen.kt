@@ -92,6 +92,7 @@ fun MedicationFormScreen(
     var doseUnitExpanded by remember { mutableStateOf(false) }
     var showNotifDialog by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
+    var dialogSuperReminder by remember { mutableStateOf(false) }
 
     val datePickerState = rememberDatePickerState()
     val dateFmt = remember { SimpleDateFormat("dd/MM/yyyy", Locale("pt", "BR")) }
@@ -164,11 +165,34 @@ fun MedicationFormScreen(
         AlertDialog(
             onDismissRequest = { showNotifDialog = false },
             title   = { Text(stringResource(R.string.med_form_notif_title)) },
-            text    = { Text(stringResource(R.string.med_form_notif_msg)) },
+            text    = {
+                Column {
+                    Text(stringResource(R.string.med_form_notif_msg))
+                    Spacer(Modifier.height(12.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Checkbox(
+                            checked         = dialogSuperReminder,
+                            onCheckedChange = { dialogSuperReminder = it }
+                        )
+                        Column {
+                            Text(
+                                stringResource(R.string.super_reminder_label),
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            Text(
+                                stringResource(R.string.super_reminder_desc),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+            },
             confirmButton = {
                 TextButton(onClick = {
                     showNotifDialog = false
                     viewModel.onReminderEnabledChange(true)
+                    viewModel.onSuperReminderChange(dialogSuperReminder)
                     doSave()
                 }) {
                     Text(stringResource(R.string.med_form_notif_enable))
@@ -178,6 +202,7 @@ fun MedicationFormScreen(
                 TextButton(onClick = {
                     showNotifDialog = false
                     viewModel.onReminderEnabledChange(false)
+                    viewModel.onSuperReminderChange(false)
                     viewModel.saveMedication(petId, medicationId)
                 }) { Text(stringResource(R.string.med_form_notif_skip)) }
             }

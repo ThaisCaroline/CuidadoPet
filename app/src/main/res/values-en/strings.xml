@@ -501,6 +501,23 @@
     <string name="notif_channel_vaccines_desc">Alerts for upcoming vaccines and dewormers</string>
     <string name="notif_channel_birthdays">Birthdays</string>
     <string name="notif_channel_birthdays_desc">Reminders for your pets\' birthdays</string>
+    <string name="notif_channel_super">Super Reminders</string>
+    <string name="notif_channel_super_desc">Insistent alerts with full screen, sound and vibration</string>
+
+    <!-- ── Super Reminder ──────────────────────────────────────── -->
+    <string name="super_reminder_label">Super Reminder</string>
+    <string name="super_reminder_desc">Full screen popup with intense sound and vibration</string>
+    <string name="super_reminder_notif_title">🔔 Time to care for %1$s!</string>
+    <string name="super_reminder_administered">Already given</string>
+    <string name="super_reminder_water_given">Already gave water</string>
+    <string name="super_reminder_meal_given">Already fed</string>
+    <string name="super_reminder_snooze">Remind me in 10 min</string>
+
+    <!-- ── Alert dialog — Meal Plan ────────────────────────────── -->
+    <string name="meal_plan_notif_title">Receive alerts?</string>
+    <string name="meal_plan_notif_msg">The app will send reminders at configured meal times. Do you want to activate alerts?</string>
+    <string name="meal_plan_notif_enable">Activate and save</string>
+    <string name="meal_plan_notif_skip">Save without alerts</string>
 
     <!-- ── Notification texts ────────────────────────────────── -->
     <string name="notif_water_title">Time to offer water to %1$s</string>

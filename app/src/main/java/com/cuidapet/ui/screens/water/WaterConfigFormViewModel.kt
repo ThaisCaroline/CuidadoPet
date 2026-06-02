@@ -21,6 +21,7 @@ data class WaterConfigFormState(
     val reminderStartTime: String = "08:00",
     val reminderEndTime: String = "23:55",
     val remindersEnabled: Boolean = true,
+    val isSuperReminder: Boolean = false,
     val isSaving: Boolean = false,
     val isSaved: Boolean = false,
     val isDeleted: Boolean = false,
@@ -49,7 +50,8 @@ class WaterConfigFormViewModel @Inject constructor(
                         reminderIntervalHours = config.reminderIntervalHours.toString(),
                         reminderStartTime     = config.reminderStartTime,
                         reminderEndTime       = config.reminderEndTime,
-                        remindersEnabled      = config.remindersEnabled
+                        remindersEnabled      = config.remindersEnabled,
+                        isSuperReminder       = config.isSuperReminder
                     )
                 }
             }
@@ -60,7 +62,8 @@ class WaterConfigFormViewModel @Inject constructor(
     fun updateReminderInterval(value: String)      = _state.update { it.copy(reminderIntervalHours = value) }
     fun updateReminderStartTime(value: String)     = _state.update { it.copy(reminderStartTime = value) }
     fun updateReminderEndTime(value: String)       = _state.update { it.copy(reminderEndTime = value) }
-    fun updateRemindersEnabled(value: Boolean)     = _state.update { it.copy(remindersEnabled = value) }
+    fun updateRemindersEnabled(value: Boolean)     = _state.update { it.copy(remindersEnabled = value, isSuperReminder = if (!value) false else it.isSuperReminder) }
+    fun updateSuperReminder(value: Boolean)        = _state.update { it.copy(isSuperReminder = value) }
 
     fun save(petId: Long) {
         val s = _state.value
@@ -103,7 +106,8 @@ class WaterConfigFormViewModel @Inject constructor(
                     reminderIntervalHours = interval,
                     reminderStartTime     = startTime,
                     reminderEndTime       = endTime,
-                    remindersEnabled      = s.remindersEnabled
+                    remindersEnabled      = s.remindersEnabled,
+                    isSuperReminder       = s.isSuperReminder
                 )
                 waterRepository.saveWaterConfig(config, s.petName)
                 _state.update { it.copy(isSaving = false, isSaved = true) }

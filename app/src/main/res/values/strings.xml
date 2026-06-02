@@ -501,6 +501,23 @@
     <string name="notif_channel_vaccines_desc">Avisos de vacinas e vermífugos vencendo</string>
     <string name="notif_channel_birthdays">Aniversários</string>
     <string name="notif_channel_birthdays_desc">Lembretes do aniversário dos seus pets</string>
+    <string name="notif_channel_super">Super Lembretes</string>
+    <string name="notif_channel_super_desc">Alertas insistentes com tela cheia, som e vibração</string>
+
+    <!-- ── Super Lembrete ──────────────────────────────────────── -->
+    <string name="super_reminder_label">Super Lembrete</string>
+    <string name="super_reminder_desc">Popup de tela cheia com som e vibração intensos</string>
+    <string name="super_reminder_notif_title">🔔 Hora de cuidar de %1$s!</string>
+    <string name="super_reminder_administered">Já administrei</string>
+    <string name="super_reminder_water_given">Já dei água</string>
+    <string name="super_reminder_meal_given">Já alimentei</string>
+    <string name="super_reminder_snooze">Lembrar em 10 min</string>
+
+    <!-- ── Diálogo de alertas — Plano Alimentar ────────────────── -->
+    <string name="meal_plan_notif_title">Receber alertas?</string>
+    <string name="meal_plan_notif_msg">O app enviará lembretes nos horários das refeições configuradas. Deseja ativar os alertas?</string>
+    <string name="meal_plan_notif_enable">Ativar e salvar</string>
+    <string name="meal_plan_notif_skip">Salvar sem alertas</string>
 
     <!-- ── Textos de Notificação ─────────────────────────────── -->
     <string name="notif_water_title">Hora de oferecer água para %1$s</string>

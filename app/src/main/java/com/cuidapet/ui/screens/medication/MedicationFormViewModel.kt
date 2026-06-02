@@ -30,6 +30,7 @@ data class MedicationFormState(
     val guidelineDetail: String = "",
     val observations: String = "",
     val reminderEnabled: Boolean = true,
+    val isSuperReminder: Boolean = false,
     val isLoading: Boolean = false,
     val isSaved: Boolean = false,
     val errorMessage: String? = null,
@@ -88,6 +89,7 @@ class MedicationFormViewModel @Inject constructor(
                         guidelineDetail   = med.guidelineDetail ?: "",
                         observations      = med.observations ?: "",
                         reminderEnabled   = med.reminderEnabled,
+                        isSuperReminder   = med.isSuperReminder,
                         startDateMillis   = midnightOf(med.startDate)
                     )
                 }
@@ -119,6 +121,7 @@ class MedicationFormViewModel @Inject constructor(
     fun onGuidelineDetailChange(v: String) = _uiState.update { it.copy(guidelineDetail = v) }
     fun onObservationsChange(v: String)    = _uiState.update { it.copy(observations = v) }
     fun onReminderEnabledChange(v: Boolean) = _uiState.update { it.copy(reminderEnabled = v) }
+    fun onSuperReminderChange(v: Boolean)   = _uiState.update { it.copy(isSuperReminder = v) }
     fun onStartDateChange(millis: Long)     = _uiState.update { it.copy(startDateMillis = millis) }
     fun clearError()                       = _uiState.update { it.copy(errorMessage = null) }
 
@@ -297,7 +300,8 @@ class MedicationFormViewModel @Inject constructor(
                 administrationGuideline = state.guideline,
                 guidelineDetail = state.guidelineDetail.ifBlank { null },
                 observations = state.observations.ifBlank { null },
-                reminderEnabled = state.reminderEnabled
+                reminderEnabled = state.reminderEnabled,
+                isSuperReminder = state.isSuperReminder
             )
 
             if (existingMedicationId != null) {

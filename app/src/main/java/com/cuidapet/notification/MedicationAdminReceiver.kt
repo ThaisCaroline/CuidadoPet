@@ -4,8 +4,11 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import androidx.core.app.NotificationManagerCompat
+import androidx.glance.appwidget.GlanceAppWidgetManager
+import androidx.glance.appwidget.updateAll
 import com.cuidadopet.data.db.entity.MedicationLogEntity
 import com.cuidadopet.data.repository.MedicationRepository
+import com.cuidadopet.widget.TodayWidget
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -43,6 +46,7 @@ class MedicationAdminReceiver : BroadcastReceiver() {
                         status       = "TAKEN"
                     )
                 )
+                TodayWidget().updateAll(context)
             } finally {
                 pendingResult.finish()
             }

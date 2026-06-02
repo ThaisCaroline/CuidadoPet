@@ -32,6 +32,8 @@ data class MealPlanFormState(
         MealTimeEntry("19:00", "")
     ),
     val quantityUnit: String = "g",
+    val reminderEnabled: Boolean = true,
+    val isSuperReminder: Boolean = false,
     val isSaving: Boolean = false,
     val isSaved: Boolean = false,
     val error: String? = null
@@ -84,7 +86,9 @@ class MealPlanFormViewModel @Inject constructor(
                         dailyQuantityGrams = plan.dailyQuantityGrams?.toInt()?.toString() ?: "",
                         dailyKcalTarget    = plan.dailyKcalTarget?.toInt()?.toString() ?: "",
                         meals              = mealEntries,
-                        quantityUnit       = savedUnit
+                        quantityUnit       = savedUnit,
+                        reminderEnabled    = plan.reminderEnabled,
+                        isSuperReminder    = plan.isSuperReminder
                     )
                 }
             }
@@ -93,6 +97,10 @@ class MealPlanFormViewModel @Inject constructor(
 
 
     // ─── Funções de atualização de campo ───────────────────────────────────
+
+    fun setReminderOptions(reminderEnabled: Boolean, isSuperReminder: Boolean) {
+        _state.update { it.copy(reminderEnabled = reminderEnabled, isSuperReminder = isSuperReminder) }
+    }
 
     fun updateFoodType(value: String)          = _state.update { it.copy(foodType = value) }
     fun updateFoodDetails(value: String)       = _state.update { it.copy(foodDetails = value) }
@@ -208,7 +216,9 @@ class MealPlanFormViewModel @Inject constructor(
                     restrictions       = s.restrictions.ifBlank { null },
                     dailyKcalTarget    = s.dailyKcalTarget.toDoubleOrNull(),
                     dailyQuantityGrams = s.dailyQuantityGrams.toDoubleOrNull(),
-                    isActive           = true
+                    isActive           = true,
+                    reminderEnabled    = s.reminderEnabled,
+                    isSuperReminder    = s.isSuperReminder
                 )
 
                 // As refeições só terão mealPlanId real depois que o plano for inserido —

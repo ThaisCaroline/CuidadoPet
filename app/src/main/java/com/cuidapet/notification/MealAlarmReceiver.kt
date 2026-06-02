@@ -26,49 +26,55 @@ class MealAlarmReceiver : BroadcastReceiver() {
 
     companion object {
         // Chaves dos extras passados pelo AlarmScheduler para este receiver
-        const val EXTRA_MEAL_ID   = "meal_id"
-        const val EXTRA_PET_NAME  = "pet_name"
-        const val EXTRA_TIME      = "time_of_day"  // ex: "07:00"
-        const val EXTRA_QUANTITY  = "quantity_grams"
+        const val EXTRA_MEAL_ID           = "meal_id"
+        const val EXTRA_PET_NAME          = "pet_name"
+        const val EXTRA_TIME              = "time_of_day"  // ex: "07:00"
+        const val EXTRA_QUANTITY          = "quantity_grams"
+        const val EXTRA_IS_SUPER_REMINDER = "is_super_reminder"
     }
 
     override fun onReceive(context: Context, intent: Intent) {
-        val mealId   = intent.getLongExtra(EXTRA_MEAL_ID, -1L)
-        val petName  = intent.getStringExtra(EXTRA_PET_NAME) ?: "seu pet"
-        val time     = intent.getStringExtra(EXTRA_TIME) ?: ""
-        val quantity = intent.getDoubleExtra(EXTRA_QUANTITY, 0.0)
+        val mealId          = intent.getLongExtra(EXTRA_MEAL_ID, -1L)
+        val petName         = intent.getStringExtra(EXTRA_PET_NAME) ?: "seu pet"
+        val time            = intent.getStringExtra(EXTRA_TIME) ?: ""
+        val quantity        = intent.getDoubleExtra(EXTRA_QUANTITY, 0.0)
+        val isSuperReminder = intent.getBooleanExtra(EXTRA_IS_SUPER_REMINDER, false)
 
         if (mealId == -1L) return  // alarme inválido — descarta
 
-        // Intent que abre o app ao tocar na notificação
-        val openAppIntent = context.packageManager
-            .getLaunchIntentForPackage(context.packageName)
-        val pendingIntent = PendingIntent.getActivity(
-            context,
-            mealId.toInt(),
-            openAppIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
+        val notifId = NotificationChannels.NOTIFICATION_BASE_MEAL + mealId.toInt()
 
-        // Monta a notificação com ícone, título e texto
-        val quantityText = if (quantity > 0) context.getString(R.string.notif_meal_quantity, quantity.toInt()) else ""
-        val notification = NotificationCompat.Builder(context, NotificationChannels.CHANNEL_MEALS)
-            .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle(context.getString(R.string.notif_meal_title, petName))
-            .setContentText(context.getString(R.string.notif_meal_body, time, quantityText))
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setDefaults(NotificationCompat.DEFAULT_ALL)
-            .setContentIntent(pendingIntent)
-            .setAutoCancel(true)
-            .build()
-
-        // Exibe a notificação — usa o mealId como ID único para não sobrescrever outras
-        with(NotificationManagerCompat.from(context)) {
-            // A permissão POST_NOTIFICATIONS é verificada no Manifest
-            try {
-                notify(mealId.toInt(), notification)
-            } catch (e: SecurityException) {
-                // Permissão de notificação negada pelo usuário — silencia o erro
+        if (isSuperReminder) {
+            val quantityText = if (quantity > 0) "${quantity.toInt()}g" else ""
+            showSuperReminderNotification(
+                context  = context,
+                type     = SuperReminderActivity.TYPE_MEAL,
+                id       = mealId,
+                notifId  = NotificationChannels.NOTIFICATION_BASE_SUPER + mealId.toInt() + 10000,
+                petName  = petName,
+                label    = context.getString(R.string.notif_meal_title, petName),
+                dose     = if (quantityText.isNotBlank()) "$time • $quantityText" else time,
+                scheduledAt = System.currentTimeMillis()
+            )
+        } else {
+            // Intent que abre o app ao tocar na notificação
+            val openAppIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)
+            val pendingIntent = PendingIntent.getActivity(
+                context, mealId.toInt(), openAppIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            val quantityText = if (quantity > 0) context.getString(R.string.notif_meal_quantity, quantity.toInt()) else ""
+            val notification = NotificationCompat.Builder(context, NotificationChannels.CHANNEL_MEALS)
+                .setSmallIcon(R.drawable.ic_notification)
+                .setContentTitle(context.getString(R.string.notif_meal_title, petName))
+                .setContentText(context.getString(R.string.notif_meal_body, time, quantityText))
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setDefaults(NotificationCompat.DEFAULT_ALL)
+                .setContentIntent(pendingIntent)
+                .setAutoCancel(true)
+                .build()
+            with(NotificationManagerCompat.from(context)) {
+                try { notify(notifId, notification) } catch (_: SecurityException) {}
             }
         }
 

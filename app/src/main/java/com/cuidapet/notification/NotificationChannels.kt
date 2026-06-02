@@ -3,6 +3,8 @@ package com.cuidadopet.notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
+import android.media.AudioAttributes
+import android.media.RingtoneManager
 
 // IDs dos canais de notificação — cada tipo de alerta tem seu próprio canal.
 // No Android 8+, o usuário pode silenciar canais individualmente nas configurações.
@@ -18,6 +20,7 @@ object NotificationChannels {
     const val CHANNEL_DAILY       = "daily_alerts_v2"
     const val CHANNEL_VACCINES    = "vaccine_reminders_v1"
     const val CHANNEL_BIRTHDAYS   = "birthday_reminders_v1"
+    const val CHANNEL_SUPER       = "super_reminders_v1"
 
     // IDs das notificações — usados para atualizar ou cancelar uma notificação específica
     const val NOTIFICATION_BASE_MEDICATION = 1000  // + medicationId para ser único
@@ -28,6 +31,7 @@ object NotificationChannels {
     const val NOTIFICATION_BASE_BIRTHDAY   = 6000  // + petId para ser único
     const val NOTIFICATION_REENGAGEMENT   = 7000
     const val NOTIFICATION_BASE_CARE      = 8000  // + petId para ser único
+    const val NOTIFICATION_BASE_SUPER     = 90000 // + id para ser único
 
     fun createAll(context: Context) {
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE)
@@ -94,6 +98,23 @@ object NotificationChannels {
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
                 description = context.getString(com.cuidadopet.R.string.notif_channel_birthdays_desc)
+            }
+        )
+
+        val alarmAudioAttributes = AudioAttributes.Builder()
+            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+            .setUsage(AudioAttributes.USAGE_ALARM)
+            .build()
+        manager.createNotificationChannel(
+            NotificationChannel(
+                CHANNEL_SUPER,
+                context.getString(com.cuidadopet.R.string.notif_channel_super),
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = context.getString(com.cuidadopet.R.string.notif_channel_super_desc)
+                setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM), alarmAudioAttributes)
+                vibrationPattern = longArrayOf(0, 500, 200, 500, 200, 500, 200, 500)
+                enableVibration(true)
             }
         )
     }

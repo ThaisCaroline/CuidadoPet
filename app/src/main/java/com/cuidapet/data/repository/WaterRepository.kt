@@ -89,11 +89,12 @@ class WaterRepository @Inject constructor(
     // O WorkManager garante que o lembrete seja disparado mesmo após o app ser fechado.
     private fun scheduleWaterReminder(config: WaterConfigEntity, petName: String) {
         val inputData = Data.Builder()
-            .putString(WaterReminderWorker.KEY_PET_NAME,   petName)
-            .putLong(WaterReminderWorker.KEY_PET_ID,       config.petId)
-            .putDouble(WaterReminderWorker.KEY_TARGET_ML,  config.dailyTargetMl)
-            .putString(WaterReminderWorker.KEY_START_TIME, config.reminderStartTime)
-            .putString(WaterReminderWorker.KEY_END_TIME,   config.reminderEndTime)
+            .putString(WaterReminderWorker.KEY_PET_NAME,          petName)
+            .putLong(WaterReminderWorker.KEY_PET_ID,              config.petId)
+            .putDouble(WaterReminderWorker.KEY_TARGET_ML,         config.dailyTargetMl)
+            .putString(WaterReminderWorker.KEY_START_TIME,        config.reminderStartTime)
+            .putString(WaterReminderWorker.KEY_END_TIME,          config.reminderEndTime)
+            .putBoolean(WaterReminderWorker.KEY_IS_SUPER_REMINDER, config.isSuperReminder)
             .build()
 
         val intervalHours = config.reminderIntervalHours.toLong().coerceAtLeast(1L)

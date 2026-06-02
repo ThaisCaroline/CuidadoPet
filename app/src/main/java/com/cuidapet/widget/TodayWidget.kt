@@ -13,6 +13,7 @@ import androidx.glance.ImageProvider
 import androidx.glance.LocalContext
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.action.actionStartActivity
+import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.provideContent
 import androidx.glance.action.clickable
 import androidx.glance.background
@@ -32,6 +33,7 @@ import androidx.glance.text.TextStyle
 import com.cuidadopet.MainActivity
 import com.cuidadopet.R
 import com.cuidadopet.data.db.entity.MedicationEntity
+import com.cuidadopet.data.db.entity.MedicationLogEntity
 import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.flow.first
 import java.util.Calendar
@@ -53,13 +55,25 @@ class TodayWidget : GlanceAppWidget() {
             TodayWidgetEntryPoint::class.java
         )
         val now = System.currentTimeMillis()
+        val todayStart = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
+        }.timeInMillis
+        val todayEnd = todayStart + 24 * 60 * 60 * 1000L
+
         val pets = entryPoint.petRepository().getAllPets().first()
         var nextDose: NextDose? = null
 
         for (pet in pets) {
             val meds = entryPoint.medicationRepository().getActiveMedications(pet.id).first()
+            val takenLogs = entryPoint.medicationRepository()
+                .getLogsForPetInPeriod(pet.id, todayStart, todayEnd)
+                .first()
+                .filter { it.status == "TAKEN" }
+
             for (med in meds) {
-                val t = computeNextDoseTime(med, now) ?: continue
+                val medTaken = takenLogs.filter { it.medicationId == med.id }.map { it.scheduledAt }.toSet()
+                val t = computeNextDoseTime(med, now, medTaken) ?: continue
                 if (nextDose == null || t < nextDose.timeMs) {
                     nextDose = NextDose(t, med.name, pet.name, med.dose, med.doseUnit)
                 }
@@ -74,14 +88,25 @@ class TodayWidget : GlanceAppWidget() {
     }
 }
 
-private fun computeNextDoseTime(med: MedicationEntity, now: Long): Long? {
+private fun computeNextDoseTime(
+    med: MedicationEntity,
+    now: Long,
+    takenScheduledTimes: Set<Long> = emptySet()
+): Long? {
+    // Retorna true se o horário candidato já foi administrado hoje (tolerância de 1h)
+    fun isAlreadyTaken(candidateMs: Long): Boolean =
+        takenScheduledTimes.any { kotlin.math.abs(it - candidateMs) < 3_600_000L }
+
     return when (med.frequencyType) {
         "INTERVAL" -> {
             val hours = med.frequencyHours ?: return null
             val ms = hours * 3_600_000L
             if (now < med.startDate) return med.startDate
             val elapsed = now - med.startDate
-            med.startDate + ((elapsed / ms) + 1) * ms
+            var candidate = med.startDate + ((elapsed / ms) + 1) * ms
+            // Avança se o próximo horário já foi administrado
+            if (isAlreadyTaken(candidate)) candidate += ms
+            candidate
         }
         "FIXED_TIMES" -> {
             val json = med.fixedTimes ?: return null
@@ -101,6 +126,8 @@ private fun computeNextDoseTime(med: MedicationEntity, now: Long): Long? {
                             set(Calendar.MILLISECOND, 0)
                         }
                         if (cal.timeInMillis <= now) cal.add(Calendar.DAY_OF_MONTH, 1)
+                        // Se o horário ainda está no futuro mas já foi administrado, vai pro dia seguinte
+                        if (isAlreadyTaken(cal.timeInMillis)) cal.add(Calendar.DAY_OF_MONTH, 1)
                         cal.timeInMillis
                     }
                     .minOrNull()
@@ -136,6 +163,7 @@ private fun WidgetContent(nextDose: NextDose?) {
         modifier = GlanceModifier
             .fillMaxSize()
             .background(GlanceTheme.colors.primary)
+            .cornerRadius(16.dp)
             .padding(horizontal = 10.dp)
             .clickable(actionStartActivity(Intent(context, MainActivity::class.java))),
         verticalAlignment = Alignment.Vertical.CenterVertically

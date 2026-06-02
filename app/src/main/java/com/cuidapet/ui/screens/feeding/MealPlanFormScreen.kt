@@ -18,7 +18,9 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import com.cuidadopet.ui.utils.TimeInputField
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -69,6 +71,53 @@ fun MealPlanFormScreen(
 
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
+
+    var showNotifDialog by remember { mutableStateOf(false) }
+    var dialogSuperReminder by remember { mutableStateOf(false) }
+
+    if (showNotifDialog) {
+        AlertDialog(
+            onDismissRequest = { showNotifDialog = false },
+            title = { Text(stringResource(R.string.meal_plan_notif_title)) },
+            text = {
+                Column {
+                    Text(stringResource(R.string.meal_plan_notif_msg))
+                    Spacer(Modifier.height(12.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Checkbox(
+                            checked = dialogSuperReminder,
+                            onCheckedChange = { dialogSuperReminder = it }
+                        )
+                        Column {
+                            Text(
+                                stringResource(R.string.super_reminder_label),
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            Text(
+                                stringResource(R.string.super_reminder_desc),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    showNotifDialog = false
+                    viewModel.setReminderOptions(reminderEnabled = true, isSuperReminder = dialogSuperReminder)
+                    viewModel.savePlan(petId, state.petName)
+                }) { Text(stringResource(R.string.meal_plan_notif_enable)) }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    showNotifDialog = false
+                    viewModel.setReminderOptions(reminderEnabled = false, isSuperReminder = false)
+                    viewModel.savePlan(petId, state.petName)
+                }) { Text(stringResource(R.string.meal_plan_notif_skip)) }
+            }
+        )
+    }
 
     LaunchedEffect(state.isSaved) {
         if (state.isSaved) onNavigateBack()
@@ -213,7 +262,10 @@ fun MealPlanFormScreen(
             }
 
             Button(
-                onClick = { viewModel.savePlan(petId, state.petName) },
+                onClick = {
+                    dialogSuperReminder = state.isSuperReminder
+                    showNotifDialog = true
+                },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !state.isSaving
             ) {

@@ -23,15 +23,16 @@ class MealAlarmScheduler @Inject constructor(
 
     // Agenda o próximo disparo de uma refeição.
     // O receiver reagenda para o dia seguinte cada vez que o alarme dispara.
-    fun scheduleMeal(meal: MealEntity, petName: String) {
+    fun scheduleMeal(meal: MealEntity, petName: String, isSuperReminder: Boolean = false) {
         val triggerTime = nextOccurrenceOf(meal.timeOfDay)
         if (triggerTime <= 0L) return  // horário inválido — descarta
 
         val intent = Intent(context, MealAlarmReceiver::class.java).apply {
-            putExtra(MealAlarmReceiver.EXTRA_MEAL_ID,  meal.id)
-            putExtra(MealAlarmReceiver.EXTRA_PET_NAME, petName)
-            putExtra(MealAlarmReceiver.EXTRA_TIME,     meal.timeOfDay)
-            putExtra(MealAlarmReceiver.EXTRA_QUANTITY, meal.quantityGrams)
+            putExtra(MealAlarmReceiver.EXTRA_MEAL_ID,          meal.id)
+            putExtra(MealAlarmReceiver.EXTRA_PET_NAME,         petName)
+            putExtra(MealAlarmReceiver.EXTRA_TIME,             meal.timeOfDay)
+            putExtra(MealAlarmReceiver.EXTRA_QUANTITY,         meal.quantityGrams)
+            putExtra(MealAlarmReceiver.EXTRA_IS_SUPER_REMINDER, isSuperReminder)
         }
 
         // requestCode único por refeição — offset de 10000 para não conflitar com medicamentos

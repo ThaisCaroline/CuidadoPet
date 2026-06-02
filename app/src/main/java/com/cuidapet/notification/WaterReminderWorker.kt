@@ -24,11 +24,12 @@ class WaterReminderWorker(
 
     companion object {
         // Chaves para os dados de entrada passados ao agendar o worker
-        const val KEY_PET_NAME   = "pet_name"
-        const val KEY_PET_ID     = "pet_id"
-        const val KEY_TARGET_ML  = "target_ml"
-        const val KEY_START_TIME = "start_time"
-        const val KEY_END_TIME   = "end_time"
+        const val KEY_PET_NAME        = "pet_name"
+        const val KEY_PET_ID          = "pet_id"
+        const val KEY_TARGET_ML       = "target_ml"
+        const val KEY_START_TIME      = "start_time"
+        const val KEY_END_TIME        = "end_time"
+        const val KEY_IS_SUPER_REMINDER = "is_super_reminder"
 
         // Tag única por pet — usada para cancelar os lembretes quando necessário
         fun workTag(petId: Long) = "water_reminder_$petId"
@@ -41,11 +42,12 @@ class WaterReminderWorker(
     }
 
     override suspend fun doWork(): Result {
-        val petName   = inputData.getString(KEY_PET_NAME)  ?: "seu pet"
-        val petId     = inputData.getLong(KEY_PET_ID, -1L)
-        val targetMl  = inputData.getDouble(KEY_TARGET_ML, 0.0)
-        val startTime = inputData.getString(KEY_START_TIME) ?: "08:00"
-        val endTime   = inputData.getString(KEY_END_TIME)   ?: "23:55"
+        val petName         = inputData.getString(KEY_PET_NAME)  ?: "seu pet"
+        val petId           = inputData.getLong(KEY_PET_ID, -1L)
+        val targetMl        = inputData.getDouble(KEY_TARGET_ML, 0.0)
+        val startTime       = inputData.getString(KEY_START_TIME) ?: "08:00"
+        val endTime         = inputData.getString(KEY_END_TIME)   ?: "23:55"
+        val isSuperReminder = inputData.getBoolean(KEY_IS_SUPER_REMINDER, false)
 
         if (petId == -1L) return Result.failure()
 
@@ -55,10 +57,22 @@ class WaterReminderWorker(
             return Result.success()
         }
 
-        showWaterReminder(petName, targetMl)
+        if (isSuperReminder) {
+            val notifId = NotificationChannels.NOTIFICATION_BASE_SUPER + petId.toInt() + 20000
+            showSuperReminderNotification(
+                context     = context,
+                type        = SuperReminderActivity.TYPE_WATER,
+                id          = petId,
+                notifId     = notifId,
+                petName     = petName,
+                label       = context.getString(R.string.notif_water_title, petName),
+                dose        = if (targetMl > 0) context.getString(R.string.notif_water_target, targetMl.toInt()) else "",
+                scheduledAt = System.currentTimeMillis()
+            )
+        } else {
+            showWaterReminder(petName, targetMl)
+        }
 
-        // Result.success() informa ao WorkManager que a tarefa terminou com êxito
-        // O WorkManager vai reagendar automaticamente para a próxima execução periódica
         return Result.success()
     }
 

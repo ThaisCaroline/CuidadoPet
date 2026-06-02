@@ -3,6 +3,15 @@ package com.cuidadopet.data.db
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
+val MIGRATION_10_11 = object : Migration(10, 11) {
+    override fun migrate(database: SupportSQLiteDatabase) {
+        database.execSQL("ALTER TABLE medications ADD COLUMN is_super_reminder INTEGER NOT NULL DEFAULT 0")
+        database.execSQL("ALTER TABLE water_configs ADD COLUMN is_super_reminder INTEGER NOT NULL DEFAULT 0")
+        database.execSQL("ALTER TABLE meal_plans ADD COLUMN reminder_enabled INTEGER NOT NULL DEFAULT 1")
+        database.execSQL("ALTER TABLE meal_plans ADD COLUMN is_super_reminder INTEGER NOT NULL DEFAULT 0")
+    }
+}
+
 val MIGRATION_9_10 = object : Migration(9, 10) {
     override fun migrate(database: SupportSQLiteDatabase) {
         database.execSQL(

@@ -4,6 +4,14 @@
     <!-- Tema principal do app — sem ActionBar (usamos TopAppBar do Compose) -->
     <style name="Theme.CuidadoPet" parent="android:Theme.Material.Light.NoActionBar" />
 
+    <!-- Tema da SuperReminderActivity — fundo transparente para o overlay funcionar -->
+    <style name="Theme.CuidadoPet.Transparent" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowActionBar">false</item>
+    </style>
+
     <!-- Tema da Splash Screen — exibido pelo sistema enquanto o app está iniciando.
          postSplashScreenTheme: tema aplicado logo depois que a splash desaparece.
          windowSplashScreenBackground: cor de fundo da splash (teal do app).

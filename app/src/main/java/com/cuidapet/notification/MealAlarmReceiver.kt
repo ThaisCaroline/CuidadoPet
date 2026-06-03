@@ -64,6 +64,13 @@ class MealAlarmReceiver : BroadcastReceiver() {
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
             val quantityText = if (quantity > 0) context.getString(R.string.notif_meal_quantity, quantity.toInt()) else ""
+            val snoozeData = Intent().apply {
+                putExtra(PushSnoozeReceiver.EXTRA_TYPE, PushSnoozeReceiver.TYPE_MEAL)
+                putExtra(PushSnoozeReceiver.EXTRA_PET_NAME, petName)
+                putExtra(PushSnoozeReceiver.EXTRA_TIME, time)
+                putExtra(PushSnoozeReceiver.EXTRA_QUANTITY, quantity)
+            }
+            val snoozePending = PushSnoozeReceiver.snoozePendingIntent(context, notifId, snoozeData)
             val notification = NotificationCompat.Builder(context, NotificationChannels.CHANNEL_MEALS)
                 .setSmallIcon(R.drawable.ic_notification)
                 .setContentTitle(context.getString(R.string.notif_meal_title, petName))
@@ -71,6 +78,7 @@ class MealAlarmReceiver : BroadcastReceiver() {
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setDefaults(NotificationCompat.DEFAULT_ALL)
                 .setContentIntent(pendingIntent)
+                .addAction(0, context.getString(R.string.super_reminder_snooze), snoozePending)
                 .setAutoCancel(true)
                 .build()
             with(NotificationManagerCompat.from(context)) {

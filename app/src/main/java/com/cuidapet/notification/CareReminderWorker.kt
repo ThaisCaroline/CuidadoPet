@@ -51,14 +51,35 @@ class CareReminderWorker(
                 .first()
 
             if (logsToday.isEmpty()) {
-                showCareReminder(pet.name, pet.id)
+                showCareReminder(pet.name, pet.id, pet.sex)
             }
         }
 
         return Result.success()
     }
 
-    private fun showCareReminder(petName: String, petId: Long) {
+    private fun showCareReminder(petName: String, petId: Long, sex: String) {
+        val variant = (1..4).random()
+
+        val titleRes = when (variant) {
+            1 -> R.string.notif_care_1_title
+            2 -> R.string.notif_care_2_title
+            3 -> R.string.notif_care_3_title
+            else -> R.string.notif_care_4_title
+        }
+        val bodyRes = when (variant) {
+            4 -> R.string.notif_care_4_body
+            else -> if (sex == "MALE") when (variant) {
+                1 -> R.string.notif_care_m1_body
+                2 -> R.string.notif_care_m2_body
+                else -> R.string.notif_care_m3_body
+            } else when (variant) {
+                1 -> R.string.notif_care_f1_body
+                2 -> R.string.notif_care_f2_body
+                else -> R.string.notif_care_f3_body
+            }
+        }
+
         val openIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)
         val pendingIntent = PendingIntent.getActivity(
             context,
@@ -69,8 +90,8 @@ class CareReminderWorker(
 
         val notification = NotificationCompat.Builder(context, NotificationChannels.CHANNEL_DAILY)
             .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle(context.getString(R.string.notif_care_title, petName))
-            .setContentText(context.getString(R.string.notif_care_body))
+            .setContentTitle(context.getString(titleRes, petName))
+            .setContentText(context.getString(bodyRes, petName))
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)

@@ -1,9 +1,11 @@
 package com.cuidadopet.notification
 
+import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.cuidadopet.R
@@ -65,6 +67,7 @@ fun showSuperReminderNotification(
         val adminIntent = Intent(context, MedicationAdminReceiver::class.java).apply {
             putExtra(MedicationAdminReceiver.EXTRA_MEDICATION_ID, id)
             putExtra(MedicationAdminReceiver.EXTRA_SCHEDULED_AT, scheduledAt)
+            putExtra(MedicationAdminReceiver.EXTRA_NOTIFICATION_ID, notifId)
         }
         val adminPending = PendingIntent.getBroadcast(
             context,
@@ -77,5 +80,18 @@ fun showSuperReminderNotification(
 
     NotificationManagerCompat.from(context).apply {
         try { notify(notifId, builder.build()) } catch (_: SecurityException) {}
+    }
+
+    // No Android 14+, USE_FULL_SCREEN_INTENT exige concessão manual pelo usuário.
+    // Se a permissão não foi concedida, o fullScreenIntent é ignorado silenciosamente
+    // e a notificação cai no drawer. Chamamos startActivity() diretamente, pois
+    // apps com SCHEDULE_EXACT_ALARM têm exceção à restrição de background activity start.
+    val canUseFullScreen = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+        context.getSystemService(NotificationManager::class.java).canUseFullScreenIntent()
+    } else {
+        true
+    }
+    if (!canUseFullScreen) {
+        try { context.startActivity(activityIntent) } catch (_: Exception) {}
     }
 }

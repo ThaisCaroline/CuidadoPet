@@ -59,7 +59,11 @@ class MedicationAlarmReceiver : BroadcastReceiver() {
 
         // ── Exibe a notificação ───────────────────────────────────────────────
 
-        val scheduledAt = System.currentTimeMillis()
+        // scheduledAt vem do intent (timestamp exato agendado pelo AlarmScheduler).
+        // Usar System.currentTimeMillis() aqui seria incorreto: o TodayViewModel busca
+        // logs por scheduledAt == timestamp_exato_calculado (sem tolerância), então
+        // qualquer diferença de milissegundos faria a dose não aparecer como administrada.
+        val scheduledAt = intent.getLongExtra(EXTRA_SCHEDULED_AT, System.currentTimeMillis())
         val notifId = NotificationChannels.NOTIFICATION_BASE_MEDICATION + medicationId.toInt()
 
         if (isSuperReminder) {
@@ -85,11 +89,22 @@ class MedicationAlarmReceiver : BroadcastReceiver() {
             val adminIntent = Intent(context, MedicationAdminReceiver::class.java).apply {
                 putExtra(MedicationAdminReceiver.EXTRA_MEDICATION_ID, medicationId)
                 putExtra(MedicationAdminReceiver.EXTRA_SCHEDULED_AT, scheduledAt)
+                putExtra(MedicationAdminReceiver.EXTRA_NOTIFICATION_ID, notifId)
             }
             val adminPendingIntent = PendingIntent.getBroadcast(
                 context, (medicationId + 20000L).toInt(), adminIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
+            val snoozeData = Intent().apply {
+                putExtra(PushSnoozeReceiver.EXTRA_TYPE, PushSnoozeReceiver.TYPE_MEDICATION)
+                putExtra(PushSnoozeReceiver.EXTRA_PET_NAME, petName)
+                putExtra(PushSnoozeReceiver.EXTRA_MEDICATION_ID, medicationId)
+                putExtra(PushSnoozeReceiver.EXTRA_MEDICATION_NAME, medicationName)
+                putExtra(PushSnoozeReceiver.EXTRA_DOSE, dose)
+                putExtra(PushSnoozeReceiver.EXTRA_DOSE_UNIT, doseUnit)
+                putExtra(PushSnoozeReceiver.EXTRA_SCHEDULED_AT, scheduledAt)
+            }
+            val snoozePending = PushSnoozeReceiver.snoozePendingIntent(context, notifId, snoozeData)
             val notification = NotificationCompat.Builder(context, NotificationChannels.CHANNEL_MEDICATIONS)
                 .setSmallIcon(R.drawable.ic_notification)
                 .setContentTitle(context.getString(R.string.notif_medication_title))
@@ -98,6 +113,7 @@ class MedicationAlarmReceiver : BroadcastReceiver() {
                 .setDefaults(NotificationCompat.DEFAULT_ALL)
                 .setContentIntent(pendingIntent)
                 .addAction(0, context.getString(R.string.action_administered), adminPendingIntent)
+                .addAction(0, context.getString(R.string.super_reminder_snooze), snoozePending)
                 .setAutoCancel(true)
                 .build()
             NotificationManagerCompat.from(context).notify(notifId, notification)

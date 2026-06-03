@@ -8,6 +8,16 @@ import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.glance.appwidget.updateAll
+import com.cuidadopet.data.db.entity.MedicationLogEntity
+import com.cuidadopet.data.repository.MedicationRepository
+import com.cuidadopet.widget.TodayWidget
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -38,7 +48,10 @@ import androidx.core.app.NotificationManagerCompat
 import com.cuidadopet.R
 import com.cuidadopet.ui.theme.CuidadoPetTheme
 
+@AndroidEntryPoint
 class SuperReminderActivity : ComponentActivity() {
+
+    @Inject lateinit var medicationRepository: MedicationRepository
 
     companion object {
         const val EXTRA_TYPE          = "super_type"
@@ -77,13 +90,22 @@ class SuperReminderActivity : ComponentActivity() {
                     label    = label,
                     dose     = dose,
                     onAdministered = {
-                        if (type == TYPE_MEDICATION && id != -1L) {
-                            sendBroadcast(Intent(this, MedicationAdminReceiver::class.java).apply {
-                                putExtra(MedicationAdminReceiver.EXTRA_MEDICATION_ID, id)
-                                putExtra(MedicationAdminReceiver.EXTRA_SCHEDULED_AT, scheduledAt)
-                            })
-                        }
                         cancelNotif(notifId)
+                        if (type == TYPE_MEDICATION && id != -1L) {
+                            CoroutineScope(Dispatchers.IO + SupervisorJob()).launch {
+                                try {
+                                    medicationRepository.saveLog(
+                                        MedicationLogEntity(
+                                            medicationId = id,
+                                            scheduledAt  = scheduledAt,
+                                            registeredAt = System.currentTimeMillis(),
+                                            status       = "TAKEN"
+                                        )
+                                    )
+                                    TodayWidget().updateAll(applicationContext)
+                                } catch (_: Exception) {}
+                            }
+                        }
                         finish()
                     },
                     onSnooze = {

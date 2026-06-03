@@ -70,43 +70,43 @@ class WaterReminderWorker(
                 scheduledAt = System.currentTimeMillis()
             )
         } else {
-            showWaterReminder(petName, targetMl)
+            showWaterReminder(petName, petId, targetMl)
         }
 
         return Result.success()
     }
 
-    // Exibe a notificação de lembrete de água
-    private fun showWaterReminder(petName: String, targetMl: Double) {
-        // Intent que abre o app ao tocar na notificação
-        val openAppIntent = context.packageManager
-            .getLaunchIntentForPackage(context.packageName)
-        val pendingIntent = PendingIntent.getActivity(
-            context,
-            0,
-            openAppIntent,
+    private fun showWaterReminder(petName: String, petId: Long, targetMl: Double) {
+        val notifId = NotificationChannels.NOTIFICATION_BASE_WATER + petId.toInt()
+
+        val openAppIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)
+        val contentPending = PendingIntent.getActivity(
+            context, notifId, openAppIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val targetText = if (targetMl > 0) context.getString(R.string.notif_water_target, targetMl.toInt()) else ""
+        val snoozeData = Intent().apply {
+            putExtra(PushSnoozeReceiver.EXTRA_TYPE, PushSnoozeReceiver.TYPE_WATER)
+            putExtra(PushSnoozeReceiver.EXTRA_PET_NAME, petName)
+            putExtra(PushSnoozeReceiver.EXTRA_PET_ID, petId)
+            putExtra(PushSnoozeReceiver.EXTRA_TARGET_ML, targetMl)
+        }
+        val snoozePending = PushSnoozeReceiver.snoozePendingIntent(context, notifId, snoozeData)
 
+        val targetText = if (targetMl > 0) context.getString(R.string.notif_water_target, targetMl.toInt()) else ""
         val notification = NotificationCompat.Builder(context, NotificationChannels.CHANNEL_WATER)
             .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(context.getString(R.string.notif_water_title, petName))
             .setContentText(context.getString(R.string.notif_water_body, targetText))
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setDefaults(NotificationCompat.DEFAULT_ALL)
-            .setContentIntent(pendingIntent)
+            .setContentIntent(contentPending)
+            .addAction(0, context.getString(R.string.super_reminder_snooze), snoozePending)
             .setAutoCancel(true)
             .build()
 
         with(NotificationManagerCompat.from(context)) {
-            try {
-                // Usa petId como parte do ID para não sobrescrever notificações de pets diferentes
-                notify(NotificationChannels.CHANNEL_WATER.hashCode(), notification)
-            } catch (e: SecurityException) {
-                // Permissão de notificação negada
-            }
+            try { notify(notifId, notification) } catch (_: SecurityException) {}
         }
     }
 }

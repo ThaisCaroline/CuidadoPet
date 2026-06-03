@@ -131,6 +131,7 @@
     <string name="med_list_empty_hint">Tap + to add\na prescribed medication</string>
     <string name="med_list_reminder_on_cd">Reminder on</string>
     <string name="med_list_reminder_off_cd">Reminder off</string>
+    <string name="med_list_super_reminder_on_cd">Super Reminder on</string>
     <string name="med_list_interval">Every %1$dh</string>
     <string name="med_list_continuous">Continuous use</string>
     <string name="med_list_with_deadline">With end date</string>
@@ -541,8 +542,21 @@
     <string name="action_administered">Administered</string>
     <string name="widget_description">Your pets\' active medications</string>
     <string name="home_profile_incomplete">Add a photo and date of birth</string>
-    <string name="notif_care_title">Is %s doing okay?</string>
-    <string name="notif_care_body">I haven\'t seen any care logs today. Hope everything\'s alright!</string>
+    <!-- Care Reminder - titles -->
+    <string name="notif_care_1_title">Is %s doing okay?</string>
+    <string name="notif_care_2_title">Hey, how is %s today?</string>
+    <string name="notif_care_3_title">Did you take care of %s today?</string>
+    <string name="notif_care_4_title">Hey, how are you two doing?</string>
+    <!-- Care Reminder - male bodies -->
+    <string name="notif_care_m1_body">No care logs for him today. Is everything alright?</string>
+    <string name="notif_care_m2_body">Nothing logged yet. How about updating his care diary?</string>
+    <string name="notif_care_m3_body">No care recorded for him today. Everything okay?</string>
+    <!-- Care Reminder - female bodies -->
+    <string name="notif_care_f1_body">No care logs for her today. Is everything alright?</string>
+    <string name="notif_care_f2_body">Nothing logged yet. How about updating her care diary?</string>
+    <string name="notif_care_f3_body">No care recorded for her today. Everything okay?</string>
+    <!-- Care Reminder - neutral -->
+    <string name="notif_care_4_body">No care logged for %s today. Is everything alright?</string>
     <!-- Re-engagement journey -->
     <string name="notif_reengagement_d7_title">Hey, everything okay?</string>
     <string name="notif_reengagement_d7_1">Is everything okay with %1$s? It\'s been a week since we heard from you.</string>

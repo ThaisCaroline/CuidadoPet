@@ -19,8 +19,10 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Medication
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.NotificationImportant
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.NotificationsOff
+import androidx.compose.ui.graphics.Color
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -179,9 +181,21 @@ private fun MedicationCard(
                     modifier = Modifier.weight(1f)
                 )
                 Icon(
-                    imageVector = if (medication.reminderEnabled) Icons.Default.Notifications else Icons.Default.NotificationsOff,
-                    contentDescription = if (medication.reminderEnabled) stringResource(R.string.med_list_reminder_on_cd) else stringResource(R.string.med_list_reminder_off_cd),
-                    tint = if (medication.reminderEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                    imageVector = when {
+                        medication.reminderEnabled && medication.isSuperReminder -> Icons.Default.NotificationImportant
+                        medication.reminderEnabled -> Icons.Default.Notifications
+                        else -> Icons.Default.NotificationsOff
+                    },
+                    contentDescription = when {
+                        medication.reminderEnabled && medication.isSuperReminder -> stringResource(R.string.med_list_super_reminder_on_cd)
+                        medication.reminderEnabled -> stringResource(R.string.med_list_reminder_on_cd)
+                        else -> stringResource(R.string.med_list_reminder_off_cd)
+                    },
+                    tint = when {
+                        medication.reminderEnabled && medication.isSuperReminder -> Color.Red
+                        medication.reminderEnabled -> MaterialTheme.colorScheme.primary
+                        else -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                    },
                     modifier = Modifier.size(18.dp)
                 )
                 IconButton(onClick = onEdit, modifier = Modifier.size(36.dp)) {

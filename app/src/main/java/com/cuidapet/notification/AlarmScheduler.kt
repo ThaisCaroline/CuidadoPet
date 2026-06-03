@@ -5,10 +5,16 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import androidx.glance.appwidget.updateAll
 import com.cuidadopet.data.db.entity.MedicationEntity
+import com.cuidadopet.widget.TodayWidget
 import java.util.Calendar
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 
 // AlarmScheduler é responsável por agendar e cancelar os alarmes de medicamento.
 // Usa o AlarmManager do Android — o componente que dispara ações em horários específicos.
@@ -26,6 +32,10 @@ class AlarmScheduler @Inject constructor(
         medication: MedicationEntity,
         petName: String
     ) {
+        CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
+            try { TodayWidget().updateAll(context) } catch (_: Exception) {}
+        }
+
         if (!medication.isActive || !medication.reminderEnabled) return
 
         val triggerTimes = calculateNextTriggerTimes(medication)
@@ -51,6 +61,10 @@ class AlarmScheduler @Inject constructor(
             PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE
         )
         pendingIntent?.let { alarmManager.cancel(it) }
+
+        CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
+            try { TodayWidget().updateAll(context) } catch (_: Exception) {}
+        }
     }
 
     // Calcula os próximos horários de disparo com base na frequência do medicamento
@@ -111,6 +125,7 @@ class AlarmScheduler @Inject constructor(
             putExtra(MedicationAlarmReceiver.EXTRA_IS_CONTINUOUS,    medication.isContinuous)
             putExtra(MedicationAlarmReceiver.EXTRA_REMINDER_ENABLED, medication.reminderEnabled)
             putExtra(MedicationAlarmReceiver.EXTRA_IS_SUPER_REMINDER,medication.isSuperReminder)
+            putExtra(MedicationAlarmReceiver.EXTRA_SCHEDULED_AT,     triggerAtMillis)
         }
 
         val pendingIntent = PendingIntent.getBroadcast(

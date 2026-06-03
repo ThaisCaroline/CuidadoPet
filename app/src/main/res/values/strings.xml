@@ -131,6 +131,7 @@
     <string name="med_list_empty_hint">Toque no + para adicionar\num medicamento prescrito</string>
     <string name="med_list_reminder_on_cd">Lembrete ativo</string>
     <string name="med_list_reminder_off_cd">Lembrete desativado</string>
+    <string name="med_list_super_reminder_on_cd">Super Lembrete ativo</string>
     <string name="med_list_interval">A cada %1$dh</string>
     <string name="med_list_continuous">Uso contínuo</string>
     <string name="med_list_with_deadline">Com prazo</string>
@@ -541,8 +542,21 @@
     <string name="action_administered">Administrado</string>
     <string name="widget_description">Medicamentos ativos dos seus pets</string>
     <string name="home_profile_incomplete">Adicione foto e data de nascimento</string>
-    <string name="notif_care_title">Tudo bem com %s?</string>
-    <string name="notif_care_body">Não vi nenhum registro de cuidado dele hoje. Fiquei preocupado!</string>
+    <!-- Care Reminder - títulos -->
+    <string name="notif_care_1_title">Tudo bem com %s?</string>
+    <string name="notif_care_2_title">Ei, como está %s hoje?</string>
+    <string name="notif_care_3_title">Já cuidou de %s hoje?</string>
+    <string name="notif_care_4_title">Ei, tudo bem com vocês?</string>
+    <!-- Care Reminder - corpos masculino -->
+    <string name="notif_care_m1_body">Não vi nenhum registro de cuidado dele hoje. Está tudo certo?</string>
+    <string name="notif_care_m2_body">Nenhum registro por aqui ainda. Que tal atualizar o diário dele?</string>
+    <string name="notif_care_m3_body">Hoje ainda não tem nenhum cuidado registrado pra ele. Tudo bem?</string>
+    <!-- Care Reminder - corpos feminino -->
+    <string name="notif_care_f1_body">Não vi nenhum registro de cuidado dela hoje. Está tudo certo?</string>
+    <string name="notif_care_f2_body">Nenhum registro por aqui ainda. Que tal atualizar o diário dela?</string>
+    <string name="notif_care_f3_body">Hoje ainda não tem nenhum cuidado registrado pra ela. Tudo bem?</string>
+    <!-- Care Reminder - neutro -->
+    <string name="notif_care_4_body">Não vi nenhum registro de %s hoje. Está tudo certo por aí?</string>
     <!-- Re-engagement journey -->
     <string name="notif_reengagement_d7_title">Ei, tudo bem por aí?</string>
     <string name="notif_reengagement_d7_1">Está tudo bem com %1$s? Faz uma semana que você não dá notícias.</string>

@@ -8,6 +8,20 @@ import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.glance.appwidget.updateAll
+import com.cuidadopet.data.db.entity.MealLogEntity
+import com.cuidadopet.data.db.entity.MedicationLogEntity
+import com.cuidadopet.data.db.entity.WaterLogEntity
+import com.cuidadopet.data.repository.FeedingRepository
+import com.cuidadopet.data.repository.MedicationRepository
+import com.cuidadopet.data.repository.WaterRepository
+import com.cuidadopet.widget.TodayWidget
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -37,17 +51,24 @@ import androidx.compose.ui.unit.sp
 import androidx.core.app.NotificationManagerCompat
 import com.cuidadopet.R
 import com.cuidadopet.ui.theme.CuidadoPetTheme
+import java.util.Calendar
 
+@AndroidEntryPoint
 class SuperReminderActivity : ComponentActivity() {
 
+    @Inject lateinit var medicationRepository: MedicationRepository
+    @Inject lateinit var waterRepository: WaterRepository
+    @Inject lateinit var feedingRepository: FeedingRepository
+
     companion object {
-        const val EXTRA_TYPE          = "super_type"
-        const val EXTRA_ID            = "super_id"
+        const val EXTRA_TYPE            = "super_type"
+        const val EXTRA_ID              = "super_id"
         const val EXTRA_NOTIFICATION_ID = "super_notification_id"
-        const val EXTRA_PET_NAME      = "super_pet_name"
-        const val EXTRA_LABEL         = "super_label"
-        const val EXTRA_DOSE          = "super_dose"
-        const val EXTRA_SCHEDULED_AT  = "super_scheduled_at"
+        const val EXTRA_PET_NAME        = "super_pet_name"
+        const val EXTRA_LABEL           = "super_label"
+        const val EXTRA_DOSE            = "super_dose"
+        const val EXTRA_SCHEDULED_AT    = "super_scheduled_at"
+        const val EXTRA_AMOUNT          = "super_amount"
 
         const val TYPE_MEDICATION = "MEDICATION"
         const val TYPE_WATER      = "WATER"
@@ -68,6 +89,7 @@ class SuperReminderActivity : ComponentActivity() {
         val label       = intent.getStringExtra(EXTRA_LABEL) ?: ""
         val dose        = intent.getStringExtra(EXTRA_DOSE) ?: ""
         val scheduledAt = intent.getLongExtra(EXTRA_SCHEDULED_AT, System.currentTimeMillis())
+        val amount      = intent.getDoubleExtra(EXTRA_AMOUNT, 0.0)
 
         setContent {
             CuidadoPetTheme {
@@ -77,18 +99,57 @@ class SuperReminderActivity : ComponentActivity() {
                     label    = label,
                     dose     = dose,
                     onAdministered = {
-                        if (type == TYPE_MEDICATION && id != -1L) {
-                            sendBroadcast(Intent(this, MedicationAdminReceiver::class.java).apply {
-                                putExtra(MedicationAdminReceiver.EXTRA_MEDICATION_ID, id)
-                                putExtra(MedicationAdminReceiver.EXTRA_SCHEDULED_AT, scheduledAt)
-                            })
-                        }
                         cancelNotif(notifId)
+                        if (id != -1L) {
+                            CoroutineScope(Dispatchers.IO + SupervisorJob()).launch {
+                                try {
+                                    when (type) {
+                                        TYPE_MEDICATION -> {
+                                            medicationRepository.saveLog(
+                                                MedicationLogEntity(
+                                                    medicationId = id,
+                                                    scheduledAt  = scheduledAt,
+                                                    registeredAt = System.currentTimeMillis(),
+                                                    status       = "TAKEN"
+                                                )
+                                            )
+                                            TodayWidget().updateAll(applicationContext)
+                                        }
+                                        TYPE_WATER -> {
+                                            waterRepository.addWaterLog(
+                                                WaterLogEntity(
+                                                    petId        = id,
+                                                    amountMl     = amount,
+                                                    registeredAt = System.currentTimeMillis()
+                                                )
+                                            )
+                                        }
+                                        TYPE_MEAL -> {
+                                            val midnight = Calendar.getInstance().apply {
+                                                timeInMillis = scheduledAt
+                                                set(Calendar.HOUR_OF_DAY, 0)
+                                                set(Calendar.MINUTE, 0)
+                                                set(Calendar.SECOND, 0)
+                                                set(Calendar.MILLISECOND, 0)
+                                            }.timeInMillis
+                                            feedingRepository.saveMealLog(
+                                                MealLogEntity(
+                                                    mealId          = id,
+                                                    date            = midnight,
+                                                    eatenPercentage = 100,
+                                                    appetiteStatus  = "ALL"
+                                                )
+                                            )
+                                        }
+                                    }
+                                } catch (_: Exception) {}
+                            }
+                        }
                         finish()
                     },
                     onSnooze = {
                         cancelNotif(notifId)
-                        scheduleSnooze(type, id, notifId, petName, label, dose, scheduledAt)
+                        scheduleSnooze(type, id, notifId, petName, label, dose, scheduledAt, amount)
                         finish()
                     },
                     onDismiss = { finish() }
@@ -103,7 +164,7 @@ class SuperReminderActivity : ComponentActivity() {
 
     private fun scheduleSnooze(
         type: String, id: Long, notifId: Int,
-        petName: String, label: String, dose: String, scheduledAt: Long
+        petName: String, label: String, dose: String, scheduledAt: Long, amount: Double
     ) {
         val snoozeIntent = Intent(this, SuperReminderSnoozeReceiver::class.java).apply {
             putExtra(EXTRA_TYPE, type)
@@ -113,6 +174,7 @@ class SuperReminderActivity : ComponentActivity() {
             putExtra(EXTRA_LABEL, label)
             putExtra(EXTRA_DOSE, dose)
             putExtra(EXTRA_SCHEDULED_AT, scheduledAt)
+            putExtra(EXTRA_AMOUNT, amount)
         }
         val pending = PendingIntent.getBroadcast(
             this,

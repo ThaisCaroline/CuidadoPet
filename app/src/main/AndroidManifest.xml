@@ -53,6 +53,11 @@
             android:name=".notification.PushSnoozeReceiver"
             android:exported="false" />
 
+        <!-- BroadcastReceiver unificado para o botão "concluído" do Super Lembrete -->
+        <receiver
+            android:name=".notification.SuperReminderDoneReceiver"
+            android:exported="false" />
+
         <!-- Activity de tela cheia do Super Lembrete — aparece sobre a tela de bloqueio -->
         <activity
             android:name=".notification.SuperReminderActivity"

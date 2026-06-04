@@ -2,6 +2,8 @@ package com.cuidadopet.widget
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -19,6 +21,7 @@ import androidx.glance.action.clickable
 import androidx.glance.background
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Column
+import androidx.glance.layout.ContentScale
 import androidx.glance.layout.Row
 import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxSize
@@ -38,13 +41,15 @@ import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.flow.first
 import java.util.Calendar
 import java.util.Locale
+import kotlin.random.Random
 
 private data class NextDose(
     val timeMs: Long,
     val medName: String,
     val petName: String,
     val dose: String,
-    val doseUnit: String
+    val doseUnit: String,
+    val petPhotoPath: String? = null
 )
 
 class TodayWidget : GlanceAppWidget() {
@@ -75,14 +80,23 @@ class TodayWidget : GlanceAppWidget() {
                 val medTaken = takenLogs.filter { it.medicationId == med.id }.map { it.scheduledAt }.toSet()
                 val t = computeNextDoseTime(med, now, medTaken) ?: continue
                 if (nextDose == null || t < nextDose.timeMs) {
-                    nextDose = NextDose(t, med.name, pet.name, med.dose, med.doseUnit)
+                    nextDose = NextDose(t, med.name, pet.name, med.dose, med.doseUnit, pet.photoPath)
                 }
             }
         }
 
+        val petBitmap: Bitmap? = nextDose?.petPhotoPath?.let { path ->
+            try {
+                val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                BitmapFactory.decodeFile(path, bounds)
+                val sampleSize = (bounds.outWidth / 144).coerceAtLeast(1)
+                BitmapFactory.decodeFile(path, BitmapFactory.Options().apply { inSampleSize = sampleSize })
+            } catch (_: Exception) { null }
+        }
+
         provideContent {
             GlanceTheme {
-                WidgetContent(nextDose)
+                WidgetContent(nextDose, petBitmap)
             }
         }
     }
@@ -155,24 +169,39 @@ private fun formatDoseTime(nextMs: Long): String {
     return String.format(Locale.getDefault(), "%02d:%02d", cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE))
 }
 
+private fun pickBackgroundRes(): Int {
+    val cal = Calendar.getInstance()
+    val periodIndex = cal.get(Calendar.HOUR_OF_DAY) / 4
+    val dayOfYear = cal.get(Calendar.DAY_OF_YEAR)
+    return when (Random(dayOfYear * 6L + periodIndex).nextInt(6)) {
+        0    -> R.drawable.widget_bg_1
+        1    -> R.drawable.widget_bg_2
+        2    -> R.drawable.widget_bg_3
+        3    -> R.drawable.widget_bg_4
+        4    -> R.drawable.widget_bg_5
+        else -> R.drawable.widget_bg_6
+    }
+}
+
 @Composable
-private fun WidgetContent(nextDose: NextDose?) {
+private fun WidgetContent(nextDose: NextDose?, petBitmap: Bitmap?) {
     val context = LocalContext.current
 
     Row(
         modifier = GlanceModifier
             .fillMaxSize()
-            .background(GlanceTheme.colors.primary)
+            .background(ImageProvider(pickBackgroundRes()))
             .cornerRadius(16.dp)
-            .padding(horizontal = 10.dp)
+            .padding(horizontal = 10.dp, vertical = 10.dp)
             .clickable(actionStartActivity(Intent(context, MainActivity::class.java))),
-        verticalAlignment = Alignment.Vertical.CenterVertically
+        verticalAlignment = Alignment.Vertical.Top
     ) {
-            // Logo do app
             Image(
-                provider = ImageProvider(R.mipmap.ic_launcher_round),
+                provider = if (petBitmap != null) ImageProvider(petBitmap)
+                           else ImageProvider(R.mipmap.ic_launcher_round),
                 contentDescription = null,
-                modifier = GlanceModifier.size(36.dp)
+                contentScale = ContentScale.Crop,
+                modifier = GlanceModifier.size(36.dp).cornerRadius(18.dp)
             )
 
             Spacer(GlanceModifier.width(8.dp))
@@ -184,7 +213,7 @@ private fun WidgetContent(nextDose: NextDose?) {
                         style = TextStyle(
                             color      = GlanceTheme.colors.onPrimary,
                             fontWeight = FontWeight.Bold,
-                            fontSize   = 12.sp
+                            fontSize   = 14.sp
                         )
                     )
                     Spacer(GlanceModifier.height(2.dp))
@@ -192,7 +221,7 @@ private fun WidgetContent(nextDose: NextDose?) {
                         text  = context.getString(R.string.widget_no_active_meds),
                         style = TextStyle(
                             color    = GlanceTheme.colors.onPrimary,
-                            fontSize = 10.sp
+                            fontSize = 12.sp
                         )
                     )
                 } else {
@@ -202,28 +231,26 @@ private fun WidgetContent(nextDose: NextDose?) {
                         style = TextStyle(
                             color      = GlanceTheme.colors.onPrimary,
                             fontWeight = FontWeight.Bold,
-                            fontSize   = 13.sp
+                            fontSize   = 15.sp
                         ),
                         maxLines = 1
                     )
                     Spacer(GlanceModifier.height(1.dp))
-                    // Horário + nome do remédio
                     Text(
                         text     = "${formatDoseTime(nextDose.timeMs)} · ${nextDose.medName}",
                         style    = TextStyle(
                             color      = GlanceTheme.colors.onPrimary,
                             fontWeight = FontWeight.Medium,
-                            fontSize   = 10.sp
+                            fontSize   = 12.sp
                         ),
                         modifier = GlanceModifier.fillMaxWidth(),
                         maxLines = 1
                     )
-                    // Pet + dose
                     Text(
                         text     = "${nextDose.petName} · ${nextDose.dose} ${nextDose.doseUnit}",
                         style    = TextStyle(
                             color    = GlanceTheme.colors.onPrimary,
-                            fontSize = 10.sp
+                            fontSize = 11.sp
                         ),
                         modifier = GlanceModifier.fillMaxWidth(),
                         maxLines = 1

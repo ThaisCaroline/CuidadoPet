@@ -67,7 +67,8 @@ class WaterReminderWorker(
                 petName     = petName,
                 label       = context.getString(R.string.notif_water_title, petName),
                 dose        = if (targetMl > 0) context.getString(R.string.notif_water_target, targetMl.toInt()) else "",
-                scheduledAt = System.currentTimeMillis()
+                scheduledAt = System.currentTimeMillis(),
+                amount      = targetMl
             )
         } else {
             showWaterReminder(petName, petId, targetMl)

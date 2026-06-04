@@ -47,14 +47,15 @@ class MealAlarmReceiver : BroadcastReceiver() {
         if (isSuperReminder) {
             val quantityText = if (quantity > 0) "${quantity.toInt()}g" else ""
             showSuperReminderNotification(
-                context  = context,
-                type     = SuperReminderActivity.TYPE_MEAL,
-                id       = mealId,
-                notifId  = NotificationChannels.NOTIFICATION_BASE_SUPER + mealId.toInt() + 10000,
-                petName  = petName,
-                label    = context.getString(R.string.notif_meal_title, petName),
-                dose     = if (quantityText.isNotBlank()) "$time • $quantityText" else time,
-                scheduledAt = System.currentTimeMillis()
+                context     = context,
+                type        = SuperReminderActivity.TYPE_MEAL,
+                id          = mealId,
+                notifId     = NotificationChannels.NOTIFICATION_BASE_SUPER + mealId.toInt() + 10000,
+                petName     = petName,
+                label       = context.getString(R.string.notif_meal_title, petName),
+                dose        = if (quantityText.isNotBlank()) "$time • $quantityText" else time,
+                scheduledAt = System.currentTimeMillis(),
+                amount      = quantity
             )
         } else {
             // Intent que abre o app ao tocar na notificação

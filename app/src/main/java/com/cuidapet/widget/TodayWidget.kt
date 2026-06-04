@@ -7,11 +7,13 @@ import android.graphics.BitmapFactory
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.graphics.Color
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.GlanceTheme
 import androidx.glance.Image
 import androidx.glance.ImageProvider
+import androidx.glance.unit.ColorProvider
 import androidx.glance.LocalContext
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.action.actionStartActivity
@@ -90,7 +92,8 @@ class TodayWidget : GlanceAppWidget() {
                 val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
                 BitmapFactory.decodeFile(path, bounds)
                 val sampleSize = (bounds.outWidth / 144).coerceAtLeast(1)
-                BitmapFactory.decodeFile(path, BitmapFactory.Options().apply { inSampleSize = sampleSize })
+                val raw = BitmapFactory.decodeFile(path, BitmapFactory.Options().apply { inSampleSize = sampleSize })
+                raw?.let { centerCropSquare(it) }
             } catch (_: Exception) { null }
         }
 
@@ -100,6 +103,13 @@ class TodayWidget : GlanceAppWidget() {
             }
         }
     }
+}
+
+private fun centerCropSquare(src: Bitmap): Bitmap {
+    val side = minOf(src.width, src.height)
+    val x = (src.width - side) / 2
+    val y = (src.height - side) / 2
+    return Bitmap.createBitmap(src, x, y, side, side)
 }
 
 private fun computeNextDoseTime(
@@ -211,7 +221,7 @@ private fun WidgetContent(nextDose: NextDose?, petBitmap: Bitmap?) {
                     Text(
                         text  = context.getString(R.string.widget_all_up_to_date),
                         style = TextStyle(
-                            color      = GlanceTheme.colors.onPrimary,
+                            color      = ColorProvider(Color.White),
                             fontWeight = FontWeight.Bold,
                             fontSize   = 14.sp
                         )
@@ -220,7 +230,7 @@ private fun WidgetContent(nextDose: NextDose?, petBitmap: Bitmap?) {
                     Text(
                         text  = context.getString(R.string.widget_no_active_meds),
                         style = TextStyle(
-                            color    = GlanceTheme.colors.onPrimary,
+                            color    = ColorProvider(Color.White),
                             fontSize = 12.sp
                         )
                     )
@@ -229,7 +239,7 @@ private fun WidgetContent(nextDose: NextDose?, petBitmap: Bitmap?) {
                     Text(
                         text  = formatTimeUntil(context, nextDose.timeMs),
                         style = TextStyle(
-                            color      = GlanceTheme.colors.onPrimary,
+                            color      = ColorProvider(Color.White),
                             fontWeight = FontWeight.Bold,
                             fontSize   = 15.sp
                         ),
@@ -239,7 +249,7 @@ private fun WidgetContent(nextDose: NextDose?, petBitmap: Bitmap?) {
                     Text(
                         text     = "${formatDoseTime(nextDose.timeMs)} · ${nextDose.medName}",
                         style    = TextStyle(
-                            color      = GlanceTheme.colors.onPrimary,
+                            color      = ColorProvider(Color.White),
                             fontWeight = FontWeight.Medium,
                             fontSize   = 12.sp
                         ),
@@ -249,7 +259,7 @@ private fun WidgetContent(nextDose: NextDose?, petBitmap: Bitmap?) {
                     Text(
                         text     = "${nextDose.petName} · ${nextDose.dose} ${nextDose.doseUnit}",
                         style    = TextStyle(
-                            color    = GlanceTheme.colors.onPrimary,
+                            color    = ColorProvider(Color.White),
                             fontSize = 11.sp
                         ),
                         modifier = GlanceModifier.fillMaxWidth(),

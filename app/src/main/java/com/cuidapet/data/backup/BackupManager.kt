@@ -10,6 +10,9 @@ import com.cuidadopet.data.db.dao.PetDao
 import com.cuidadopet.data.db.dao.WaterDao
 import com.cuidadopet.data.db.entity.HealthPhotoEntity
 import com.cuidadopet.data.db.entity.PetEntity
+import com.cuidadopet.notification.AlarmScheduler
+import com.cuidadopet.notification.BirthdayAlarmScheduler
+import com.cuidadopet.notification.MealAlarmScheduler
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -34,6 +37,9 @@ class BackupManager @Inject constructor(
     private val waterDao: WaterDao,
     private val healthDao: HealthDao,
     private val healthPhotoDao: HealthPhotoDao,
+    private val alarmScheduler: AlarmScheduler,
+    private val mealAlarmScheduler: MealAlarmScheduler,
+    private val birthdayAlarmScheduler: BirthdayAlarmScheduler,
     @ApplicationContext private val context: Context
 ) {
     private val gson: Gson = GsonBuilder().serializeNulls().create()
@@ -221,8 +227,43 @@ class BackupManager @Inject constructor(
                     )
                 }
             }
+            reagendarAlarmes(backup)
         } finally {
             tempDir.deleteRecursively()
+        }
+    }
+
+    private fun reagendarAlarmes(backup: BackupData) {
+        val petNameById = backup.pets.associate { it.id to it.name }
+        val now = System.currentTimeMillis()
+
+        for (med in backup.medications) {
+            if (!med.isActive || !med.reminderEnabled) continue
+            if (med.endDate != null && med.endDate < now) continue
+            val petName = petNameById[med.petId] ?: continue
+            alarmScheduler.scheduleMedication(med, petName)
+        }
+
+        val activePlanById = backup.mealPlans
+            .filter { it.isActive && it.reminderEnabled }
+            .associateBy { it.id }
+        for (meal in backup.meals) {
+            val plan = activePlanById[meal.mealPlanId] ?: continue
+            val petName = petNameById[plan.petId] ?: continue
+            mealAlarmScheduler.scheduleMeal(meal, petName, plan.isSuperReminder)
+        }
+
+        for (petBackup in backup.pets) {
+            if (petBackup.birthDate == null) continue
+            birthdayAlarmScheduler.scheduleBirthday(
+                PetEntity(
+                    id = petBackup.id, name = petBackup.name, species = petBackup.species,
+                    breed = petBackup.breed, birthDate = petBackup.birthDate,
+                    weightKg = petBackup.weightKg, sex = petBackup.sex,
+                    isNeutered = petBackup.isNeutered, clinicalStates = petBackup.clinicalStates,
+                    photoPath = null, createdAt = petBackup.createdAt
+                )
+            )
         }
     }
 }

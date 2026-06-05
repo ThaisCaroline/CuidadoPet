@@ -8,6 +8,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import dagger.hilt.android.EntryPointAccessors
 import java.util.Calendar
 
 // Worker do WorkManager responsável por exibir o lembrete periódico de água.
@@ -30,6 +31,7 @@ class WaterReminderWorker(
         const val KEY_START_TIME      = "start_time"
         const val KEY_END_TIME        = "end_time"
         const val KEY_IS_SUPER_REMINDER = "is_super_reminder"
+        const val KEY_INTERVAL_HOURS    = "interval_hours"
 
         // Tag única por pet — usada para cancelar os lembretes quando necessário
         fun workTag(petId: Long) = "water_reminder_$petId"
@@ -56,6 +58,14 @@ class WaterReminderWorker(
         if (currentMinutes < parseMinutes(startTime) || currentMinutes >= parseMinutes(endTime)) {
             return Result.success()
         }
+
+        val intervalHours = inputData.getLong(KEY_INTERVAL_HOURS, 1L)
+        val waterDao = EntryPointAccessors.fromApplication(
+            context.applicationContext,
+            WaterReminderEntryPoint::class.java
+        ).waterDao()
+        val since = System.currentTimeMillis() - intervalHours * 3_600_000L
+        if (waterDao.hasLogSince(petId, since)) return Result.success()
 
         if (isSuperReminder) {
             val notifId = NotificationChannels.NOTIFICATION_BASE_SUPER + petId.toInt() + 20000

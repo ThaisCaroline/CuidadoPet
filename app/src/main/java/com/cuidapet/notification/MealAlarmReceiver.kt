@@ -13,6 +13,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import java.util.Calendar
 import javax.inject.Inject
 
 // BroadcastReceiver que recebe os alarmes de refeição e exibe a notificação.
@@ -43,56 +44,66 @@ class MealAlarmReceiver : BroadcastReceiver() {
         if (mealId == -1L) return  // alarme inválido — descarta
 
         val notifId = NotificationChannels.NOTIFICATION_BASE_MEAL + mealId.toInt()
-
-        if (isSuperReminder) {
-            val quantityText = if (quantity > 0) "${quantity.toInt()}g" else ""
-            showSuperReminderNotification(
-                context     = context,
-                type        = SuperReminderActivity.TYPE_MEAL,
-                id          = mealId,
-                notifId     = NotificationChannels.NOTIFICATION_BASE_SUPER + mealId.toInt() + 10000,
-                petName     = petName,
-                label       = context.getString(R.string.notif_meal_title, petName),
-                dose        = if (quantityText.isNotBlank()) "$time • $quantityText" else time,
-                scheduledAt = System.currentTimeMillis(),
-                amount      = quantity
-            )
-        } else {
-            // Intent que abre o app ao tocar na notificação
-            val openAppIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)
-            val pendingIntent = PendingIntent.getActivity(
-                context, mealId.toInt(), openAppIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
-            val quantityText = if (quantity > 0) context.getString(R.string.notif_meal_quantity, quantity.toInt()) else ""
-            val snoozeData = Intent().apply {
-                putExtra(PushSnoozeReceiver.EXTRA_TYPE, PushSnoozeReceiver.TYPE_MEAL)
-                putExtra(PushSnoozeReceiver.EXTRA_PET_NAME, petName)
-                putExtra(PushSnoozeReceiver.EXTRA_TIME, time)
-                putExtra(PushSnoozeReceiver.EXTRA_QUANTITY, quantity)
-            }
-            val snoozePending = PushSnoozeReceiver.snoozePendingIntent(context, notifId, snoozeData)
-            val notification = NotificationCompat.Builder(context, NotificationChannels.CHANNEL_MEALS)
-                .setSmallIcon(R.drawable.ic_notification)
-                .setContentTitle(context.getString(R.string.notif_meal_title, petName))
-                .setContentText(context.getString(R.string.notif_meal_body, time, quantityText))
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setDefaults(NotificationCompat.DEFAULT_ALL)
-                .setContentIntent(pendingIntent)
-                .addAction(0, context.getString(R.string.super_reminder_snooze), snoozePending)
-                .setAutoCancel(true)
-                .build()
-            with(NotificationManagerCompat.from(context)) {
-                try { notify(notifId, notification) } catch (_: SecurityException) {}
-            }
-        }
-
-        // ── Reagenda o próximo alarme para amanhã ─────────────────────────────
-        // Busca dados atuais do banco — se o plano foi substituído, getMealByIdIfActive
-        // retorna null e o alarme não é reagendado (evita fantasmas de planos antigos).
         val pendingResult = goAsync()
+
         CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
             try {
+                val todayMidnight = Calendar.getInstance().apply {
+                    set(Calendar.HOUR_OF_DAY, 0)
+                    set(Calendar.MINUTE, 0)
+                    set(Calendar.SECOND, 0)
+                    set(Calendar.MILLISECOND, 0)
+                }.timeInMillis
+
+                val existingLog = feedingRepository.getLogForMealOnDateOnce(mealId, todayMidnight)
+
+                if (existingLog == null) {
+                    if (isSuperReminder) {
+                        val quantityText = if (quantity > 0) "${quantity.toInt()}g" else ""
+                        showSuperReminderNotification(
+                            context     = context,
+                            type        = SuperReminderActivity.TYPE_MEAL,
+                            id          = mealId,
+                            notifId     = NotificationChannels.NOTIFICATION_BASE_SUPER + mealId.toInt() + 10000,
+                            petName     = petName,
+                            label       = context.getString(R.string.notif_meal_title, petName),
+                            dose        = if (quantityText.isNotBlank()) "$time • $quantityText" else time,
+                            scheduledAt = System.currentTimeMillis(),
+                            amount      = quantity
+                        )
+                    } else {
+                        val openAppIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)
+                        val pendingIntent = PendingIntent.getActivity(
+                            context, mealId.toInt(), openAppIntent,
+                            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                        )
+                        val quantityText = if (quantity > 0) context.getString(R.string.notif_meal_quantity, quantity.toInt()) else ""
+                        val snoozeData = Intent().apply {
+                            putExtra(PushSnoozeReceiver.EXTRA_TYPE, PushSnoozeReceiver.TYPE_MEAL)
+                            putExtra(PushSnoozeReceiver.EXTRA_PET_NAME, petName)
+                            putExtra(PushSnoozeReceiver.EXTRA_TIME, time)
+                            putExtra(PushSnoozeReceiver.EXTRA_QUANTITY, quantity)
+                        }
+                        val snoozePending = PushSnoozeReceiver.snoozePendingIntent(context, notifId, snoozeData)
+                        val notification = NotificationCompat.Builder(context, NotificationChannels.CHANNEL_MEALS)
+                            .setSmallIcon(R.drawable.ic_notification)
+                            .setContentTitle(context.getString(R.string.notif_meal_title, petName))
+                            .setContentText(context.getString(R.string.notif_meal_body, time, quantityText))
+                            .setPriority(NotificationCompat.PRIORITY_HIGH)
+                            .setDefaults(NotificationCompat.DEFAULT_ALL)
+                            .setContentIntent(pendingIntent)
+                            .addAction(0, context.getString(R.string.super_reminder_snooze), snoozePending)
+                            .setAutoCancel(true)
+                            .build()
+                        with(NotificationManagerCompat.from(context)) {
+                            try { notify(notifId, notification) } catch (_: SecurityException) {}
+                        }
+                    }
+                }
+
+                // Reagenda o próximo alarme independente de ter disparado o lembrete.
+                // Busca dados atuais do banco — se o plano foi substituído, getMealByIdIfActive
+                // retorna null e o alarme não é reagendado (evita fantasmas de planos antigos).
                 val meal = feedingRepository.getMealByIdIfActive(mealId)
                 if (meal != null) mealAlarmScheduler.scheduleMeal(meal, petName)
             } finally {

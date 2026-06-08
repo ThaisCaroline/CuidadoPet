@@ -40,11 +40,12 @@ class AlarmScheduler @Inject constructor(
 
         val triggerTimes = calculateNextTriggerTimes(medication)
 
-        triggerTimes.forEach { triggerTime ->
+        triggerTimes.forEachIndexed { index, triggerTime ->
             scheduleAlarm(
                 medication = medication,
                 petName = petName,
-                triggerAtMillis = triggerTime
+                triggerAtMillis = triggerTime,
+                alarmIndex = index
             )
         }
     }
@@ -52,15 +53,17 @@ class AlarmScheduler @Inject constructor(
     // Cancela todos os alarmes de um medicamento
     // Chamado quando: medicamento é desativado, tratamento encerrado, ou pet deletado
     fun cancelMedication(medicationId: Long) {
-        // Para cancelar, precisamos recriar o mesmo PendingIntent usado no agendamento
         val intent = Intent(context, MedicationAlarmReceiver::class.java)
-        val pendingIntent = PendingIntent.getBroadcast(
-            context,
-            medicationId.toInt(),
-            intent,
-            PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE
-        )
-        pendingIntent?.let { alarmManager.cancel(it) }
+        // Cancela requestCode antigo (instalações anteriores à correção do índice)
+        PendingIntent.getBroadcast(context, medicationId.toInt(), intent,
+            PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE)
+            ?.let { alarmManager.cancel(it) }
+        // Cancela todos os slots indexados (até 10 horários fixos por medicamento)
+        for (index in 0 until 10) {
+            PendingIntent.getBroadcast(context, (medicationId * 100 + index).toInt(), intent,
+                PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE)
+                ?.let { alarmManager.cancel(it) }
+        }
 
         CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
             try { TodayWidget().updateAll(context) } catch (_: Exception) {}
@@ -77,8 +80,9 @@ class AlarmScheduler @Inject constructor(
             // INTERVAL: a cada X horas — calcula o próximo horário a partir de agora
             "INTERVAL" -> {
                 val intervalMs = (medication.frequencyHours ?: 8) * 60 * 60 * 1000L
-                var nextTime = medication.startDate
-                // Avança até encontrar o próximo horário futuro
+                // Trunca para o minuto exato, eliminando segundos/ms do momento do cadastro
+                val startTruncated = (medication.startDate / 60_000L) * 60_000L
+                var nextTime = startTruncated
                 while (nextTime <= now) {
                     nextTime += intervalMs
                 }
@@ -105,7 +109,8 @@ class AlarmScheduler @Inject constructor(
     private fun scheduleAlarm(
         medication: MedicationEntity,
         petName: String,
-        triggerAtMillis: Long
+        triggerAtMillis: Long,
+        alarmIndex: Int = 0
     ) {
         // Monta o Intent com todos os dados que o receiver vai precisar
         // Os campos de frequência são necessários para que o receiver reagende o próximo alarme
@@ -130,8 +135,8 @@ class AlarmScheduler @Inject constructor(
 
         val pendingIntent = PendingIntent.getBroadcast(
             context,
-            // requestCode único por medicamento — evita sobrescrever outros alarmes
-            medication.id.toInt(),
+            // requestCode único por medicamento + slot — evita sobrescrever alarmes do mesmo med
+            (medication.id * 100 + alarmIndex).toInt(),
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )

@@ -51,7 +51,11 @@ class CareReminderWorker(
                 .first()
 
             if (logsToday.isEmpty()) {
-                showCareReminder(pet.name, pet.id, pet.sex)
+                val hasWater  = entryPoint.waterDao().hasLogSince(pet.id, midnightToday)
+                val hasHealth = entryPoint.healthDao().hasEntrySince(pet.id, midnightToday)
+                if (!hasWater && !hasHealth) {
+                    showCareReminder(pet.name, pet.id, pet.sex)
+                }
             }
         }
 

@@ -47,6 +47,9 @@ interface HealthDao {
     @Query("DELETE FROM health_entries WHERE id = :entryId")
     suspend fun deleteEntry(entryId: Long)
 
+    @Query("SELECT COUNT(*) > 0 FROM health_entries WHERE petId = :petId AND registeredAt >= :since")
+    suspend fun hasEntrySince(petId: Long, since: Long): Boolean
+
     // ─── Histórico de peso ──────────────────────────────────────────
 
     // Busca todos os registros de peso em ordem cronológica

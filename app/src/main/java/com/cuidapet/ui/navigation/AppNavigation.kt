@@ -2,6 +2,7 @@ package com.cuidadopet.ui.navigation
 
 import android.content.Context
 import androidx.compose.runtime.Composable
+import android.app.Activity
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
@@ -74,13 +75,11 @@ fun AppNavigation(
 ) {
     val context        = LocalContext.current
     val prefs          = remember { context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE) }
+    val activity = LocalContext.current as? Activity
     val startDestination = remember {
-        val openPetId = prefs.getLong("open_today_pet_id", -1L)
+        val openPetId = activity?.intent?.getLongExtra("open_today_pet_id", -1L) ?: -1L
         when {
-            openPetId != -1L -> {
-                prefs.edit().remove("open_today_pet_id").apply()
-                Routes.dashboard(openPetId)
-            }
+            openPetId != -1L -> Routes.dashboard(openPetId)
             prefs.getBoolean(KEY_ONBOARDING, false) -> Routes.HOME
             else -> Routes.ONBOARDING
         }

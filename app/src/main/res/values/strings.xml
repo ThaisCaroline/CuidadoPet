@@ -511,6 +511,7 @@
     <string name="super_reminder_notif_title">🔔 Hora de cuidar de %1$s!</string>
     <string name="super_reminder_administered">Já administrei</string>
     <string name="super_reminder_water_given">Já dei água</string>
+    <string name="super_reminder_water_ok">Ok, vou registrar</string>
     <string name="super_reminder_meal_given">Já alimentei</string>
     <string name="super_reminder_snooze">Lembrar em 10 min</string>
 

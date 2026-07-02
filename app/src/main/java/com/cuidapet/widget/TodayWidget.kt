@@ -1,3 +1,5 @@
+@file:Suppress("RestrictedApi")
+
 package com.cuidadopet.widget
 
 import android.content.Context

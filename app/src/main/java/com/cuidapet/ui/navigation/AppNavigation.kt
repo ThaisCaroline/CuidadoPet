@@ -2,14 +2,8 @@ package com.cuidadopet.ui.navigation
 
 import android.content.Context
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -81,27 +75,14 @@ fun AppNavigation(
     val context        = LocalContext.current
     val prefs          = remember { context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE) }
     val startDestination = remember {
-        if (prefs.getBoolean(KEY_ONBOARDING, false)) Routes.HOME else Routes.ONBOARDING
-    }
-
-    val lifecycleOwner   = LocalLifecycleOwner.current
-    val resumeTrigger    = remember { mutableIntStateOf(0) }
-
-    DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) resumeTrigger.intValue++
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
-    }
-
-    LaunchedEffect(resumeTrigger.intValue) {
-        val petId = prefs.getLong("open_today_pet_id", -1L)
-        if (petId != -1L) {
-            prefs.edit().remove("open_today_pet_id").apply()
-            navController.navigate(Routes.dashboard(petId)) {
-                launchSingleTop = true
+        val openPetId = prefs.getLong("open_today_pet_id", -1L)
+        when {
+            openPetId != -1L -> {
+                prefs.edit().remove("open_today_pet_id").apply()
+                Routes.dashboard(openPetId)
             }
+            prefs.getBoolean(KEY_ONBOARDING, false) -> Routes.HOME
+            else -> Routes.ONBOARDING
         }
     }
 

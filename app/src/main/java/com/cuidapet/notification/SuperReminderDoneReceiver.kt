@@ -57,8 +57,7 @@ class SuperReminderDoneReceiver : BroadcastReceiver() {
                         context.packageManager.getLaunchIntentForPackage(context.packageName)?.let {
                             it.addFlags(
                                 Intent.FLAG_ACTIVITY_NEW_TASK or
-                                Intent.FLAG_ACTIVITY_CLEAR_TOP or
-                                Intent.FLAG_ACTIVITY_SINGLE_TOP
+                                Intent.FLAG_ACTIVITY_CLEAR_TASK
                             )
                             context.startActivity(it)
                         }

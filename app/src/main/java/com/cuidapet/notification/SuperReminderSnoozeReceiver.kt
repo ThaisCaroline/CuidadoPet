@@ -125,7 +125,7 @@ fun showSuperReminderNotification(
         .setOngoing(true)
 
     val doneLabel = when (type) {
-        SuperReminderActivity.TYPE_WATER -> context.getString(R.string.super_reminder_water_given)
+        SuperReminderActivity.TYPE_WATER -> context.getString(R.string.super_reminder_water_ok)
         SuperReminderActivity.TYPE_MEAL  -> context.getString(R.string.super_reminder_meal_given)
         else                             -> context.getString(R.string.super_reminder_administered)
     }

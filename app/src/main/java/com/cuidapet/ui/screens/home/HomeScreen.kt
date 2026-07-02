@@ -33,6 +33,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Store
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -88,7 +89,8 @@ fun HomeScreen(
     onPetClick: (Long) -> Unit,
     onPrivacyPolicy: () -> Unit = {},
     onSettings: () -> Unit = {},
-    onOpenPaywall: () -> Unit = {}
+    onOpenPaywall: () -> Unit = {},
+    onPartnersClick: () -> Unit = {}
 ) {
     val viewModel: HomeViewModel = hiltViewModel()
     val pets by viewModel.pets.collectAsStateWithLifecycle()
@@ -189,6 +191,13 @@ fun HomeScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = onPartnersClick) {
+                        Icon(
+                            Icons.Default.Store,
+                            contentDescription = stringResource(R.string.partners_title),
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
                     var menuExpanded by remember { mutableStateOf(false) }
                     IconButton(onClick = { menuExpanded = true }) {
                         Icon(Icons.Default.MoreVert, "Menu",

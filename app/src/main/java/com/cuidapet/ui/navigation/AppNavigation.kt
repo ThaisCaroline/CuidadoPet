@@ -29,6 +29,7 @@ import com.cuidadopet.ui.screens.health.WeightHistoryScreen
 import com.cuidadopet.ui.screens.report.ReportScreen
 import com.cuidadopet.ui.screens.vaccine.VaccineFormScreen
 import com.cuidadopet.ui.screens.vaccine.VaccineListScreen
+import com.cuidadopet.ui.screens.partners.PartnersScreen
 import com.cuidadopet.ui.screens.paywall.PaywallScreen
 import com.cuidadopet.ui.screens.water.WaterConfigFormScreen
 
@@ -49,6 +50,7 @@ object Routes {
     const val PRIVACY_POLICY = "privacy_policy"           // política de privacidade
     const val SETTINGS       = "settings"                  // configurações / backup
     const val PAYWALL        = "paywall"                   // assinatura premium
+    const val PARTNERS       = "partners"                  // parceiros
     const val VACCINE_LIST   = "vaccine_list/{petId}"
     const val VACCINE_FORM   = "vaccine_form/{petId}?vaccineId={vaccineId}"
 
@@ -127,8 +129,14 @@ fun AppNavigation(
                 onPetClick      = { petId -> navController.navigate(Routes.dashboard(petId)) },
                 onPrivacyPolicy = { navController.navigate(Routes.PRIVACY_POLICY) },
                 onSettings      = { navController.navigate(Routes.SETTINGS) },
-                onOpenPaywall   = { navController.navigate(Routes.PAYWALL) }
+                onOpenPaywall   = { navController.navigate(Routes.PAYWALL) },
+                onPartnersClick = { navController.navigate(Routes.PARTNERS) }
             )
+        }
+
+        // ── Parceiros ─────────────────────────────────────────────────────
+        composable(Routes.PARTNERS) {
+            PartnersScreen(onNavigateBack = { navController.popBackStack() })
         }
 
         // ── Política de privacidade ───────────────────────────────────────

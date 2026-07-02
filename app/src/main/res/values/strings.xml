@@ -540,6 +540,10 @@
     <string name="birthday_banner_title">Feliz aniversário, %s!</string>
     <string name="birthday_banner_subtitle">Dê um carinho especial hoje.</string>
     <string name="action_dismiss">Fechar</string>
+
+    <!-- ── Parceiros ────────────────────────────────────────────── -->
+    <string name="partners_title">Parceiros</string>
+    <string name="partners_empty">Em breve nossos parceiros aparecerão aqui!</string>
     <string name="action_administered">Administrado</string>
     <string name="widget_description">Medicamentos ativos dos seus pets</string>
     <string name="home_profile_incomplete">Adicione foto e data de nascimento</string>

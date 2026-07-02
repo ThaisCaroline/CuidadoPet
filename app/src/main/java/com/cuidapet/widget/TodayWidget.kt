@@ -5,6 +5,7 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
@@ -219,7 +220,7 @@ private fun WidgetContent(nextDose: NextDose?, petBitmap: Bitmap?) {
                     Text(
                         text  = context.getString(R.string.widget_all_up_to_date),
                         style = TextStyle(
-                            color      = ColorProvider(android.R.color.white),
+                            color      = ColorProvider(Color.White),
                             fontWeight = FontWeight.Bold,
                             fontSize   = 14.sp
                         )
@@ -228,7 +229,7 @@ private fun WidgetContent(nextDose: NextDose?, petBitmap: Bitmap?) {
                     Text(
                         text  = context.getString(R.string.widget_no_active_meds),
                         style = TextStyle(
-                            color    = ColorProvider(android.R.color.white),
+                            color    = ColorProvider(Color.White),
                             fontSize = 12.sp
                         )
                     )
@@ -237,7 +238,7 @@ private fun WidgetContent(nextDose: NextDose?, petBitmap: Bitmap?) {
                     Text(
                         text  = formatTimeUntil(context, nextDose.timeMs),
                         style = TextStyle(
-                            color      = ColorProvider(android.R.color.white),
+                            color      = ColorProvider(Color.White),
                             fontWeight = FontWeight.Bold,
                             fontSize   = 15.sp
                         ),
@@ -247,7 +248,7 @@ private fun WidgetContent(nextDose: NextDose?, petBitmap: Bitmap?) {
                     Text(
                         text     = "${formatDoseTime(nextDose.timeMs)} · ${nextDose.medName}",
                         style    = TextStyle(
-                            color      = ColorProvider(android.R.color.white),
+                            color      = ColorProvider(Color.White),
                             fontWeight = FontWeight.Medium,
                             fontSize   = 12.sp
                         ),
@@ -257,7 +258,7 @@ private fun WidgetContent(nextDose: NextDose?, petBitmap: Bitmap?) {
                     Text(
                         text     = "${nextDose.petName} · ${nextDose.dose} ${nextDose.doseUnit}",
                         style    = TextStyle(
-                            color    = ColorProvider(android.R.color.white),
+                            color    = ColorProvider(Color.White),
                             fontSize = 11.sp
                         ),
                         modifier = GlanceModifier.fillMaxWidth(),

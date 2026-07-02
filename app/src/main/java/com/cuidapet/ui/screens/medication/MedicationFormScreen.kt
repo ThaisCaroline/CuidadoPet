@@ -201,7 +201,7 @@ fun MedicationFormScreen(
                     if (dialogSuperReminder) {
                         val alarmMgr = context.getSystemService(AlarmManager::class.java)
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
-                            !alarmMgr.canScheduleExactAlarms()
+                            alarmMgr != null && !alarmMgr.canScheduleExactAlarms()
                         ) {
                             context.startActivity(
                                 Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
@@ -210,7 +210,7 @@ fun MedicationFormScreen(
                             )
                         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                             val notifMgr = context.getSystemService(NotificationManager::class.java)
-                            if (!notifMgr.canUseFullScreenIntent()) {
+                            if (notifMgr != null && !notifMgr.canUseFullScreenIntent()) {
                                 context.startActivity(
                                     Intent(Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT).apply {
                                         data = Uri.fromParts("package", context.packageName, null)

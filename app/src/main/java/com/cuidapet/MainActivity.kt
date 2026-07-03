@@ -38,7 +38,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
-import com.cuidadopet.notification.ReEngagementWorker
+import com.cuidadopet.notification.ReEngagementReceiver
 import com.cuidadopet.widget.TodayWidget
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -87,11 +87,7 @@ class MainActivity : ComponentActivity() {
         appUpdateManager.registerListener(installStateListener)
         checkForUpdate()
 
-        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
-            ReEngagementWorker.WORK_NAME,
-            ExistingPeriodicWorkPolicy.KEEP,
-            PeriodicWorkRequestBuilder<ReEngagementWorker>(24, TimeUnit.HOURS).build()
-        )
+        ReEngagementReceiver.schedule(this)
 
         // Care reminder às 19h — dispara se o tutor não registrou cuidados no dia
         val now = Calendar.getInstance()

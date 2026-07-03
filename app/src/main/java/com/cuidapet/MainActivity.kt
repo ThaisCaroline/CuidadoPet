@@ -17,6 +17,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.res.stringResource
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.cuidadopet.R
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -37,7 +38,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
-import com.cuidadopet.notification.ReEngagementWorker
+import com.cuidadopet.notification.ReEngagementReceiver
 import com.cuidadopet.widget.TodayWidget
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -78,15 +79,15 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
+        intent.getIntExtra("cancel_notif_id", -1).also {
+            if (it != -1) NotificationManagerCompat.from(this).cancel(it)
+        }
+
         appUpdateManager = AppUpdateManagerFactory.create(this)
         appUpdateManager.registerListener(installStateListener)
         checkForUpdate()
 
-        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
-            ReEngagementWorker.WORK_NAME,
-            ExistingPeriodicWorkPolicy.KEEP,
-            PeriodicWorkRequestBuilder<ReEngagementWorker>(24, TimeUnit.HOURS).build()
-        )
+        ReEngagementReceiver.schedule(this)
 
         // Care reminder às 19h — dispara se o tutor não registrou cuidados no dia
         val now = Calendar.getInstance()

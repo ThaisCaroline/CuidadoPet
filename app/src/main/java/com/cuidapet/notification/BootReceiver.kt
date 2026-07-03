@@ -38,6 +38,8 @@ class BootReceiver : BroadcastReceiver() {
         // outros broadcasts dependendo da configuração do sistema
         if (intent.action != Intent.ACTION_BOOT_COMPLETED) return
 
+        ReEngagementReceiver.schedule(context)
+
         // onReceive() roda na thread principal e tem limite de tempo (~10s).
         // goAsync() estende esse limite e libera a thread principal imediatamente.
         // O Android só "mata" o processo depois que pendingResult.finish() for chamado.

@@ -1,3 +1,5 @@
+@file:Suppress("RestrictedApi")
+
 package com.cuidadopet.widget
 
 import android.content.Context
@@ -5,9 +7,9 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.graphics.Color
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.GlanceTheme
@@ -38,7 +40,6 @@ import androidx.glance.text.TextStyle
 import com.cuidadopet.MainActivity
 import com.cuidadopet.R
 import com.cuidadopet.data.db.entity.MedicationEntity
-import com.cuidadopet.data.db.entity.MedicationLogEntity
 import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.flow.first
 import java.util.Calendar

@@ -58,6 +58,11 @@
             android:name=".notification.SuperReminderDoneReceiver"
             android:exported="false" />
 
+        <!-- BroadcastReceiver das jornadas de retorno — dispara todo dia às 19h via AlarmManager -->
+        <receiver
+            android:name=".notification.ReEngagementReceiver"
+            android:exported="false" />
+
         <!-- Activity de tela cheia do Super Lembrete — aparece sobre a tela de bloqueio -->
         <activity
             android:name=".notification.SuperReminderActivity"

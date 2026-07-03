@@ -74,4 +74,9 @@ interface WaterDao {
     // Remove um registro específico — caso o tutor tenha digitado errado
     @Query("DELETE FROM water_logs WHERE id = :logId")
     suspend fun deleteLog(logId: Long)
+
+    // Verifica se há algum registro de água desde :since — usado pelo Worker para
+    // não disparar o lembrete se o tutor já ofereceu água no intervalo atual
+    @Query("SELECT COUNT(*) > 0 FROM water_logs WHERE petId = :petId AND registeredAt >= :since")
+    suspend fun hasLogSince(petId: Long, since: Long): Boolean
 }

@@ -44,11 +44,15 @@ fun AdBanner(modifier: Modifier = Modifier) {
     if (showAdMob) {
         AndroidView(
             modifier = modifier.fillMaxWidth().padding(top = 16.dp),
-            factory  = { context ->
-                AdView(context).apply {
-                    setAdSize(AdSize.BANNER)
-                    adUnitId = BuildConfig.BANNER_AD_UNIT_ID
-                    loadAd(AdRequest.Builder().build())
+            factory  = { ctx ->
+                try {
+                    AdView(ctx).apply {
+                        setAdSize(AdSize.BANNER)
+                        adUnitId = BuildConfig.BANNER_AD_UNIT_ID
+                        loadAd(AdRequest.Builder().build())
+                    }
+                } catch (_: Exception) {
+                    android.view.View(ctx)
                 }
             }
         )

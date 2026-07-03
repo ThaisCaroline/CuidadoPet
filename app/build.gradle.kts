@@ -18,8 +18,8 @@ android {
         applicationId = "com.cuidadopet"
         minSdk = 26
         targetSdk = 36
-        versionCode = 35
-        versionName = "1.0.35"
+        versionCode = 36
+        versionName = "1.0.36"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -150,8 +150,8 @@ dependencies {
     implementation("nl.dionsegijn:konfetti-compose:2.0.4")
 
     // Glance — widget para a tela inicial do Android
-    implementation("androidx.glance:glance-appwidget:1.1.0")
-    implementation("androidx.glance:glance-material3:1.1.0")
+    implementation("androidx.glance:glance-appwidget:1.1.1")
+    implementation("androidx.glance:glance-material3:1.1.1")
 
     // Play In-App Updates — popup de atualização quando há nova versão na Play Store
     implementation("com.google.android.play:app-update-ktx:2.1.0")

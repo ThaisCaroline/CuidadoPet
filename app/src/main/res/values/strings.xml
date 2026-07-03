@@ -511,6 +511,7 @@
     <string name="super_reminder_notif_title">🔔 Hora de cuidar de %1$s!</string>
     <string name="super_reminder_administered">Já administrei</string>
     <string name="super_reminder_water_given">Já dei água</string>
+    <string name="super_reminder_water_ok">Ok, vou registrar</string>
     <string name="super_reminder_meal_given">Já alimentei</string>
     <string name="super_reminder_snooze">Lembrar em 10 min</string>
 
@@ -539,6 +540,10 @@
     <string name="birthday_banner_title">Feliz aniversário, %s!</string>
     <string name="birthday_banner_subtitle">Dê um carinho especial hoje.</string>
     <string name="action_dismiss">Fechar</string>
+
+    <!-- ── Parceiros ────────────────────────────────────────────── -->
+    <string name="partners_title">Parceiros</string>
+    <string name="partners_empty">Em breve nossos parceiros aparecerão aqui!</string>
     <string name="action_administered">Administrado</string>
     <string name="widget_description">Medicamentos ativos dos seus pets</string>
     <string name="home_profile_incomplete">Adicione foto e data de nascimento</string>

@@ -17,6 +17,7 @@ class BirthdayAlarmScheduler @Inject constructor(
     private val alarmManager = context.getSystemService(AlarmManager::class.java)
 
     fun scheduleBirthday(pet: PetEntity) {
+        val am = alarmManager ?: return
         val birthDate = pet.birthDate ?: return
         val triggerTime = nextBirthdayMillis(birthDate)
 
@@ -31,18 +32,22 @@ class BirthdayAlarmScheduler @Inject constructor(
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        when {
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-                if (alarmManager.canScheduleExactAlarms()) {
-                    alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent)
-                } else {
-                    alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent)
+        try {
+            when {
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+                    if (am.canScheduleExactAlarms()) {
+                        am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent)
+                    } else {
+                        am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent)
+                    }
                 }
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ->
+                    am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent)
+                else ->
+                    am.setExact(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent)
             }
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ->
-                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent)
-            else ->
-                alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent)
+        } catch (_: SecurityException) {
+            am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent)
         }
     }
 

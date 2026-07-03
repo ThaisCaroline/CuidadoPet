@@ -34,6 +34,12 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import android.app.AlarmManager
+import android.app.NotificationManager
+import android.content.Intent
+import android.net.Uri
+import android.os.Build
+import android.provider.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -42,6 +48,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -61,6 +68,7 @@ fun WaterConfigFormScreen(
 ) {
     LaunchedEffect(petId) { viewModel.load(petId) }
 
+    val context = LocalContext.current
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -163,7 +171,33 @@ fun WaterConfigFormScreen(
                 ) {
                     Checkbox(
                         checked         = state.isSuperReminder,
-                        onCheckedChange = viewModel::updateSuperReminder
+                        onCheckedChange = { enabled ->
+                            if (enabled) {
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                                    val alarmMgr = context.getSystemService(AlarmManager::class.java)
+                                    if (alarmMgr != null && !alarmMgr.canScheduleExactAlarms()) {
+                                        context.startActivity(
+                                            Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
+                                                data = Uri.fromParts("package", context.packageName, null)
+                                            }
+                                        )
+                                        return@Checkbox
+                                    }
+                                }
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                                    val notifMgr = context.getSystemService(NotificationManager::class.java)
+                                    if (notifMgr != null && !notifMgr.canUseFullScreenIntent()) {
+                                        context.startActivity(
+                                            Intent(Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT).apply {
+                                                data = Uri.fromParts("package", context.packageName, null)
+                                            }
+                                        )
+                                        return@Checkbox
+                                    }
+                                }
+                            }
+                            viewModel.updateSuperReminder(enabled)
+                        }
                     )
                     Column {
                         Text(

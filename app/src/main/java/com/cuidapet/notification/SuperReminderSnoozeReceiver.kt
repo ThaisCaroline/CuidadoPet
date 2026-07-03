@@ -9,6 +9,7 @@ import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import com.cuidadopet.MainActivity
 import com.cuidadopet.R
 
 class SuperReminderSnoozeReceiver : BroadcastReceiver() {
@@ -125,23 +126,37 @@ fun showSuperReminderNotification(
         .setOngoing(true)
 
     val doneLabel = when (type) {
-        SuperReminderActivity.TYPE_WATER -> context.getString(R.string.super_reminder_water_given)
+        SuperReminderActivity.TYPE_WATER -> context.getString(R.string.super_reminder_water_ok)
         SuperReminderActivity.TYPE_MEAL  -> context.getString(R.string.super_reminder_meal_given)
         else                             -> context.getString(R.string.super_reminder_administered)
     }
-    val doneIntent = Intent(context, SuperReminderDoneReceiver::class.java).apply {
-        putExtra(SuperReminderActivity.EXTRA_TYPE, type)
-        putExtra(SuperReminderActivity.EXTRA_ID, id)
-        putExtra(SuperReminderActivity.EXTRA_NOTIFICATION_ID, notifId)
-        putExtra(SuperReminderActivity.EXTRA_SCHEDULED_AT, scheduledAt)
-        putExtra(SuperReminderActivity.EXTRA_AMOUNT, amount)
+    val donePending = if (type == SuperReminderActivity.TYPE_WATER) {
+        val waterIntent = Intent(context, MainActivity::class.java).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+            putExtra("open_today_pet_id", id)
+            putExtra("cancel_notif_id", notifId)
+        }
+        PendingIntent.getActivity(
+            context,
+            (id + 20000L).toInt(),
+            waterIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+    } else {
+        val doneIntent = Intent(context, SuperReminderDoneReceiver::class.java).apply {
+            putExtra(SuperReminderActivity.EXTRA_TYPE, type)
+            putExtra(SuperReminderActivity.EXTRA_ID, id)
+            putExtra(SuperReminderActivity.EXTRA_NOTIFICATION_ID, notifId)
+            putExtra(SuperReminderActivity.EXTRA_SCHEDULED_AT, scheduledAt)
+            putExtra(SuperReminderActivity.EXTRA_AMOUNT, amount)
+        }
+        PendingIntent.getBroadcast(
+            context,
+            (id + 20000L).toInt(),
+            doneIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
     }
-    val donePending = PendingIntent.getBroadcast(
-        context,
-        (id + 20000L).toInt(),
-        doneIntent,
-        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-    )
     builder.addAction(0, doneLabel, donePending)
 
     val snoozeIntent = Intent(context, SuperReminderSnoozeReceiver::class.java).apply {

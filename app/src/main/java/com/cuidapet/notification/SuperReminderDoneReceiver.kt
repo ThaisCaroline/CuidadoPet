@@ -7,10 +7,8 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.glance.appwidget.updateAll
 import com.cuidadopet.data.db.entity.MealLogEntity
 import com.cuidadopet.data.db.entity.MedicationLogEntity
-import com.cuidadopet.data.db.entity.WaterLogEntity
 import com.cuidadopet.data.repository.FeedingRepository
 import com.cuidadopet.data.repository.MedicationRepository
-import com.cuidadopet.data.repository.WaterRepository
 import com.cuidadopet.widget.TodayWidget
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
@@ -24,7 +22,6 @@ import javax.inject.Inject
 class SuperReminderDoneReceiver : BroadcastReceiver() {
 
     @Inject lateinit var medicationRepository: MedicationRepository
-    @Inject lateinit var waterRepository: WaterRepository
     @Inject lateinit var feedingRepository: FeedingRepository
 
     override fun onReceive(context: Context, intent: Intent) {
@@ -55,13 +52,15 @@ class SuperReminderDoneReceiver : BroadcastReceiver() {
                         TodayWidget().updateAll(context)
                     }
                     SuperReminderActivity.TYPE_WATER -> {
-                        waterRepository.addWaterLog(
-                            WaterLogEntity(
-                                petId        = id,
-                                amountMl     = amount,
-                                registeredAt = System.currentTimeMillis()
+                        context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+                            .edit().putLong("open_today_pet_id", id).apply()
+                        context.packageManager.getLaunchIntentForPackage(context.packageName)?.let {
+                            it.addFlags(
+                                Intent.FLAG_ACTIVITY_NEW_TASK or
+                                Intent.FLAG_ACTIVITY_CLEAR_TASK
                             )
-                        )
+                            context.startActivity(it)
+                        }
                     }
                     SuperReminderActivity.TYPE_MEAL -> {
                         val midnight = Calendar.getInstance().apply {

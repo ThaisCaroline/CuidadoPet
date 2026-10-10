@@ -1,9 +1,12 @@
 package com.cuidadopet.data.repository
 
+import android.content.Context
 import com.cuidadopet.data.db.dao.MedicationDao
 import com.cuidadopet.data.db.entity.MedicationEntity
 import com.cuidadopet.data.db.entity.MedicationLogEntity
 import com.cuidadopet.notification.AlarmScheduler
+import com.cuidadopet.widget.TodayWidget
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -11,7 +14,8 @@ import javax.inject.Singleton
 @Singleton
 class MedicationRepository @Inject constructor(
     private val medicationDao: MedicationDao,
-    private val alarmScheduler: AlarmScheduler
+    private val alarmScheduler: AlarmScheduler,
+    @ApplicationContext private val context: Context
 ) {
 
     // Busca medicamentos ativos de um pet
@@ -46,6 +50,8 @@ class MedicationRepository @Inject constructor(
     suspend fun deactivateMedication(medicationId: Long) {
         medicationDao.deactivateMedication(medicationId)
         alarmScheduler.cancelMedication(medicationId)
+        // Atualiza o widget para não mostrar mais a dose deste medicamento
+        try { TodayWidget().updateAll(context) } catch (_: Exception) {}
     }
 
     // ── Logs ──────────────────────────────────────────────────────────

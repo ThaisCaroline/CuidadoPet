@@ -82,6 +82,8 @@ class TodayWidget : GlanceAppWidget() {
             for (med in meds) {
                 val medTaken = takenLogs.filter { it.medicationId == med.id }.map { it.scheduledAt }.toSet()
                 val t = computeNextDoseTime(med, now, medTaken) ?: continue
+                // Tratamento encerrado: a próxima dose cairia após o fim, então não há mais doses
+                if (med.endDate != null && t > med.endDate) continue
                 if (nextDose == null || t < nextDose.timeMs) {
                     nextDose = NextDose(t, med.name, pet.name, med.dose, med.doseUnit, pet.photoPath)
                 }

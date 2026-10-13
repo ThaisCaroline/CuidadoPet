@@ -15,6 +15,7 @@ import com.cuidadopet.ui.screens.dashboard.PetDashboardScreen
 import com.cuidadopet.ui.screens.feeding.MealPlanFormScreen
 import com.cuidadopet.ui.screens.home.HomeScreen
 import com.cuidadopet.ui.screens.medication.MedicationFormScreen
+import com.cuidadopet.ui.screens.medication.PrescriptionScanScreen
 import com.cuidadopet.ui.screens.onboarding.OnboardingScreen
 import com.cuidadopet.ui.screens.pet.PetFormScreen
 import com.cuidadopet.ui.screens.health.HealthEntryFormScreen
@@ -37,6 +38,7 @@ object Routes {
     const val PET_FORM      = "pet_form?petId={petId}"
     const val DASHBOARD     = "dashboard/{petId}"
     const val MED_FORM      = "med_form/{petId}?medicationId={medicationId}"
+    const val PRESCRIPTION_SCAN = "prescription_scan/{petId}"   // leitura de receita (OCR)
     const val MEAL_PLAN     = "meal_plan/{petId}?planId={planId}"    // formulário de plano alimentar
     const val WATER_CONFIG   = "water_config/{petId}"   // configuração de hidratação
     const val HEALTH_ENTRY   = "health_entry/{petId}?entryId={entryId}" // diário saúde
@@ -55,6 +57,7 @@ object Routes {
     fun medForm(petId: Long, medicationId: Long? = null) =
         if (medicationId != null) "med_form/$petId?medicationId=$medicationId"
         else "med_form/$petId"
+    fun prescriptionScan(petId: Long) = "prescription_scan/$petId"
     fun mealPlan(petId: Long, planId: Long? = null) =
         if (planId != null) "meal_plan/$petId?planId=$planId" else "meal_plan/$petId"
     fun waterConfig(petId: Long)      = "water_config/$petId"
@@ -162,6 +165,7 @@ fun AppNavigation(
                 onNavigateBack       = { navController.popBackStack() },
                 onEditPet            = { navController.navigate(Routes.petForm(it)) },
                 onAddMedication      = { navController.navigate(Routes.medForm(petId)) },
+                onScanPrescription   = { navController.navigate(Routes.prescriptionScan(petId)) },
                 onEditMedication     = { medId -> navController.navigate(Routes.medForm(petId, medId)) },
                 onConfigureMealPlan  = { planId -> navController.navigate(Routes.mealPlan(petId, planId)) },
                 onConfigureWater     = { navController.navigate(Routes.waterConfig(petId)) },
@@ -218,6 +222,17 @@ fun AppNavigation(
             MedicationFormScreen(
                 petId          = petId,
                 medicationId   = medicationId,
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        // ── Leitura de receita (OCR) ──────────────────────────────────────
+        composable(
+            route = Routes.PRESCRIPTION_SCAN,
+            arguments = listOf(navArgument("petId") { type = NavType.LongType })
+        ) { entry ->
+            PrescriptionScanScreen(
+                petId          = entry.arguments!!.getLong("petId"),
                 onNavigateBack = { navController.popBackStack() }
             )
         }

@@ -9,7 +9,10 @@ import com.cuidadopet.widget.TodayWidget
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
+import android.util.Log
 import javax.inject.Singleton
+
+private const val TAG = "MedicationRepository"
 
 @Singleton
 class MedicationRepository @Inject constructor(
@@ -36,6 +39,22 @@ class MedicationRepository @Inject constructor(
         // Agenda com o id real gerado pelo banco
         alarmScheduler.scheduleMedication(medication.copy(id = id), petName)
         return id
+    }
+
+    // Insere vários medicamentos de uma vez (ex.: leitura de receita).
+    // Grava tudo numa transação e só agenda os alarmes depois que todas as linhas estiverem salvas.
+    suspend fun insertMedications(medications: List<MedicationEntity>, petName: String): List<Long> {
+        val ids = medicationDao.insertMedications(medications)
+        // Os registros já estão salvos. Se um alarme falhar, não tratamos como erro de salvamento:
+        // o tutor tentaria de novo e duplicaria os medicamentos.
+        medications.zip(ids).forEach { (medication, id) ->
+            try {
+                alarmScheduler.scheduleMedication(medication.copy(id = id), petName)
+            } catch (e: Exception) {
+                Log.w(TAG, "Falha ao agendar alarme do medicamento $id", e)
+            }
+        }
+        return ids
     }
 
     // Atualiza medicamento E reagenda o alarme

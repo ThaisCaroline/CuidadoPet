@@ -165,6 +165,9 @@ dependencies {
     // RevenueCat — gerenciamento de assinaturas e compras in-app
     implementation("com.revenuecat.purchases:purchases:8.3.0")
 
+    // ML Kit — reconhecimento de texto no aparelho (leitura de receitas)
+    implementation("com.google.mlkit:text-recognition:16.0.1")
+
     // Testes
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

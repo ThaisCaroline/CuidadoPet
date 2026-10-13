@@ -633,4 +633,43 @@
     <string name="language_system">Padrão do sistema</string>
     <string name="language_pt">Português</string>
     <string name="language_en">Inglês</string>
+
+    <!-- Leitura de receita -->
+    <string name="scan_title">Ler receita</string>
+    <string name="scan_pick_button">Escolher foto da receita</string>
+    <string name="scan_reading">Lendo a receita…</string>
+    <string name="scan_empty">Não encontrei medicamentos nessa foto. Tente uma imagem mais nítida ou cadastre manualmente.</string>
+    <string name="scan_read_error">Não consegui ler a imagem. Tente outra foto.</string>
+    <string name="scan_save_error">Não foi possível salvar os medicamentos. Tente novamente.</string>
+    <string name="scan_observation">Importado da receita: %1$s</string>
+    <string name="scan_tips_title">Para uma leitura melhor:</string>
+    <string name="scan_tip_frame">Enquadre a receita inteira, sem cortar as bordas.</string>
+    <string name="scan_tip_light">Use boa luz, sem sombra nem reflexo.</string>
+    <string name="scan_tip_steady">Segure o celular firme e fotografe de cima, sem borrão.</string>
+    <string name="scan_tip_handwriting">Letra de mão pode não ser lida. Confira tudo.</string>
+    <string name="scan_tip_privacy">A foto fica só no seu aparelho.</string>
+    <string name="scan_tip_bullet">• %1$s</string>
+    <string name="scan_include_label">Incluir na agenda</string>
+    <string name="scan_start_time_label">Horário da 1ª dose (HH:mm)</string>
+    <string name="scan_interval_label">Intervalo (horas)</string>
+    <string name="scan_times_label">Horários (HH:mm, separados por vírgula)</string>
+    <string name="scan_preview_interval">A cada %1$d h, a partir das %2$s</string>
+    <string name="scan_preview_total">Total: %1$d doses, até %2$s</string>
+    <string name="scan_preview_first">Primeiro aviso: %1$s</string>
+    <string name="scan_duplicate_warning">Já existe um medicamento ativo com este nome. Ele começou desmarcado para evitar dose dupla. Marque só se for intencional.</string>
+    <string name="scan_invalid_schedule">Confira os horários (HH:mm) e o intervalo (de 1 a 720 horas).</string>
+    <string name="scan_disclaimer_title">Antes de começar</string>
+    <string name="scan_disclaimer_text">A leitura é automática e pode errar, principalmente com letra de mão, foto borrada ou receita cortada. Confira nome, dose, horários e duração antes de salvar. Quem confirma os dados é você.</string>
+    <string name="scan_disclaimer_ok">Entendi</string>
+    <string name="scan_limit_error">Esse pet já tem %1$d medicamentos ativos. Desative alguns antes de importar a receita.</string>
+    <string name="scan_invalid_items">Confira os medicamentos marcados: nome, dose e duração (1 a 3650 dias) são obrigatórios.</string>
+    <string name="scan_default_pet_name">seu pet</string>
+    <string name="scan_save_button">Salvar %1$d medicamento(s)</string>
+    <string name="scan_fixed_times">Horários: %1$s</string>
+    <string name="scan_name_label">Medicamento</string>
+    <string name="scan_dose_label">Dose (%1$s)</string>
+    <string name="scan_duration_label">Dias de tratamento</string>
+    <string name="scan_duration_required">Informe os dias de tratamento. A receita não traz esse dado.</string>
+    <string name="scan_review_warning">Confira: parte das informações não foi encontrada e foi preenchida por padrão.</string>
+    <string name="scan_source_label">Texto da receita: %1$s</string>
 </resources>

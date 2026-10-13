@@ -628,4 +628,43 @@
     <string name="language_system">System default</string>
     <string name="language_pt">Portuguese</string>
     <string name="language_en">English</string>
+
+    <!-- Prescription reading -->
+    <string name="scan_title">Read prescription</string>
+    <string name="scan_pick_button">Choose prescription photo</string>
+    <string name="scan_reading">Reading the prescription…</string>
+    <string name="scan_empty">I couldn\'t find medications in this photo. Try a sharper image or add them manually.</string>
+    <string name="scan_read_error">I couldn\'t read the image. Try another photo.</string>
+    <string name="scan_save_error">Couldn\'t save the medications. Please try again.</string>
+    <string name="scan_observation">Imported from prescription: %1$s</string>
+    <string name="scan_tips_title">For a better reading:</string>
+    <string name="scan_tip_frame">Frame the whole prescription, without cropping the edges.</string>
+    <string name="scan_tip_light">Use good light, with no shadows or glare.</string>
+    <string name="scan_tip_steady">Hold the phone steady and shoot from above, without blur.</string>
+    <string name="scan_tip_handwriting">Handwriting may not be read. Check everything.</string>
+    <string name="scan_tip_privacy">The photo stays only on your device.</string>
+    <string name="scan_tip_bullet">• %1$s</string>
+    <string name="scan_include_label">Include in the schedule</string>
+    <string name="scan_start_time_label">First dose time (HH:mm)</string>
+    <string name="scan_interval_label">Interval (hours)</string>
+    <string name="scan_times_label">Times (HH:mm, comma-separated)</string>
+    <string name="scan_preview_interval">Every %1$d h, starting at %2$s</string>
+    <string name="scan_preview_total">Total: %1$d doses, until %2$s</string>
+    <string name="scan_preview_first">First reminder: %1$s</string>
+    <string name="scan_duplicate_warning">An active medication with this name already exists. It started unchecked to avoid a double dose. Check it only if it is intended.</string>
+    <string name="scan_invalid_schedule">Check the times (HH:mm) and the interval (1 to 720 hours).</string>
+    <string name="scan_disclaimer_title">Before you start</string>
+    <string name="scan_disclaimer_text">Reading is automatic and can make mistakes, especially with handwriting, blurry photos or cropped prescriptions. Check name, dose, times and duration before saving. You are the one who confirms the data.</string>
+    <string name="scan_disclaimer_ok">Got it</string>
+    <string name="scan_limit_error">This pet already has %1$d active medications. Deactivate some before importing the prescription.</string>
+    <string name="scan_invalid_items">Check the selected medications: name, dose and duration (1 to 3650 days) are required.</string>
+    <string name="scan_default_pet_name">your pet</string>
+    <string name="scan_save_button">Save %1$d medication(s)</string>
+    <string name="scan_fixed_times">Times: %1$s</string>
+    <string name="scan_name_label">Medication</string>
+    <string name="scan_dose_label">Dose (%1$s)</string>
+    <string name="scan_duration_label">Treatment days</string>
+    <string name="scan_duration_required">Enter the treatment days. The prescription doesn\'t show them.</string>
+    <string name="scan_review_warning">Please check: some information was not found and was filled in by default.</string>
+    <string name="scan_source_label">Prescription text: %1$s</string>
 </resources>

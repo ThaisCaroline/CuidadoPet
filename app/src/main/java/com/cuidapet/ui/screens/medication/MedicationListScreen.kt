@@ -29,6 +29,8 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -51,6 +53,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.res.stringResource
 import com.cuidadopet.R
+import com.cuidadopet.data.PremiumFlags
 import com.cuidadopet.data.db.entity.MedicationEntity
 import com.cuidadopet.ui.components.AdBanner
 import java.text.SimpleDateFormat
@@ -62,6 +65,7 @@ fun MedicationListScreen(
     petId: Long,
     modifier: Modifier = Modifier,
     onAddClick: (() -> Unit)? = null,
+    onScanClick: (() -> Unit)? = null,
     onEditClick: ((Long) -> Unit)? = null,
     onOpenPaywall: () -> Unit = {},
     viewModel: MedicationListViewModel = hiltViewModel()
@@ -79,10 +83,16 @@ fun MedicationListScreen(
             title = { Text(stringResource(R.string.dialog_med_limit_title)) },
             text  = { Text(stringResource(R.string.dialog_med_limit_msg)) },
             confirmButton = {
-                Button(onClick = { showLimitDialog = false; onOpenPaywall() }) { Text(stringResource(R.string.dialog_med_limit_premium)) }
+                if (PremiumFlags.SALES_ENABLED) {
+                    Button(onClick = { showLimitDialog = false; onOpenPaywall() }) { Text(stringResource(R.string.dialog_med_limit_premium)) }
+                } else {
+                    TextButton(onClick = { showLimitDialog = false }) { Text(stringResource(R.string.dialog_med_limit_later)) }
+                }
             },
             dismissButton = {
-                TextButton(onClick = { showLimitDialog = false }) { Text(stringResource(R.string.dialog_med_limit_later)) }
+                if (PremiumFlags.SALES_ENABLED) {
+                    TextButton(onClick = { showLimitDialog = false }) { Text(stringResource(R.string.dialog_med_limit_later)) }
+                }
             }
         )
     }
@@ -107,15 +117,29 @@ fun MedicationListScreen(
     Scaffold(
         modifier = modifier,
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = {
-                    if (medications.size >= 20) showLimitDialog = true
-                    else onAddClick?.invoke()
-                },
-                containerColor = MaterialTheme.colorScheme.secondary
+            Column(
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Icon(Icons.Default.Add, stringResource(R.string.med_list_add_cd),
-                    tint = MaterialTheme.colorScheme.onSecondary)
+                // Leitura de receita: cria medicamentos a partir de uma foto
+                onScanClick?.let { scan ->
+                    ExtendedFloatingActionButton(
+                        onClick = scan,
+                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                        icon = { Icon(Icons.Default.CameraAlt, null) },
+                        text = { Text(stringResource(R.string.scan_title)) }
+                    )
+                }
+                FloatingActionButton(
+                    onClick = {
+                        if (medications.size >= 20) showLimitDialog = true
+                        else onAddClick?.invoke()
+                    },
+                    containerColor = MaterialTheme.colorScheme.secondary
+                ) {
+                    Icon(Icons.Default.Add, stringResource(R.string.med_list_add_cd),
+                        tint = MaterialTheme.colorScheme.onSecondary)
+                }
             }
         }
     ) { innerPadding ->

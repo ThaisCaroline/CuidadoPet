@@ -357,6 +357,14 @@ private fun ScanItemCard(
                 Text(text = it, style = MaterialTheme.typography.bodyMedium)
             }
 
+            if (!item.nameRecognized) {
+                Text(
+                    text = stringResource(R.string.scan_name_unknown),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+
             if (item.isDuplicate) {
                 Text(
                     text = stringResource(R.string.scan_duplicate_warning),

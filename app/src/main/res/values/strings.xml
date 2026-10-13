@@ -656,6 +656,7 @@
     <string name="scan_preview_interval">A cada %1$d h, a partir das %2$s</string>
     <string name="scan_preview_total">Total: %1$d doses, até %2$s</string>
     <string name="scan_preview_first">Primeiro aviso: %1$s</string>
+    <string name="scan_name_unknown">Este nome não está na lista de medicamentos conhecidos. Ele começou desmarcado: confira antes de marcar.</string>
     <string name="scan_duplicate_warning">Já existe um medicamento ativo com este nome. Ele começou desmarcado para evitar dose dupla. Marque só se for intencional.</string>
     <string name="scan_invalid_schedule">Confira os horários (HH:mm) e o intervalo (de 1 a 720 horas).</string>
     <string name="scan_disclaimer_title">Antes de começar</string>

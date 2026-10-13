@@ -5,6 +5,7 @@ import com.cuidadopet.data.db.dao.MedicationDao
 import com.cuidadopet.data.db.entity.MedicationEntity
 import com.cuidadopet.data.db.entity.MedicationLogEntity
 import com.cuidadopet.notification.AlarmScheduler
+import androidx.glance.appwidget.updateAll
 import com.cuidadopet.widget.TodayWidget
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
@@ -49,11 +50,13 @@ class MedicationRepository @Inject constructor(
         // o tutor tentaria de novo e duplicaria os medicamentos.
         medications.zip(ids).forEach { (medication, id) ->
             try {
-                alarmScheduler.scheduleMedication(medication.copy(id = id), petName)
+                alarmScheduler.scheduleMedication(medication.copy(id = id), petName, refreshWidget = false)
             } catch (e: Exception) {
                 Log.w(TAG, "Falha ao agendar alarme do medicamento $id", e)
             }
         }
+        // Uma única atualização do widget para o lote inteiro
+        try { TodayWidget().updateAll(context) } catch (_: Exception) {}
         return ids
     }
 

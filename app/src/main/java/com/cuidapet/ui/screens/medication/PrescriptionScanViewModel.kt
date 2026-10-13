@@ -20,7 +20,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.util.Calendar
 import javax.inject.Inject
@@ -45,6 +47,8 @@ data class ScanItem(
     val needsReview: Boolean,
     // Já existe um medicamento ativo com o mesmo nome no pet
     val isDuplicate: Boolean,
+    // false quando o nome não parece de medicamento; o item começa desmarcado
+    val nameRecognized: Boolean = true,
     val sourceLine: String,
     val selected: Boolean = true
 )
@@ -136,7 +140,9 @@ class PrescriptionScanViewModel @Inject constructor(
                 currentPetId?.let { refreshActiveNames(it) }
                 val text = recognizeText(uri)
                 val activeNames = _uiState.value.activeNames
-                val items = PrescriptionParser.parse(text).mapIndexed { index, parsed ->
+                // Interpretação do texto em segundo plano, fora da thread principal
+                val parsedList = withContext(Dispatchers.Default) { PrescriptionParser.parse(text) }
+                val items = parsedList.mapIndexed { index, parsed ->
                     val duplicate = activeNames.any { isSimilarMedicationName(it, parsed.name) }
                     parsed.toScanItem(id = index, duplicate = duplicate)
                 }
@@ -255,8 +261,9 @@ class PrescriptionScanViewModel @Inject constructor(
         durationDays = durationDays?.toString() ?: "",
         needsReview = needsReview,
         isDuplicate = duplicate,
+        nameRecognized = nameRecognized,
         sourceLine = sourceLine,
-        selected = !duplicate
+        selected = !duplicate && nameRecognized
     )
 
     private fun ScanItem.scheduleIsValid(): Boolean =

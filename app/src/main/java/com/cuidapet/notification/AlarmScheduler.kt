@@ -28,12 +28,16 @@ class AlarmScheduler @Inject constructor(
 
     // Agenda todos os alarmes de um medicamento para as próximas 24 horas.
     // Chamado quando: medicamento é cadastrado, editado, ou no boot do dispositivo.
+    // refreshWidget = false quando o chamador já vai atualizar o widget (ex.: inserção em lote)
     fun scheduleMedication(
         medication: MedicationEntity,
-        petName: String
+        petName: String,
+        refreshWidget: Boolean = true
     ) {
-        CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
-            try { TodayWidget().updateAll(context) } catch (_: Exception) {}
+        if (refreshWidget) {
+            CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
+                try { TodayWidget().updateAll(context) } catch (_: Exception) {}
+            }
         }
 
         if (!medication.isActive || !medication.reminderEnabled) return

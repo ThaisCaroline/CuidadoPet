@@ -651,6 +651,7 @@
     <string name="scan_preview_interval">Every %1$d h, starting at %2$s</string>
     <string name="scan_preview_total">Total: %1$d doses, until %2$s</string>
     <string name="scan_preview_first">First reminder: %1$s</string>
+    <string name="scan_name_unknown">This name is not in the list of known medications. It started unchecked: check it before selecting.</string>
     <string name="scan_duplicate_warning">An active medication with this name already exists. It started unchecked to avoid a double dose. Check it only if it is intended.</string>
     <string name="scan_invalid_schedule">Check the times (HH:mm) and the interval (1 to 720 hours).</string>
     <string name="scan_disclaimer_title">Before you start</string>

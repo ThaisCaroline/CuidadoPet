@@ -20,6 +20,8 @@ data class ParsedMedication(
     val durationDays: Int?,
     // true quando algum dado não foi encontrado, foi preenchido por padrão, ou o tratamento é contínuo
     val needsReview: Boolean,
+    // false quando o nome não parece de medicamento (ex.: palavra de cabeçalho). Não sugerido para salvar.
+    val nameRecognized: Boolean = true,
     // Linha original da receita, para o tutor conferir
     val sourceLine: String
 )
@@ -135,6 +137,7 @@ object PrescriptionParser {
                 fixedTimes = frequency.times,
                 startTime = frequency.startTime,
                 durationDays = durationFound?.coerceIn(1, 3650),
+                nameRecognized = MedicationNames.isLikelyMedication(name),
                 needsReview = nameOnLine == null || dose == null || frequencyFound == null ||
                     durationFound == null || continuous,
                 sourceLine = line

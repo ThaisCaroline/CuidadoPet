@@ -22,6 +22,8 @@ data class ParsedMedication(
     val needsReview: Boolean,
     // false quando o nome não parece de medicamento (ex.: palavra de cabeçalho). Não sugerido para salvar.
     val nameRecognized: Boolean = true,
+    // false quando a receita não traz frequência (ex.: "1 comprimido"). A frequência padrão é só um ponto de partida: o tutor precisa confirmar.
+    val hasFrequency: Boolean = true,
     // Linha original da receita, para o tutor conferir
     val sourceLine: String
 )
@@ -130,7 +132,8 @@ object PrescriptionParser {
 
             val parsed = ParsedMedication(
                 name = name,
-                dose = dose?.first ?: "1",
+                // Vazio quando a receita não traz a quantidade: o tutor precisa preencher, nada é assumido
+                dose = dose?.first ?: "",
                 doseUnit = dose?.second ?: "comprimido",
                 frequencyType = frequency.type,
                 frequencyHours = frequency.hours,
@@ -138,6 +141,7 @@ object PrescriptionParser {
                 startTime = frequency.startTime,
                 durationDays = durationFound?.coerceIn(1, 3650),
                 nameRecognized = MedicationNames.isLikelyMedication(name),
+                hasFrequency = frequencyFound != null,
                 needsReview = nameOnLine == null || dose == null || frequencyFound == null ||
                     durationFound == null || continuous,
                 sourceLine = line

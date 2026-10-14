@@ -636,7 +636,10 @@
 
     <!-- Leitura de receita -->
     <string name="scan_title">Ler receita</string>
-    <string name="scan_pick_button">Escolher foto da receita</string>
+    <string name="scan_camera_button">Fotografar receita</string>
+    <string name="scan_pick_button">Escolher da galeria (sem recorte)</string>
+    <string name="scan_camera_error">Não consegui abrir o scanner de documentos. Tente escolher a foto da galeria.</string>
+    <string name="scan_dose_required">Informe a dose. A receita não traz esse dado.</string>
     <string name="scan_reading">Lendo a receita…</string>
     <string name="scan_empty">Não encontrei medicamentos nessa foto. Tente uma imagem mais nítida ou cadastre manualmente.</string>
     <string name="scan_read_error">Não consegui ler a imagem. Tente outra foto.</string>
@@ -673,4 +676,76 @@
     <string name="scan_duration_required">Informe os dias de tratamento. A receita não traz esse dado.</string>
     <string name="scan_review_warning">Confira: parte das informações não foi encontrada e foi preenchida por padrão.</string>
     <string name="scan_source_label">Texto da receita: %1$s</string>
+    <!-- Backup: tamanho do conteúdo -->
+    <string name="settings_backup_size">Conteúdo atual: %1$s de %2$s (fotos e documentos).</string>
+    <string name="settings_backup_size_warning">Perto do limite do backup. Considere excluir documentos ou fotos antigos.</string>
+
+    <!-- Exames e documentos (PDF) -->
+    <string name="docs_entry_title">Exames e documentos</string>
+    <string name="docs_entry_desc">PDFs de exames e outros documentos do pet, com busca.</string>
+    <string name="docs_screen_title">Exames e documentos</string>
+    <string name="docs_search_hint">Buscar por título</string>
+    <string name="docs_filter_from">De: %1$s</string>
+    <string name="docs_filter_to">Até: %1$s</string>
+    <string name="docs_filter_unset">Sem data</string>
+    <string name="docs_filter_clear">Limpar filtros</string>
+    <string name="docs_add_cd">Adicionar PDF</string>
+    <string name="docs_empty_title">Nenhum documento ainda</string>
+    <string name="docs_empty_hint">Adicione PDFs de exames para ter tudo no mesmo lugar.</string>
+    <string name="docs_empty_filtered">Nenhum documento com esses filtros.</string>
+    <string name="docs_date_label">Data: %1$s</string>
+    <string name="docs_action_download_cd">Baixar cópia</string>
+    <string name="docs_action_share_cd">Compartilhar</string>
+    <string name="docs_action_edit_cd">Editar</string>
+    <string name="docs_action_delete_cd">Excluir</string>
+    <string name="docs_dialog_add_title">Novo documento</string>
+    <string name="docs_dialog_edit_title">Editar documento</string>
+    <string name="docs_field_title">Título (ex.: Hemograma)</string>
+    <string name="docs_field_date">Data do exame: %1$s</string>
+    <string name="docs_pick_date">Escolher data</string>
+    <string name="docs_delete_title">Excluir documento?</string>
+    <string name="docs_delete_msg">\"%1$s\" será apagado do aparelho e não estará no próximo backup.</string>
+    <string name="docs_copy_saved">Cópia salva.</string>
+    <string name="docs_error_not_pdf">Esse arquivo não é um PDF.</string>
+    <string name="docs_error_too_large">Esse PDF passa de 20 MB. Escolha um arquivo menor.</string>
+    <string name="docs_error_save">Não consegui salvar o documento. Tente de novo.</string>
+    <string name="docs_error_copy">Não consegui salvar a cópia.</string>
+    <string name="docs_error_no_viewer">Nenhum app encontrado para abrir PDF.</string>
+    <string name="docs_share_chooser">Compartilhar PDF</string>
+    <string name="docs_default_title">Documento</string>
+    <string name="docs_file_missing">O arquivo deste documento não existe mais no aparelho. Exclua o registro e adicione o PDF de novo.</string>
+    <string name="docs_file_missing_label">Arquivo não encontrado</string>
+
+    <!-- Busca e filtro na tela inicial -->
+    <string name="home_search_hint">Buscar por nome ou raça</string>
+    <string name="home_filter_all">Todos</string>
+    <string name="home_no_results">Nenhum pet encontrado com esses filtros.</string>
+    <string name="home_clear_filters">Limpar filtros</string>
+    <string name="home_results_count">%1$d de %2$d pets</string>
+
+    <!-- Restauração de backup -->
+    <string name="settings_restore_confirm_title">Restaurar backup?</string>
+    <string name="settings_restore_confirm_msg">A restauração substitui todos os dados atuais do app (pets, medicamentos, registros, fotos e documentos) pelos do backup. Os dados atuais não voltam depois.</string>
+    <string name="settings_restore_confirm_btn">Substituir dados</string>
+    <string name="docs_date_range_invalid">A data \"De\" está depois da data \"Até\".</string>
+    <string name="scan_frequency_required">Informe o intervalo. A receita não traz a frequência.</string>
+
+    <!-- Mensagens de backup (traduzidas a partir do motivo do erro) -->
+    <string name="settings_restore_success">Backup restaurado com sucesso! Reinicie o app.</string>
+    <plurals name="settings_restore_success_skipped">
+        <item quantity="one">Backup restaurado! %1$d documento não tinha arquivo no backup e foi ignorado. Reinicie o app.</item>
+        <item quantity="other">Backup restaurado! %1$d documentos não tinham arquivo no backup e foram ignorados. Reinicie o app.</item>
+    </plurals>
+    <string name="backup_error_unknown">Não foi possível concluir a operação. Tente de novo.</string>
+    <string name="backup_error_file_too_large">O arquivo %1$s passa de 30 MB e não pode entrar no backup.</string>
+    <string name="backup_error_too_large">O conteúdo passou de 500 MB e não pode ser exportado. Exclua documentos ou fotos antigos.</string>
+    <string name="backup_error_no_space">Espaço insuficiente no aparelho para gerar o backup. Libere cerca de %1$s e tente de novo.</string>
+    <string name="backup_error_invalid">Este arquivo não é um backup válido do CuidadoPet.</string>
+    <string name="docs_error_duplicate">Já existe um documento com este título e tamanho.</string>
+
+    <!-- Mensagens de erro de formulários -->
+    <string name="error_save_detail">Erro ao salvar: %1$s</string>
+    <string name="error_save_photo_detail">Erro ao salvar foto: %1$s</string>
+    <string name="error_delete_photo_detail">Erro ao excluir foto: %1$s</string>
+    <string name="paywall_no_purchase_found">Nenhuma compra encontrada.</string>
 </resources>

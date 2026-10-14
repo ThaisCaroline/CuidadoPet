@@ -631,7 +631,10 @@
 
     <!-- Prescription reading -->
     <string name="scan_title">Read prescription</string>
-    <string name="scan_pick_button">Choose prescription photo</string>
+    <string name="scan_camera_button">Photograph prescription</string>
+    <string name="scan_pick_button">Choose from gallery (no cropping)</string>
+    <string name="scan_camera_error">Couldn\'t open the document scanner. Try choosing the photo from the gallery.</string>
+    <string name="scan_dose_required">Enter the dose. The prescription doesn\'t show it.</string>
     <string name="scan_reading">Reading the prescription…</string>
     <string name="scan_empty">I couldn\'t find medications in this photo. Try a sharper image or add them manually.</string>
     <string name="scan_read_error">I couldn\'t read the image. Try another photo.</string>
@@ -668,4 +671,76 @@
     <string name="scan_duration_required">Enter the treatment days. The prescription doesn\'t show them.</string>
     <string name="scan_review_warning">Please check: some information was not found and was filled in by default.</string>
     <string name="scan_source_label">Prescription text: %1$s</string>
+    <!-- Backup: content size -->
+    <string name="settings_backup_size">Current content: %1$s of %2$s (photos and documents).</string>
+    <string name="settings_backup_size_warning">Close to the backup limit. Consider deleting old documents or photos.</string>
+
+    <!-- Exams and documents (PDF) -->
+    <string name="docs_entry_title">Exams and documents</string>
+    <string name="docs_entry_desc">PDF exams and other pet documents, with search.</string>
+    <string name="docs_screen_title">Exams and documents</string>
+    <string name="docs_search_hint">Search by title</string>
+    <string name="docs_filter_from">From: %1$s</string>
+    <string name="docs_filter_to">To: %1$s</string>
+    <string name="docs_filter_unset">No date</string>
+    <string name="docs_filter_clear">Clear filters</string>
+    <string name="docs_add_cd">Add PDF</string>
+    <string name="docs_empty_title">No documents yet</string>
+    <string name="docs_empty_hint">Add PDF exams to keep everything in one place.</string>
+    <string name="docs_empty_filtered">No documents match these filters.</string>
+    <string name="docs_date_label">Date: %1$s</string>
+    <string name="docs_action_download_cd">Save a copy</string>
+    <string name="docs_action_share_cd">Share</string>
+    <string name="docs_action_edit_cd">Edit</string>
+    <string name="docs_action_delete_cd">Delete</string>
+    <string name="docs_dialog_add_title">New document</string>
+    <string name="docs_dialog_edit_title">Edit document</string>
+    <string name="docs_field_title">Title (e.g. Blood count)</string>
+    <string name="docs_field_date">Exam date: %1$s</string>
+    <string name="docs_pick_date">Pick date</string>
+    <string name="docs_delete_title">Delete document?</string>
+    <string name="docs_delete_msg">\"%1$s\" will be deleted from this device and will not be in the next backup.</string>
+    <string name="docs_copy_saved">Copy saved.</string>
+    <string name="docs_error_not_pdf">This file is not a PDF.</string>
+    <string name="docs_error_too_large">This PDF is larger than 20 MB. Choose a smaller file.</string>
+    <string name="docs_error_save">Couldn\'t save the document. Please try again.</string>
+    <string name="docs_error_copy">Couldn\'t save the copy.</string>
+    <string name="docs_error_no_viewer">No app found to open PDFs.</string>
+    <string name="docs_share_chooser">Share PDF</string>
+    <string name="docs_default_title">Document</string>
+    <string name="docs_file_missing">This document\'s file is no longer on this device. Delete the entry and add the PDF again.</string>
+    <string name="docs_file_missing_label">File not found</string>
+
+    <!-- Search and filter on the home screen -->
+    <string name="home_search_hint">Search by name or breed</string>
+    <string name="home_filter_all">All</string>
+    <string name="home_no_results">No pets match these filters.</string>
+    <string name="home_clear_filters">Clear filters</string>
+    <string name="home_results_count">%1$d of %2$d pets</string>
+
+    <!-- Backup restore -->
+    <string name="settings_restore_confirm_title">Restore backup?</string>
+    <string name="settings_restore_confirm_msg">Restoring replaces all current app data (pets, medications, records, photos and documents) with the backup data. Current data cannot be recovered afterwards.</string>
+    <string name="settings_restore_confirm_btn">Replace data</string>
+    <string name="docs_date_range_invalid">The \"From\" date is after the \"To\" date.</string>
+    <string name="scan_frequency_required">Enter the interval. The prescription doesn\'t show the frequency.</string>
+
+    <!-- Backup messages (translated from the error reason) -->
+    <string name="settings_restore_success">Backup restored successfully! Restart the app.</string>
+    <plurals name="settings_restore_success_skipped">
+        <item quantity="one">Backup restored! %1$d document had no file in the backup and was skipped. Restart the app.</item>
+        <item quantity="other">Backup restored! %1$d documents had no file in the backup and were skipped. Restart the app.</item>
+    </plurals>
+    <string name="backup_error_unknown">Couldn\'t complete the operation. Please try again.</string>
+    <string name="backup_error_file_too_large">The file %1$s is larger than 30 MB and can\'t be included in the backup.</string>
+    <string name="backup_error_too_large">The content is over 500 MB and can\'t be exported. Delete old documents or photos.</string>
+    <string name="backup_error_no_space">Not enough space on the device to create the backup. Free about %1$s and try again.</string>
+    <string name="backup_error_invalid">This file is not a valid CuidadoPet backup.</string>
+    <string name="docs_error_duplicate">A document with this title and size already exists.</string>
+
+    <!-- Form error messages -->
+    <string name="error_save_detail">Couldn\'t save: %1$s</string>
+    <string name="error_save_photo_detail">Couldn\'t save photo: %1$s</string>
+    <string name="error_delete_photo_detail">Couldn\'t delete photo: %1$s</string>
+    <string name="paywall_no_purchase_found">No purchase found.</string>
 </resources>

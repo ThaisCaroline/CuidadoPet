@@ -18,9 +18,16 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
+import android.app.Activity
+import androidx.activity.result.IntentSenderRequest
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Photo
+import androidx.compose.ui.platform.LocalContext
+import com.google.mlkit.vision.documentscanner.GmsDocumentScannerOptions
+import com.google.mlkit.vision.documentscanner.GmsDocumentScanning
+import com.google.mlkit.vision.documentscanner.GmsDocumentScanningResult
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -31,6 +38,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -39,6 +47,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import java.text.DateFormat
@@ -64,6 +73,41 @@ fun PrescriptionScanScreen(
 
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) viewModel.onImageSelected(uri)
+    }
+
+    // Scanner de documentos: a câmera abre com detecção de bordas e recorte automático.
+    // Roda no Google Play Services, então não precisa de permissão de câmera no app.
+    val context = LocalContext.current
+    val activity = context as? Activity
+    val scanner = remember {
+        GmsDocumentScanning.getClient(
+            GmsDocumentScannerOptions.Builder()
+                .setGalleryImportAllowed(false)
+                .setPageLimit(1)
+                .setResultFormats(GmsDocumentScannerOptions.RESULT_FORMAT_JPEG)
+                .setScannerMode(GmsDocumentScannerOptions.SCANNER_MODE_BASE)
+                .build()
+        )
+    }
+    val scanLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartIntentSenderForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            GmsDocumentScanningResult.fromActivityResultIntent(result.data)
+                ?.pages?.firstOrNull()?.imageUri
+                ?.let { viewModel.onImageSelected(it) }
+        }
+    }
+    val startScan: () -> Unit = {
+        if (activity == null) {
+            viewModel.onScanFailed()
+        } else {
+            scanner.getStartScanIntent(activity)
+                .addOnSuccessListener { sender ->
+                    scanLauncher.launch(IntentSenderRequest.Builder(sender).build())
+                }
+                .addOnFailureListener { viewModel.onScanFailed() }
+        }
     }
 
     LaunchedEffect(state.isSaved) {
@@ -127,13 +171,23 @@ fun PrescriptionScanScreen(
         ) {
             item {
                 Button(
+                    onClick = startScan,
+                    enabled = !state.isReading,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.CameraAlt, null)
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.scan_camera_button))
+                }
+                Spacer(Modifier.height(4.dp))
+                OutlinedButton(
                     onClick = {
                         picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
                     },
                     enabled = !state.isReading,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Icon(Icons.Default.CameraAlt, null)
+                    Icon(Icons.Default.Photo, null)
                     Spacer(Modifier.width(8.dp))
                     Text(stringResource(R.string.scan_pick_button))
                 }
@@ -301,6 +355,12 @@ private fun ScanItemCard(
                     onValueChange = onDoseChange,
                     label = { Text(stringResource(R.string.scan_dose_label, item.doseUnit)) },
                     singleLine = true,
+                    isError = item.dose.isBlank(),
+                    supportingText = {
+                        if (item.dose.isBlank()) {
+                            Text(stringResource(R.string.scan_dose_required))
+                        }
+                    },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     modifier = Modifier.weight(1f)
                 )
@@ -355,6 +415,14 @@ private fun ScanItemCard(
 
             preview?.let {
                 Text(text = it, style = MaterialTheme.typography.bodyMedium)
+            }
+
+            if (!item.hasFrequency) {
+                Text(
+                    text = stringResource(R.string.scan_frequency_required),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error
+                )
             }
 
             if (!item.nameRecognized) {

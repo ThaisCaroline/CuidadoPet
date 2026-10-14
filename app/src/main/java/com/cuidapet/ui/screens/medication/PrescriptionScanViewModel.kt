@@ -49,6 +49,8 @@ data class ScanItem(
     val isDuplicate: Boolean,
     // false quando o nome não parece de medicamento; o item começa desmarcado
     val nameRecognized: Boolean = true,
+    // false quando a receita não trouxe frequência: o intervalo começa vazio e o item não vem marcado
+    val hasFrequency: Boolean = true,
     val sourceLine: String,
     val selected: Boolean = true
 )
@@ -234,8 +236,16 @@ class PrescriptionScanViewModel @Inject constructor(
 
     // Reconhecimento de texto no aparelho (ML Kit), sem enviar a foto para fora
     private suspend fun recognizeText(uri: Uri): String = suspendCancellableCoroutine { cont ->
+        // Abre a imagem antes do reconhecedor: se ela não puder ser lida, não sobra reconhecedor aberto
+        val image = try {
+            InputImage.fromFilePath(context, uri)
+        } catch (e: Exception) {
+            cont.resumeWithException(e)
+            return@suspendCancellableCoroutine
+        }
         val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
-        val image = InputImage.fromFilePath(context, uri)
+        // Se a coroutine for cancelada (ex.: tela fechada), o reconhecedor também é fechado
+        cont.invokeOnCancellation { recognizer.close() }
         recognizer.process(image)
             .addOnSuccessListener { result ->
                 recognizer.close()
@@ -247,7 +257,8 @@ class PrescriptionScanViewModel @Inject constructor(
             }
     }
 
-    // Duplicado começa desmarcado para não gerar dose dobrada sem querer
+    // Duplicado e nome desconhecido começam desmarcados para não gerar dose dobrada sem querer.
+    // Sem dose na receita, também começa desmarcado: o tutor preenche antes de incluir.
     private fun ParsedMedication.toScanItem(id: Int, duplicate: Boolean) = ScanItem(
         id = id,
         name = name,
@@ -255,16 +266,23 @@ class PrescriptionScanViewModel @Inject constructor(
         doseUnit = doseUnit,
         frequencyType = frequencyType,
         startTime = startTime ?: "08:00",
-        intervalHours = (frequencyHours ?: 24).toString(),
+        // Sem frequência na receita, o intervalo começa vazio: o app não inventa um intervalo
+        intervalHours = if (hasFrequency) (frequencyHours ?: 24).toString() else "",
         timesText = fixedTimes.joinToString(", "),
         // Sem duração na receita, o campo começa vazio: o app não assume um tratamento
         durationDays = durationDays?.toString() ?: "",
         needsReview = needsReview,
         isDuplicate = duplicate,
         nameRecognized = nameRecognized,
+        hasFrequency = hasFrequency,
         sourceLine = sourceLine,
-        selected = !duplicate && nameRecognized
+        selected = !duplicate && nameRecognized && dose.isNotBlank() && hasFrequency
     )
+
+    // Chamado quando o scanner de documentos não abre (ex.: aparelho sem Google Play Services)
+    fun onScanFailed() {
+        _uiState.update { it.copy(errorMessage = context.getString(R.string.scan_camera_error)) }
+    }
 
     private fun ScanItem.scheduleIsValid(): Boolean =
         if (frequencyType == "INTERVAL") {

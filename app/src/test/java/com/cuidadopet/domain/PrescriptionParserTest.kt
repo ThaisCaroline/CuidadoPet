@@ -124,6 +124,30 @@ class PrescriptionParserTest {
     }
 
     @Test
+    fun `sem frequencia na receita a marca para o tutor informar`() {
+        val med = PrescriptionParser.parse("Dipirona 500mg 1 comprimido por 3 dias").single()
+
+        assertFalse(med.hasFrequency)
+        assertTrue(med.needsReview)
+    }
+
+    @Test
+    fun `com frequencia na receita a marca como encontrada`() {
+        val med = PrescriptionParser.parse("Amoxicilina 250mg - 1 comprimido q8h por 7 dias").single()
+
+        assertTrue(med.hasFrequency)
+    }
+
+    @Test
+    fun `sem quantidade na receita a dose fica vazia e nao e assumida`() {
+        val med = PrescriptionParser.parse("Amoxicilina 250mg de 12/12h por 7 dias").single()
+
+        assertEquals("", med.dose)
+        assertEquals(12, med.frequencyHours)
+        assertTrue(med.needsReview)
+    }
+
+    @Test
     fun `texto vazio nao gera nada`() {
         assertTrue(PrescriptionParser.parse("").isEmpty())
         assertTrue(PrescriptionParser.parse("   \n  \n").isEmpty())

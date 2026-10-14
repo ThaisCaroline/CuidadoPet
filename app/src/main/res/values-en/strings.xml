@@ -712,7 +712,7 @@
     <string name="docs_file_missing_label">File not found</string>
 
     <!-- Search and filter on the home screen -->
-    <string name="home_search_hint">Search by name or breed</string>
+    <string name="home_search_hint">Search by name, breed or species</string>
     <string name="home_filter_all">All</string>
     <string name="home_no_results">No pets match these filters.</string>
     <string name="home_clear_filters">Clear filters</string>
@@ -743,4 +743,5 @@
     <string name="error_save_photo_detail">Couldn\'t save photo: %1$s</string>
     <string name="error_delete_photo_detail">Couldn\'t delete photo: %1$s</string>
     <string name="paywall_no_purchase_found">No purchase found.</string>
+    <string name="home_species_all">All species (%1$d)</string>
 </resources>

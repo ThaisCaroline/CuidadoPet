@@ -717,7 +717,7 @@
     <string name="docs_file_missing_label">Arquivo não encontrado</string>
 
     <!-- Busca e filtro na tela inicial -->
-    <string name="home_search_hint">Buscar por nome ou raça</string>
+    <string name="home_search_hint">Buscar por nome, raça ou espécie</string>
     <string name="home_filter_all">Todos</string>
     <string name="home_no_results">Nenhum pet encontrado com esses filtros.</string>
     <string name="home_clear_filters">Limpar filtros</string>
@@ -748,4 +748,5 @@
     <string name="error_save_photo_detail">Erro ao salvar foto: %1$s</string>
     <string name="error_delete_photo_detail">Erro ao excluir foto: %1$s</string>
     <string name="paywall_no_purchase_found">Nenhuma compra encontrada.</string>
+    <string name="home_species_all">Todas as espécies (%1$d)</string>
 </resources>

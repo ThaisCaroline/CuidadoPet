@@ -24,11 +24,19 @@ object PetFilter {
     fun speciesKey(pet: PetEntity): String =
         if (pet.species == "OTHER") "OTHER:" + normalize(pet.customSpecies.orEmpty()) else pet.species
 
-    // Nome ou raça contém o texto digitado, e (se houver) a espécie selecionada bate
-    fun matches(pet: PetEntity, query: String, selectedSpeciesKey: String?): Boolean {
+    // Nome, raça ou espécie contém o texto digitado, e (se houver) a espécie selecionada bate.
+    // speciesLabel é o nome da espécie como aparece na tela (ex.: "Cachorro" ou "Dog"), para a busca bater com o que o tutor vê.
+    fun matches(
+        pet: PetEntity,
+        query: String,
+        selectedSpeciesKey: String?,
+        speciesLabel: String = ""
+    ): Boolean {
         if (selectedSpeciesKey != null && speciesKey(pet) != selectedSpeciesKey) return false
         val q = normalize(query)
         if (q.isEmpty()) return true
-        return normalize(pet.name).contains(q) || normalize(pet.breed.orEmpty()).contains(q)
+        return normalize(pet.name).contains(q) ||
+            normalize(pet.breed.orEmpty()).contains(q) ||
+            normalize(speciesLabel).contains(q)
     }
 }

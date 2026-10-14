@@ -38,6 +38,14 @@ class PetFilterTest {
     }
 
     @Test
+    fun `busca tambem encontra pelo nome da especie`() {
+        val rex = pet("Rex", species = "DOG")
+        assertTrue(PetFilter.matches(rex, "cachorro", null, "Cachorro"))
+        assertTrue(PetFilter.matches(rex, "DOG", null, "Dog"))
+        assertFalse(PetFilter.matches(rex, "gato", null, "Cachorro"))
+    }
+
+    @Test
     fun `filtro de especie separa os pets`() {
         val dog = pet("Rex", species = "DOG")
         val cat = pet("Mia", species = "CAT")

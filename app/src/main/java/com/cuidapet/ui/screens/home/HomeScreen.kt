@@ -21,7 +21,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -29,6 +28,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Cake
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Favorite
@@ -42,7 +42,8 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -115,17 +116,23 @@ fun HomeScreen(
     val selectedSpecies by viewModel.selectedSpecies.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val speciesOptions = remember(pets) {
+        val counts = pets.groupingBy { PetFilter.speciesKey(it) }.eachCount()
         pets.distinctBy { PetFilter.speciesKey(it) }
-            .map { PetFilter.speciesKey(it) to petSpeciesLabel(context, it.species, it.customSpecies) }
+            .map { pet ->
+                val key = PetFilter.speciesKey(pet)
+                SpeciesOption(key, petSpeciesLabel(context, pet.species, pet.customSpecies), counts[key] ?: 0)
+            }
     }
     // Se a última espécie selecionada deixar de existir (pet excluído), volta para "Todos"
     LaunchedEffect(speciesOptions) {
-        if (selectedSpecies != null && speciesOptions.none { it.first == selectedSpecies }) {
+        if (selectedSpecies != null && speciesOptions.none { it.key == selectedSpecies }) {
             viewModel.setSelectedSpecies(null)
         }
     }
     val filteredPets = remember(pets, searchQuery, selectedSpecies) {
-        pets.filter { PetFilter.matches(it, searchQuery, selectedSpecies) }
+        pets.filter {
+            PetFilter.matches(it, searchQuery, selectedSpecies, petSpeciesLabel(context, it.species, it.customSpecies))
+        }
     }
 
     // Marca banner como visto hoje na primeira vez que aparece
@@ -408,7 +415,7 @@ private fun EmptyPetsContent(modifier: Modifier = Modifier) {
 private fun PetSearchBar(
     query: String,
     onQueryChange: (String) -> Unit,
-    speciesOptions: List<Pair<String, String>>,
+    speciesOptions: List<SpeciesOption>,
     selectedSpecies: String?,
     onSpeciesSelected: (String?) -> Unit,
     shownCount: Int,
@@ -441,22 +448,12 @@ private fun PetSearchBar(
         )
 
         if (speciesOptions.size > 1) {
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                item {
-                    FilterChip(
-                        selected = selectedSpecies == null,
-                        onClick = { onSpeciesSelected(null) },
-                        label = { Text(stringResource(R.string.home_filter_all)) }
-                    )
-                }
-                items(speciesOptions, key = { it.first }) { (key, label) ->
-                    FilterChip(
-                        selected = selectedSpecies == key,
-                        onClick = { onSpeciesSelected(if (selectedSpecies == key) null else key) },
-                        label = { Text(label) }
-                    )
-                }
-            }
+            SpeciesDropdown(
+                options = speciesOptions,
+                selectedKey = selectedSpecies,
+                totalCount = totalCount,
+                onSelect = onSpeciesSelected
+            )
         }
 
         if (shownCount < totalCount) {
@@ -465,6 +462,54 @@ private fun PetSearchBar(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurface
             )
+        }
+    }
+}
+
+// Um item da lista de espécies: chave para o filtro, nome exibido e quantos pets tem
+private data class SpeciesOption(val key: String, val label: String, val count: Int)
+
+// Menu de espécies: mostra a espécie escolhida (ou todas) e abre a lista completa com a contagem de cada uma
+@Composable
+private fun SpeciesDropdown(
+    options: List<SpeciesOption>,
+    selectedKey: String?,
+    totalCount: Int,
+    onSelect: (String?) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val selected = options.firstOrNull { it.key == selectedKey }
+
+    Box(modifier = Modifier.fillMaxWidth()) {
+        OutlinedButton(
+            onClick = { expanded = true },
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.outlinedButtonColors(containerColor = MaterialTheme.colorScheme.surface)
+        ) {
+            Text(
+                text = selected?.let { "${it.label} (${it.count})" }
+                    ?: stringResource(R.string.home_species_all, totalCount),
+                modifier = Modifier.weight(1f)
+            )
+            Icon(Icons.Default.ArrowDropDown, contentDescription = null)
+        }
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.home_species_all, totalCount)) },
+                onClick = {
+                    onSelect(null)
+                    expanded = false
+                }
+            )
+            options.forEach { option ->
+                DropdownMenuItem(
+                    text = { Text("${option.label} (${option.count})") },
+                    onClick = {
+                        onSelect(option.key)
+                        expanded = false
+                    }
+                )
+            }
         }
     }
 }

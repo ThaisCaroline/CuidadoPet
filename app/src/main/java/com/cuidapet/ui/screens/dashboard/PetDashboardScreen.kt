@@ -85,6 +85,7 @@ fun PetDashboardScreen(
     onWeightHistory: () -> Unit = {},
     onReport: () -> Unit = {},
     onVaccines: () -> Unit = {},
+    onDocuments: () -> Unit = {},
     onOpenPaywall: () -> Unit = {},
     viewModel: PetDashboardViewModel = hiltViewModel()
 ) {
@@ -187,6 +188,7 @@ fun PetDashboardScreen(
                         onNewHealthEntry    = onNewHealthEntry,
                         onEditHealthEntry   = onEditHealthEntry,
                         onWeightHistory     = onWeightHistory,
+                        onDocuments         = onDocuments,
                         onOpenPaywall       = onOpenPaywall
                     )
                 }
@@ -204,6 +206,7 @@ fun PetDashboardScreen(
                 onNewHealthEntry    = onNewHealthEntry,
                 onEditHealthEntry   = onEditHealthEntry,
                 onWeightHistory     = onWeightHistory,
+                onDocuments         = onDocuments,
                 onOpenPaywall       = onOpenPaywall
             )
         }
@@ -223,6 +226,7 @@ private fun DashboardTabContent(
     onNewHealthEntry: () -> Unit,
     onEditHealthEntry: (Long) -> Unit,
     onWeightHistory: () -> Unit,
+    onDocuments: () -> Unit = {},
     onOpenPaywall: () -> Unit = {}
 ) {
     when (selectedTab) {
@@ -251,6 +255,7 @@ private fun DashboardTabContent(
             onNewEntry      = onNewHealthEntry,
             onEditEntry     = onEditHealthEntry,
             onWeightHistory = onWeightHistory,
+            onDocuments     = onDocuments,
             modifier        = modifier
         )
     }

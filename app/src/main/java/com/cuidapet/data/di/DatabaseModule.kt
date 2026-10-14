@@ -13,6 +13,7 @@ import com.cuidadopet.data.db.MIGRATION_7_8
 import com.cuidadopet.data.db.MIGRATION_8_9
 import com.cuidadopet.data.db.MIGRATION_9_10
 import com.cuidadopet.data.db.MIGRATION_10_11
+import com.cuidadopet.data.db.MIGRATION_11_12
 import com.cuidadopet.data.security.DatabaseKeyManager
 import net.sqlcipher.database.SQLiteDatabase
 import net.sqlcipher.database.SupportFactory
@@ -20,7 +21,9 @@ import com.cuidadopet.data.db.dao.FeedingDao
 import com.cuidadopet.data.db.dao.HealthDao
 import com.cuidadopet.data.db.dao.HealthPhotoDao
 import com.cuidadopet.data.db.dao.MedicationDao
+import com.cuidadopet.data.db.dao.BackupRestoreDao
 import com.cuidadopet.data.db.dao.PetDao
+import com.cuidadopet.data.db.dao.PetDocumentDao
 import com.cuidadopet.data.db.dao.VaccineDao
 import com.cuidadopet.data.db.dao.WaterDao
 import com.cuidadopet.data.repository.FeedingRepository
@@ -64,7 +67,7 @@ object DatabaseModule {
             "cuidadopet_database"
         )
             .openHelperFactory(factory)
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12)
             .build()
     }
 
@@ -99,6 +102,14 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun provideVaccineDao(database: AppDatabase): VaccineDao = database.vaccineDao()
+
+    @Provides
+    @Singleton
+    fun providePetDocumentDao(database: AppDatabase): PetDocumentDao = database.petDocumentDao()
+
+    @Provides
+    @Singleton
+    fun provideBackupRestoreDao(database: AppDatabase): BackupRestoreDao = database.backupRestoreDao()
 
     // MealAlarmScheduler precisa do Context para acessar o AlarmManager do sistema
     @Provides

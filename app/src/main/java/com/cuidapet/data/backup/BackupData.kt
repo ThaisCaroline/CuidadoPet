@@ -9,6 +9,7 @@ import com.cuidadopet.data.db.entity.MedicationLogEntity
 import com.cuidadopet.data.db.entity.SporadicMealLogEntity
 import com.cuidadopet.data.db.entity.WaterConfigEntity
 import com.cuidadopet.data.db.entity.WaterLogEntity
+import com.cuidadopet.data.db.entity.VaccineEntity
 import com.cuidadopet.data.db.entity.WeightRecordEntity
 
 data class BackupData(
@@ -25,7 +26,19 @@ data class BackupData(
     val waterLogs: List<WaterLogEntity> = emptyList(),
     val healthEntries: List<HealthEntryEntity> = emptyList(),
     val weightRecords: List<WeightRecordEntity> = emptyList(),
-    val healthPhotos: List<HealthPhotoBackup> = emptyList()
+    val healthPhotos: List<HealthPhotoBackup> = emptyList(),
+    val vaccines: List<VaccineEntity> = emptyList(),
+    val petDocuments: List<PetDocumentBackup> = emptyList()
+)
+
+// Versão de PetDocumentEntity para backup: filePath é substituído por fileName (nome do PDF dentro de documents/ no ZIP)
+data class PetDocumentBackup(
+    val id: Long,
+    val petId: Long,
+    val title: String,
+    val documentDate: Long,
+    val fileName: String,
+    val createdAt: Long
 )
 
 // Versão de PetEntity para backup: photoPath é substituído por photoFile (nome do arquivo no ZIP)

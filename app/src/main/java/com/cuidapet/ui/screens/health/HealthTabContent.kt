@@ -1,5 +1,6 @@
 package com.cuidadopet.ui.screens.health
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,11 +10,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.MonitorWeight
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -53,6 +57,7 @@ fun HealthTabContent(
     onNewEntry: () -> Unit,
     onEditEntry: (Long) -> Unit,
     onWeightHistory: () -> Unit,
+    onDocuments: () -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: HealthViewModel = hiltViewModel()
 ) {
@@ -80,6 +85,44 @@ fun HealthTabContent(
                 latestWeightKg = state.latestWeight?.weightKg,
                 onWeightHistory = onWeightHistory
             )
+        }
+
+        // Atalho para a tela de exames e documentos (PDF)
+        item {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(onClick = onDocuments),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.Default.Description,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(Modifier.width(12.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            stringResource(R.string.docs_entry_title),
+                            style = MaterialTheme.typography.titleSmall
+                        )
+                        Text(
+                            stringResource(R.string.docs_entry_desc),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Icon(
+                        Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
         }
 
         item { HorizontalDivider() }

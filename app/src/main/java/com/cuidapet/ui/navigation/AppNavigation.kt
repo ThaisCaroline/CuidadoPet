@@ -24,6 +24,7 @@ import com.cuidadopet.ui.screens.settings.SettingsScreen
 import com.cuidadopet.ui.screens.health.WeightHistoryScreen
 import com.cuidadopet.ui.screens.report.ReportScreen
 import com.cuidadopet.ui.screens.vaccine.VaccineFormScreen
+import com.cuidadopet.ui.screens.documents.PetDocumentsScreen
 import com.cuidadopet.ui.screens.vaccine.VaccineListScreen
 import com.cuidadopet.ui.screens.partners.PartnersScreen
 import com.cuidadopet.ui.screens.paywall.PaywallScreen
@@ -50,6 +51,7 @@ object Routes {
     const val PARTNERS       = "partners"                  // parceiros
     const val VACCINE_LIST   = "vaccine_list/{petId}"
     const val VACCINE_FORM   = "vaccine_form/{petId}?vaccineId={vaccineId}"
+    const val PET_DOCUMENTS  = "pet_documents/{petId}"   // exames e documentos em PDF
 
     // Funções auxiliares para montar rotas com parâmetros reais
     fun petForm(petId: Long? = null)  = if (petId != null) "pet_form?petId=$petId" else "pet_form"
@@ -58,6 +60,7 @@ object Routes {
         if (medicationId != null) "med_form/$petId?medicationId=$medicationId"
         else "med_form/$petId"
     fun prescriptionScan(petId: Long) = "prescription_scan/$petId"
+    fun petDocuments(petId: Long) = "pet_documents/$petId"
     fun mealPlan(petId: Long, planId: Long? = null) =
         if (planId != null) "meal_plan/$petId?planId=$planId" else "meal_plan/$petId"
     fun waterConfig(petId: Long)      = "water_config/$petId"
@@ -174,6 +177,7 @@ fun AppNavigation(
                 onWeightHistory      = { navController.navigate(Routes.weightHistory(petId)) },
                 onReport             = { navController.navigate(Routes.report(petId)) },
                 onVaccines           = { navController.navigate(Routes.vaccineList(petId)) },
+                onDocuments          = { navController.navigate(Routes.petDocuments(petId)) },
                 onOpenPaywall        = { navController.navigate(Routes.PAYWALL) }
             )
         }
@@ -222,6 +226,17 @@ fun AppNavigation(
             MedicationFormScreen(
                 petId          = petId,
                 medicationId   = medicationId,
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        // ── Exames e documentos (PDF) ─────────────────────────────────────
+        composable(
+            route = Routes.PET_DOCUMENTS,
+            arguments = listOf(navArgument("petId") { type = NavType.LongType })
+        ) { entry ->
+            PetDocumentsScreen(
+                petId          = entry.arguments!!.getLong("petId"),
                 onNavigateBack = { navController.popBackStack() }
             )
         }

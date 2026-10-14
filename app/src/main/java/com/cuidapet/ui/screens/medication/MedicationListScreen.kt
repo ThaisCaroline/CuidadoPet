@@ -53,6 +53,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.res.stringResource
 import com.cuidadopet.R
+import com.cuidadopet.data.FeatureFlags
 import com.cuidadopet.data.PremiumFlags
 import com.cuidadopet.data.db.entity.MedicationEntity
 import com.cuidadopet.ui.components.AdBanner
@@ -122,7 +123,7 @@ fun MedicationListScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 // Leitura de receita: cria medicamentos a partir de uma foto
-                onScanClick?.let { scan ->
+                if (FeatureFlags.PRESCRIPTION_SCAN_ENABLED) onScanClick?.let { scan ->
                     ExtendedFloatingActionButton(
                         onClick = scan,
                         containerColor = MaterialTheme.colorScheme.tertiaryContainer,

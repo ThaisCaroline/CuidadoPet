@@ -3,7 +3,9 @@ package com.cuidadopet.ui.screens.paywall
 import android.app.Activity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import android.content.Context
 import com.cuidadopet.data.repository.PurchaseRepository
+import dagger.hilt.android.qualifiers.ApplicationContext
 import com.revenuecat.purchases.Offerings
 import com.revenuecat.purchases.Package
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -23,6 +25,7 @@ data class PaywallUiState(
 
 @HiltViewModel
 class PaywallViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val purchaseRepository: PurchaseRepository
 ) : ViewModel() {
 
@@ -46,7 +49,7 @@ class PaywallViewModel @Inject constructor(
             _uiState.update {
                 it.copy(
                     isLoading    = false,
-                    errorMessage = if (!success) "Compra não concluída. Tente novamente." else null
+                    errorMessage = if (!success) context.getString(com.cuidadopet.R.string.form_paywall_purchase_not_completed) else null
                 )
             }
         }
@@ -58,7 +61,7 @@ class PaywallViewModel @Inject constructor(
             _uiState.update {
                 it.copy(
                     isLoading    = false,
-                    errorMessage = if (!success) "Nenhuma compra encontrada." else null
+                    errorMessage = if (!success) context.getString(com.cuidadopet.R.string.paywall_no_purchase_found) else null
                 )
             }
         }

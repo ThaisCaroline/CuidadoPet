@@ -7,8 +7,10 @@ import com.cuidadopet.data.db.entity.PetEntity
 import com.cuidadopet.data.repository.PetRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -52,10 +54,34 @@ class HomeViewModel @Inject constructor(
             initialValue = emptyList()
         )
 
+    // Busca e espécie da tela inicial, salvos entre aberturas do app
+    private val _searchQuery = MutableStateFlow(prefs.getString(KEY_SEARCH, "") ?: "")
+    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
+
+    private val _selectedSpecies = MutableStateFlow(prefs.getString(KEY_SPECIES, null))
+    val selectedSpecies: StateFlow<String?> = _selectedSpecies.asStateFlow()
+
+    fun setSearchQuery(query: String) {
+        _searchQuery.value = query
+        prefs.edit().putString(KEY_SEARCH, query).apply()
+    }
+
+    fun setSelectedSpecies(key: String?) {
+        _selectedSpecies.value = key
+        prefs.edit().apply {
+            if (key == null) remove(KEY_SPECIES) else putString(KEY_SPECIES, key)
+        }.apply()
+    }
+
     fun deletePet(pet: PetEntity) {
         viewModelScope.launch {
             petRepository.deletePet(pet)
         }
+    }
+
+    private companion object {
+        const val KEY_SEARCH = "home_search_query"
+        const val KEY_SPECIES = "home_selected_species"
     }
 
     fun wasBirthdayBannerShownToday(petId: Long): Boolean =

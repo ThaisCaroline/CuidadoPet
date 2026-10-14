@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Meal plan -->
+    <string name="form_meal_plan_need_meal">Add at least one meal with a time.</string>
+    <string name="form_meal_plan_max_meals">Maximum of 12 meals per plan.</string>
+    <string name="form_meal_plan_time_format">Times must use the HH:mm format.</string>
+    <string name="form_meal_plan_max_meal_qty">Maximum amount per meal: 5,000 g.</string>
+    <string name="form_meal_plan_max_kcal">Maximum calorie target: 10,000 kcal.</string>
+    <string name="form_meal_plan_max_daily_qty">Maximum daily amount: 10,000 g.</string>
+
+    <!-- Health entry -->
+    <string name="form_health_fill_one">Fill in at least one field before saving.</string>
+    <string name="form_health_vomit_invalid">Invalid number of vomiting episodes</string>
+    <string name="form_health_vomit_too_high">Number of vomiting episodes is too high — please check the value</string>
+    <string name="form_health_notes_too_long">Notes are too long (max. 2,000 characters)</string>
+
+    <!-- Premium -->
+    <string name="form_paywall_purchase_not_completed">Purchase not completed. Please try again.</string>
+
+    <!-- Medication -->
+    <string name="form_med_name_required">Medication name is required</string>
+    <string name="form_name_max_100">The name must be at most 100 characters</string>
+    <string name="form_med_dose_required">Enter the dose</string>
+    <string name="form_med_dose_too_long">Dose description is too long (max. 200 characters)</string>
+    <string name="form_med_interval_min">Minimum interval: 1 hour</string>
+    <string name="form_med_interval_max">Maximum interval: 720 hours (30 days)</string>
+    <string name="form_med_time_format">Times must use the HH:mm format</string>
+    <string name="form_med_max_fixed_times">Maximum of 10 fixed times per medication</string>
+    <string name="form_med_duration_min">Minimum duration: 1 day</string>
+    <string name="form_med_duration_max">Maximum duration: 3,650 days (10 years)</string>
+    <string name="form_med_default_pet_name">your pet</string>
+
+    <!-- Pet -->
+    <string name="form_pet_name_required">Pet name is required</string>
+    <string name="form_pet_breed_too_long">The breed must be at most 100 characters</string>
+    <string name="form_pet_weight_invalid">Enter a valid weight (minimum 0.1 kg)</string>
+    <string name="form_pet_weight_max">Maximum allowed weight: 200 kg</string>
+    <string name="form_pet_clinical_state_required">Select at least one clinical condition</string>
+
+    <!-- Vaccine / dewormer -->
+    <string name="form_vaccine_name_required">Enter the vaccine/dewormer name.</string>
+
+    <!-- Water -->
+    <string name="form_water_target_min">Minimum target: 50 ml</string>
+    <string name="form_water_target_max">Maximum target: 20,000 ml</string>
+    <string name="form_water_interval_min">Minimum reminder interval: 1 hour</string>
+    <string name="form_water_interval_max">Maximum reminder interval: 24 hours</string>
+    <string name="form_water_end_after_start">End time must be after the start time</string>
+
+    <!-- Energy summary (EnergyCalculator) -->
+    <string name="form_energy_sufficient">✅ Ate enough</string>
+    <string name="form_energy_below_min">⚠️ Below recommended minimum</string>
+    <string name="form_energy_above">⚠️ Above recommended amount</string>
+    <string name="form_energy_did_not_eat">❌ Didn\'t eat today</string>
+
+    <!-- Report (ReportScreen) -->
+    <string name="reportscreen_med_every_hours">Every %1$sh</string>
+    <string name="reportscreen_med_fixed_times">Times: %1$s</string>
+    <string name="reportscreen_med_since">since %1$s</string>
+    <string name="reportscreen_date_range">%1$s to %2$s</string>
+    <string name="reportscreen_med_start">start: %1$s</string>
+    <string name="reportscreen_plan_daily_qty">" · %1$d%2$s/day"</string>
+    <string name="reportscreen_next_due">"  •  Next: %1$s"</string>
+</resources>

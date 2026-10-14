@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Pet report (ReportGenerator / ReportViewModel) -->
+
+    <string name="report_text_title">🐾 *CuidadoPet — Report for %1$s*</string>
+    <string name="report_pdf_title">CuidadoPet — Report for %1$s</string>
+    <string name="report_period">Period: %1$s</string>
+    <string name="report_date_range">%1$s to %2$s</string>
+
+    <string name="report_text_section_pet">*🐾 Pet information*</string>
+    <string name="report_section_pet">Pet information</string>
+    <string name="report_male">Male</string>
+    <string name="report_female">Female</string>
+    <string name="report_neutered">(neutered)</string>
+    <string name="report_age">Age: %1$s</string>
+    <string name="report_breed">Breed: %1$s</string>
+    <string name="report_sex">Sex: %1$s</string>
+    <string name="report_name_species_weight">Name: %1$s   Species: %2$s   Weight: %3$s kg</string>
+    <plurals name="report_age_years">
+        <item quantity="one">%1$d year</item>
+        <item quantity="other">%1$d years</item>
+    </plurals>
+    <plurals name="report_age_months">
+        <item quantity="one">%1$d month</item>
+        <item quantity="other">%1$d months</item>
+    </plurals>
+    <string name="report_age_years_months">%1$s and %2$s</string>
+    <string name="report_age_under_month">less than 1 month</string>
+
+    <string name="report_species_dog">Dog</string>
+    <string name="report_species_cat">Cat</string>
+    <string name="report_species_rabbit">Rabbit</string>
+    <string name="report_species_bird">Bird</string>
+    <string name="report_species_hamster">Hamster</string>
+    <string name="report_species_turtle">Turtle</string>
+    <string name="report_species_fish">Fish</string>
+    <string name="report_other">Other</string>
+
+    <string name="report_text_section_meds">*💊 Medications in use*</string>
+    <string name="report_section_meds">Medications in use</string>
+    <string name="report_no_active_meds">No active medications.</string>
+    <string name="report_medication_line">%1$s — %2$s %3$s</string>
+    <string name="report_medication_line_pdf">%1$s   %2$s %3$s</string>
+    <string name="report_every_hours">Every %1$sh</string>
+    <string name="report_schedule_times">Times: %1$s</string>
+    <string name="report_since">since %1$s</string>
+    <string name="report_starting_on">starting %1$s</string>
+    <string name="report_administrations">Doses in this period:</string>
+    <string name="report_obs">Notes: %1$s</string>
+    <string name="report_admin_line">%1$s — %2$s</string>
+    <string name="report_status_taken">Given</string>
+    <string name="report_status_not_taken">Not given</string>
+    <string name="report_status_vomited">Given (vomited)</string>
+    <string name="report_status_pending">Pending</string>
+
+    <string name="report_text_section_meals">*🍽️ Feeding plan*</string>
+    <string name="report_section_meals">Feeding plan</string>
+    <string name="report_no_meal_plan">No feeding plan set up.</string>
+    <string name="report_daily_quantity">%1$s%2$s/day</string>
+    <string name="report_food_details">Food: %1$s</string>
+    <string name="report_meal_day_line">%1$s - %2$s%3$s planned</string>
+    <string name="report_extras">Extras:</string>
+    <string name="report_extra_day_line">%1$s - %2$s%3$s</string>
+    <string name="report_extra_amounts">(%1$s)</string>
+    <plurals name="report_extra_count">
+        <item quantity="one">%1$d extra</item>
+        <item quantity="other">%1$d extras</item>
+    </plurals>
+
+    <string name="report_text_section_water">*💧 Water intake in this period*</string>
+    <string name="report_water_total">Total: %1$d ml</string>
+
+    <string name="report_text_section_health">*❤️ Health journal (%1$d entries)*</string>
+    <string name="report_no_health">No entries in this period.</string>
+    <string name="report_health_more">... and %1$d more earlier entries.</string>
+    <string name="report_behavior">Behavior: %1$s</string>
+    <string name="report_feces">Stool: %1$s</string>
+    <string name="report_urine">Urine: %1$s</string>
+    <string name="report_vomits">Vomiting: %1$dx</string>
+    <string name="report_pain_text">Pain: %1$s</string>
+    <string name="report_pain_pdf">Pain signs: %1$s</string>
+    <string name="report_normal">Normal</string>
+    <string name="report_lethargic">Lethargic</string>
+    <string name="report_agitated">Agitated</string>
+    <string name="report_sleepy">Sleepy</string>
+    <string name="report_feces_soft">Soft</string>
+    <string name="report_feces_diarrhea">Diarrhea</string>
+    <string name="report_feces_absent">Absent</string>
+    <string name="report_urine_increased">Increased</string>
+    <string name="report_urine_reduced">Reduced</string>
+    <string name="report_urine_absent">Absent</string>
+    <string name="report_bloody">Bloody ⚠️</string>
+    <string name="report_pain_none">No signs</string>
+    <string name="report_pain_apparent">Apparent</string>
+    <string name="report_pain_evident">Evident</string>
+
+    <string name="report_food_dry">Dry kibble</string>
+    <string name="report_food_wet">Wet food</string>
+    <string name="report_food_natural">Natural diet</string>
+    <string name="report_food_therapeutic">Therapeutic diet</string>
+
+    <string name="report_text_section_vaccines">*💉 Vaccines and dewormers — last dose*</string>
+    <string name="report_vaccine_line">%1$s — %2$s%3$s</string>
+    <string name="report_next_due">next due: %1$s</string>
+
+    <string name="report_text_section_weights">*⚖️ Latest weigh-ins*</string>
+    <string name="report_section_weights">Weight history</string>
+
+    <string name="report_text_section_photos">*📷 Recorded photos*</string>
+    <plurals name="report_photo_count">
+        <item quantity="one">%1$d photo</item>
+        <item quantity="other">%1$d photos</item>
+    </plurals>
+    <string name="report_photo_line">%1$s — %2$s (available in the app)</string>
+
+    <string name="report_footer_generated">_Generated by the CuidadoPet app_</string>
+    <string name="report_footer_disclaimer">_⚠️ This report is a record of the guardian\'s observations._</string>
+    <string name="report_footer_not_substitute">_It does not replace veterinary assessment, diagnosis or prescription._</string>
+    <string name="report_pdf_footer_generated">Generated by the CuidadoPet app</string>
+    <string name="report_pdf_footer_disclaimer">This report is a record of the guardian\'s observations.</string>
+    <string name="report_pdf_footer_not_substitute">It does not replace veterinary assessment, diagnosis or prescription.</string>
+
+    <string name="report_appetite_all">Ate everything</string>
+    <string name="report_appetite_partial">Partial (%1$d%%)</string>
+    <string name="report_appetite_refused">Refused</string>
+    <string name="report_appetite_pct">%1$d%%</string>
+
+    <string name="report_error_pet_not_found">Pet not found.</string>
+    <string name="report_error_load">Error loading data: %1$s</string>
+    <string name="report_error_pdf">Error generating PDF: %1$s</string>
+    <string name="report_error_total_too_low">The total cannot be less than the other entries for the day.</string>
+</resources>

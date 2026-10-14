@@ -1,6 +1,7 @@
 package com.cuidadopet.domain
 
 import android.content.Context
+import com.cuidadopet.R
 import com.cuidadopet.data.db.entity.HealthPhotoEntity
 import com.cuidadopet.data.db.entity.MedicationLogEntity
 import com.cuidadopet.data.db.entity.VaccineEntity
@@ -52,62 +53,57 @@ object ReportGenerator {
     // ─── Texto para WhatsApp / e-mail ─────────────────────────────────────────
 
     // Gera um relatório formatado em texto com marcação do WhatsApp (*negrito*, _itálico_).
-    fun generateText(report: PetReport): String {
+    fun generateText(context: Context, report: PetReport): String {
         val sb  = StringBuilder()
         val pet = report.pet
 
         val (actualStart, actualEnd) = actualDataPeriod(report)
         val periodLabel = if (dateFmt.format(Date(actualStart)) == dateFmt.format(Date(actualEnd)))
             dateFmt.format(Date(actualStart))
-        else "${dateFmt.format(Date(actualStart))} a ${dateFmt.format(Date(actualEnd))}"
+        else context.getString(R.string.report_date_range, dateFmt.format(Date(actualStart)), dateFmt.format(Date(actualEnd)))
 
-        sb.appendLine("🐾 *CuidadoPet — Relatório de ${pet.name}*")
-        sb.appendLine("Período: $periodLabel")
+        sb.appendLine(context.getString(R.string.report_text_title, pet.name))
+        sb.appendLine(context.getString(R.string.report_period, periodLabel))
         sb.appendLine()
 
         // Informações do pet
-        sb.appendLine("*🐾 Informações do pet*")
-        val speciesLabel  = speciesLabel(pet.species, pet.customSpecies)
-        val sexLabel      = if (pet.sex == "MALE") "Macho" else "Fêmea"
-        val neuteredLabel = if (pet.isNeutered) " (castrado)" else ""
+        sb.appendLine(context.getString(R.string.report_text_section_pet))
+        val speciesLabel  = speciesLabel(context, pet.species, pet.customSpecies)
+        val sexLabel      = sexLabel(context, pet.sex)
+        val neuteredLabel = if (pet.isNeutered) " ${context.getString(R.string.report_neutered)}" else ""
         sb.appendLine("$speciesLabel${if (!pet.breed.isNullOrBlank()) " · ${pet.breed}" else ""}")
-        pet.birthDate?.let { sb.appendLine("Idade: ${calculateAge(it)}") }
+        pet.birthDate?.let { sb.appendLine(context.getString(R.string.report_age, calculateAge(context, it))) }
         sb.appendLine("$sexLabel$neuteredLabel · ${pet.weightKg} kg")
         sb.appendLine()
 
         // Medicamentos
-        sb.appendLine("*💊 Medicamentos em uso*")
+        sb.appendLine(context.getString(R.string.report_text_section_meds))
         if (report.activeMedications.isEmpty()) {
-            sb.appendLine("Nenhum medicamento ativo.")
+            sb.appendLine(context.getString(R.string.report_no_active_meds))
         } else {
             val timeFmt = SimpleDateFormat("dd/MM HH:mm", Locale.forLanguageTag("pt-BR"))
             report.activeMedications.forEach { med ->
-                sb.appendLine("• ${med.name} — ${med.dose} ${med.doseUnit}")
+                sb.appendLine("• " + context.getString(R.string.report_medication_line, med.name, med.dose, med.doseUnit))
                 val freq = if (med.frequencyType == "INTERVAL")
-                    "  A cada ${med.frequencyHours}h"
+                    "  " + context.getString(R.string.report_every_hours, med.frequencyHours)
                 else
-                    "  Horários: ${med.fixedTimes?.cleanJson() ?: ""}"
+                    "  " + context.getString(R.string.report_schedule_times, med.fixedTimes?.cleanJson() ?: "")
                 val periodLabel = if (med.isContinuous)
-                    "desde ${dateFmt.format(Date(med.startDate))}"
+                    context.getString(R.string.report_since, dateFmt.format(Date(med.startDate)))
                 else if (med.endDate != null)
-                    "${dateFmt.format(Date(med.startDate))} a ${dateFmt.format(Date(med.endDate))}"
+                    context.getString(R.string.report_date_range, dateFmt.format(Date(med.startDate)), dateFmt.format(Date(med.endDate)))
                 else
-                    "início: ${dateFmt.format(Date(med.startDate))}"
+                    context.getString(R.string.report_starting_on, dateFmt.format(Date(med.startDate)))
                 sb.appendLine("$freq · $periodLabel")
                 if (!med.observations.isNullOrBlank()) sb.appendLine("  ${med.observations}")
                 val logsThisMed = report.medicationLogs
                     .filter { it.medicationId == med.id }
                     .sortedBy { it.scheduledAt }
                 if (logsThisMed.isNotEmpty()) {
-                    sb.appendLine("  _Administrações no período:_")
+                    sb.appendLine("  _${context.getString(R.string.report_administrations)}_")
                     logsThisMed.forEach { log ->
-                        val statusLabel = when (log.status) {
-                            "TAKEN"     -> "Administrado"
-                            "NOT_TAKEN" -> "Não administrado"
-                            "VOMITED"   -> "Administrado (vomitou)"
-                            else        -> "Pendente"
-                        }
-                        sb.appendLine("    ${timeFmt.format(Date(log.scheduledAt))} — $statusLabel")
+                        val statusLabel = medicationStatusLabel(context, log.status.orEmpty())
+                        sb.appendLine("    " + context.getString(R.string.report_admin_line, timeFmt.format(Date(log.scheduledAt)), statusLabel))
                     }
                 }
             }
@@ -115,20 +111,20 @@ object ReportGenerator {
         sb.appendLine()
 
         // Alimentação
-        sb.appendLine("*🍽️ Plano alimentar*")
+        sb.appendLine(context.getString(R.string.report_text_section_meals))
         if (report.mealPlans.isEmpty()) {
-            sb.appendLine("Sem plano configurado.")
+            sb.appendLine(context.getString(R.string.report_no_meal_plan))
         } else {
             report.mealPlans.forEach { plan ->
                 val unitForPlan = report.meals.firstOrNull { it.mealPlanId == plan.id }?.quantityUnit ?: "g"
-                val qty = plan.dailyQuantityGrams?.let { " · ${it.toInt()}$unitForPlan/dia" } ?: ""
-                sb.appendLine("• ${foodTypeLabel(plan.foodType)}$qty")
-                if (!plan.foodDetails.isNullOrBlank()) sb.appendLine("  Alimento: ${plan.foodDetails}")
-                if (!plan.restrictions.isNullOrBlank()) sb.appendLine("  Restrições: ${plan.restrictions}")
+                val qty = plan.dailyQuantityGrams?.let { " · " + context.getString(R.string.report_daily_quantity, it.toInt(), unitForPlan) } ?: ""
+                sb.appendLine("• ${foodTypeLabel(context, plan.foodType)}$qty")
+                if (!plan.foodDetails.isNullOrBlank()) sb.appendLine("  " + context.getString(R.string.report_food_details, plan.foodDetails))
+                if (!plan.restrictions.isNullOrBlank()) sb.appendLine("  " + context.getString(R.string.report_restrictions, plan.restrictions))
             }
         }
         if (report.mealLogs.isEmpty() && report.sporadicLogs.isEmpty()) {
-            sb.appendLine("Nenhuma refeição registrada no período.")
+            sb.appendLine(context.getString(R.string.report_no_meals))
         } else {
             val mealsById = report.meals.associateBy { it.id }
             if (report.mealLogs.isNotEmpty()) {
@@ -140,11 +136,11 @@ object ReportGenerator {
                         val total = logs.sumOf { log ->
                             (mealsById[log.mealId]?.quantityGrams ?: 0.0) * log.eatenPercentage / 100.0
                         }
-                        sb.appendLine("  $date - ${total.toInt()}$unit plano")
+                        sb.appendLine("  " + context.getString(R.string.report_meal_day_line, date, total.toInt(), unit))
                     }
             }
             if (report.sporadicLogs.isNotEmpty()) {
-                sb.appendLine("Extras:")
+                sb.appendLine(context.getString(R.string.report_extras))
                 report.sporadicLogs
                     .sortedBy { it.registeredAt }
                     .groupBy { dateFmt.format(Date(it.registeredAt)) }
@@ -154,17 +150,18 @@ object ReportGenerator {
                             .groupBy { it.amountUnit }
                             .mapValues { (_, e) -> e.sumOf { it.amountGrams ?: 0.0 } }
                         val amounts = byUnit.entries.joinToString(" + ") { (u, v) -> "${v.toInt()}$u" }
-                        val extra = if (amounts.isNotBlank()) " ($amounts)" else ""
-                        sb.appendLine("  $date - ${logs.size} extra(s)$extra")
+                        val extra = if (amounts.isNotBlank()) " " + context.getString(R.string.report_extra_amounts, amounts) else ""
+                        val count = context.resources.getQuantityString(R.plurals.report_extra_count, logs.size, logs.size)
+                        sb.appendLine("  " + context.getString(R.string.report_extra_day_line, date, count, extra))
                     }
             }
         }
         sb.appendLine()
 
         // Hidratação
-        sb.appendLine("*💧 Hidratação no período*")
+        sb.appendLine(context.getString(R.string.report_text_section_water))
         if (report.waterLogs.isEmpty()) {
-            sb.appendLine("Nenhum registro de água.")
+            sb.appendLine(context.getString(R.string.report_no_water))
         } else {
             val byDay = report.waterLogs
                 .sortedBy { it.registeredAt }
@@ -173,27 +170,27 @@ object ReportGenerator {
                 sb.appendLine("  $date — ${logs.sumOf { it.amountMl }.toInt()} ml")
             }
             val totalMl = report.waterLogs.sumOf { it.amountMl }
-            sb.appendLine("  Total: ${totalMl.toInt()} ml")
+            sb.appendLine("  " + context.getString(R.string.report_water_total, totalMl.toInt()))
         }
         sb.appendLine()
 
         // Diário de saúde
-        sb.appendLine("*❤️ Diário de saúde (${report.healthEntries.size} registros)*")
+        sb.appendLine(context.getString(R.string.report_text_section_health, report.healthEntries.size))
         if (report.healthEntries.isEmpty()) {
-            sb.appendLine("Nenhum registro no período.")
+            sb.appendLine(context.getString(R.string.report_no_health))
         } else {
             // Exibe no máximo os 5 registros mais recentes para não sobrecarregar o texto
             report.healthEntries.takeLast(5).forEach { entry ->
                 sb.appendLine("• ${dateFmt.format(Date(entry.registeredAt))}")
-                entry.behavior?.let    { sb.appendLine("  Comportamento: ${behaviorLabel(it)}") }
-                entry.fecesStatus?.let { sb.appendLine("  Fezes: ${fecesLabel(it)}") }
-                entry.urineStatus?.let { sb.appendLine("  Urina: ${urineLabel(it)}") }
-                entry.vomitCount?.let  { if (it > 0) sb.appendLine("  Vômitos: ${it}x") }
-                entry.painSigns?.let   { if (it != "NONE") sb.appendLine("  Dor: ${painLabel(it)}") }
+                entry.behavior?.let    { sb.appendLine("  " + context.getString(R.string.report_behavior, behaviorLabel(context, it))) }
+                entry.fecesStatus?.let { sb.appendLine("  " + context.getString(R.string.report_feces, fecesLabel(context, it))) }
+                entry.urineStatus?.let { sb.appendLine("  " + context.getString(R.string.report_urine, urineLabel(context, it))) }
+                entry.vomitCount?.let  { if (it > 0) sb.appendLine("  " + context.getString(R.string.report_vomits, it)) }
+                entry.painSigns?.let   { if (it != "NONE") sb.appendLine("  " + context.getString(R.string.report_pain_text, painLabel(context, it))) }
                 if (!entry.observations.isNullOrBlank()) sb.appendLine("  ${entry.observations}")
             }
             if (report.healthEntries.size > 5)
-                sb.appendLine("  ... e mais ${report.healthEntries.size - 5} registros anteriores.")
+                sb.appendLine("  " + context.getString(R.string.report_health_more, report.healthEntries.size - 5))
         }
         sb.appendLine()
 
@@ -201,22 +198,22 @@ object ReportGenerator {
         if (report.lastVaccineDoses.isNotEmpty()) {
             val vaccines  = report.lastVaccineDoses.filter { it.type == "VACCINE" }
             val dewormers = report.lastVaccineDoses.filter { it.type == "DEWORMER" }
-            sb.appendLine("*💉 Vacinas e Vermífugos — última dose*")
+            sb.appendLine(context.getString(R.string.report_text_section_vaccines))
             if (vaccines.isNotEmpty()) {
-                sb.appendLine("_Vacinas:_")
+                sb.appendLine("_${context.getString(R.string.report_vaccines_label)}_")
                 vaccines.forEach { v ->
                     val date = v.administeredAt?.let { dateFmt.format(Date(it)) } ?: "—"
-                    val next = v.nextDueDate?.let { "  próxima: ${dateFmt.format(Date(it))}" } ?: ""
-                    sb.appendLine("• ${v.name} — $date$next")
+                    val next = v.nextDueDate?.let { "  " + context.getString(R.string.report_next_due, dateFmt.format(Date(it))) } ?: ""
+                    sb.appendLine("• " + context.getString(R.string.report_vaccine_line, v.name, date, next))
                     if (!v.notes.isNullOrBlank()) sb.appendLine("  ${v.notes}")
                 }
             }
             if (dewormers.isNotEmpty()) {
-                sb.appendLine("_Vermífugos:_")
+                sb.appendLine("_${context.getString(R.string.report_dewormers_label)}_")
                 dewormers.forEach { v ->
                     val date = v.administeredAt?.let { dateFmt.format(Date(it)) } ?: "—"
-                    val next = v.nextDueDate?.let { "  próxima: ${dateFmt.format(Date(it))}" } ?: ""
-                    sb.appendLine("• ${v.name} — $date$next")
+                    val next = v.nextDueDate?.let { "  " + context.getString(R.string.report_next_due, dateFmt.format(Date(it))) } ?: ""
+                    sb.appendLine("• " + context.getString(R.string.report_vaccine_line, v.name, date, next))
                     if (!v.notes.isNullOrBlank()) sb.appendLine("  ${v.notes}")
                 }
             }
@@ -225,7 +222,7 @@ object ReportGenerator {
 
         // Peso
         if (report.weightRecords.isNotEmpty()) {
-            sb.appendLine("*⚖️ Últimas pesagens*")
+            sb.appendLine(context.getString(R.string.report_text_section_weights))
             report.weightRecords.takeLast(5).forEach { w ->
                 sb.appendLine("• ${dateFmt.format(Date(w.date))}: ${w.weightKg} kg${if (!w.notes.isNullOrBlank()) " (${w.notes})" else ""}")
             }
@@ -235,17 +232,18 @@ object ReportGenerator {
         // Fotos
         if (report.photos.isNotEmpty()) {
             val photosByDay = report.photos.groupBy { dateFmt.format(Date(it.entryDate)) }
-            sb.appendLine("*📷 Fotos registradas*")
+            sb.appendLine(context.getString(R.string.report_text_section_photos))
             photosByDay.forEach { (date, photos) ->
                 val n = photos.size
-                sb.appendLine("  $date — $n ${if (n == 1) "foto" else "fotos"} (disponível no app)")
+                val count = context.resources.getQuantityString(R.plurals.report_photo_count, n, n)
+                sb.appendLine("  " + context.getString(R.string.report_photo_line, date, count))
             }
             sb.appendLine()
         }
 
-        sb.appendLine("_Gerado pelo app CuidadoPet_")
-        sb.appendLine("_⚠️ Este relatório é um registro de observações do tutor._")
-        sb.appendLine("_Não substitui avaliação, diagnóstico ou prescrição veterinária._")
+        sb.appendLine(context.getString(R.string.report_footer_generated))
+        sb.appendLine(context.getString(R.string.report_footer_disclaimer))
+        sb.appendLine(context.getString(R.string.report_footer_not_substitute))
 
         return sb.toString()
     }
@@ -348,79 +346,74 @@ object ReportGenerator {
         val (pdfStart, pdfEnd) = actualDataPeriod(report)
         val pdfPeriod = if (dateFmt.format(Date(pdfStart)) == dateFmt.format(Date(pdfEnd)))
             dateFmt.format(Date(pdfStart))
-        else "${dateFmt.format(Date(pdfStart))} a ${dateFmt.format(Date(pdfEnd))}"
+        else context.getString(R.string.report_date_range, dateFmt.format(Date(pdfStart)), dateFmt.format(Date(pdfEnd)))
 
-        text("CuidadoPet — Relatório de ${report.pet.name}", paintTitle)
-        text("Período: $pdfPeriod", paintSmall)
+        text(context.getString(R.string.report_pdf_title, report.pet.name), paintTitle)
+        text(context.getString(R.string.report_period, pdfPeriod), paintSmall)
         y += 4f
 
         // ── Pet ──────────────────────────────────────────────────────────────
-        section("Informações do pet")
+        section(context.getString(R.string.report_section_pet))
         val pet          = report.pet
-        val speciesLabelPdf = speciesLabel(pet.species, pet.customSpecies)
-        val sexLabel     = if (pet.sex == "MALE") "Macho" else "Fêmea"
-        text("Nome: ${pet.name}   Espécie: $speciesLabelPdf   Peso: ${pet.weightKg} kg", paintBody)
+        val speciesLabelPdf = speciesLabel(context, pet.species, pet.customSpecies)
+        val sexLabel     = sexLabel(context, pet.sex)
+        text(context.getString(R.string.report_name_species_weight, pet.name, speciesLabelPdf, pet.weightKg.toString()), paintBody)
         val breedSex = buildString {
-            if (!pet.breed.isNullOrBlank()) append("Raça: ${pet.breed}   ")
-            append("Sexo: $sexLabel")
-            if (pet.isNeutered) append(" (castrado)")
+            if (!pet.breed.isNullOrBlank()) append(context.getString(R.string.report_breed, pet.breed) + "   ")
+            append(context.getString(R.string.report_sex, sexLabel))
+            if (pet.isNeutered) append(" " + context.getString(R.string.report_neutered))
         }
         text(breedSex, paintBody)
-        pet.birthDate?.let { text("Idade: ${calculateAge(it)}", paintBody) }
+        pet.birthDate?.let { text(context.getString(R.string.report_age, calculateAge(context, it)), paintBody) }
 
         // ── Medicamentos ─────────────────────────────────────────────────────
-        section("Medicamentos em uso")
+        section(context.getString(R.string.report_section_meds))
         if (report.activeMedications.isEmpty()) {
-            text("Nenhum medicamento ativo.", paintBody)
+            text(context.getString(R.string.report_no_active_meds), paintBody)
         } else {
             val timeFmtPdf = SimpleDateFormat("dd/MM HH:mm", Locale.forLanguageTag("pt-BR"))
             report.activeMedications.forEach { med ->
-                text("• ${med.name}   ${med.dose} ${med.doseUnit}", paintBody)
+                text("• " + context.getString(R.string.report_medication_line_pdf, med.name, med.dose, med.doseUnit), paintBody)
                 val freq = if (med.frequencyType == "INTERVAL")
-                    "A cada ${med.frequencyHours}h"
+                    context.getString(R.string.report_every_hours, med.frequencyHours)
                 else
-                    "Horários: ${med.fixedTimes?.cleanJson() ?: ""}"
+                    context.getString(R.string.report_schedule_times, med.fixedTimes?.cleanJson() ?: "")
                 val periodLabel = if (med.isContinuous)
-                    "desde ${dateFmt.format(Date(med.startDate))}"
+                    context.getString(R.string.report_since, dateFmt.format(Date(med.startDate)))
                 else if (med.endDate != null)
-                    "${dateFmt.format(Date(med.startDate))} a ${dateFmt.format(Date(med.endDate))}"
+                    context.getString(R.string.report_date_range, dateFmt.format(Date(med.startDate)), dateFmt.format(Date(med.endDate)))
                 else
-                    "início: ${dateFmt.format(Date(med.startDate))}"
+                    context.getString(R.string.report_starting_on, dateFmt.format(Date(med.startDate)))
                 text("$freq · $periodLabel", paintSmall, 12f)
-                if (!med.observations.isNullOrBlank()) text("Obs: ${med.observations}", paintSmall, 12f)
+                if (!med.observations.isNullOrBlank()) text(context.getString(R.string.report_obs, med.observations), paintSmall, 12f)
                 val logsThisMed = report.medicationLogs
                     .filter { it.medicationId == med.id }
                     .sortedBy { it.scheduledAt }
                 if (logsThisMed.isNotEmpty()) {
-                    text("Administrações no período:", paintSmall, 12f)
+                    text(context.getString(R.string.report_administrations), paintSmall, 12f)
                     logsThisMed.forEach { log ->
-                        val statusLabel = when (log.status) {
-                            "TAKEN"     -> "Administrado"
-                            "NOT_TAKEN" -> "Não administrado"
-                            "VOMITED"   -> "Administrado (vomitou)"
-                            else        -> "Pendente"
-                        }
-                        text("${timeFmtPdf.format(Date(log.scheduledAt))} — $statusLabel", paintSmall, 24f)
+                        val statusLabel = medicationStatusLabel(context, log.status.orEmpty())
+                        text(context.getString(R.string.report_admin_line, timeFmtPdf.format(Date(log.scheduledAt)), statusLabel), paintSmall, 24f)
                     }
                 }
             }
         }
 
         // ── Alimentação ───────────────────────────────────────────────────────
-        section("Plano alimentar")
+        section(context.getString(R.string.report_section_meals))
         if (report.mealPlans.isEmpty()) {
-            text("Sem plano configurado.", paintBody)
+            text(context.getString(R.string.report_no_meal_plan), paintBody)
         } else {
             report.mealPlans.forEach { plan ->
                 val unitForPlan = report.meals.firstOrNull { it.mealPlanId == plan.id }?.quantityUnit ?: "g"
-                val qty = plan.dailyQuantityGrams?.let { "   ${it.toInt()}$unitForPlan/dia" } ?: ""
-                text("• ${foodTypeLabel(plan.foodType)}$qty", paintBody)
-                if (!plan.foodDetails.isNullOrBlank()) text("Alimento: ${plan.foodDetails}", paintSmall, 12f)
-                if (!plan.restrictions.isNullOrBlank()) text("Restrições: ${plan.restrictions}", paintSmall, 12f)
+                val qty = plan.dailyQuantityGrams?.let { "   " + context.getString(R.string.report_daily_quantity, it.toInt(), unitForPlan) } ?: ""
+                text("• ${foodTypeLabel(context, plan.foodType)}$qty", paintBody)
+                if (!plan.foodDetails.isNullOrBlank()) text(context.getString(R.string.report_food_details, plan.foodDetails), paintSmall, 12f)
+                if (!plan.restrictions.isNullOrBlank()) text(context.getString(R.string.report_restrictions, plan.restrictions), paintSmall, 12f)
             }
         }
         if (report.mealLogs.isEmpty() && report.sporadicLogs.isEmpty()) {
-            text("Nenhuma refeição registrada no período.", paintSmall)
+            text(context.getString(R.string.report_no_meals), paintSmall)
         } else {
             val mealsById = report.meals.associateBy { it.id }
             if (report.mealLogs.isNotEmpty()) {
@@ -432,11 +425,11 @@ object ReportGenerator {
                         val total = logs.sumOf { log ->
                             (mealsById[log.mealId]?.quantityGrams ?: 0.0) * log.eatenPercentage / 100.0
                         }
-                        text("$date - ${total.toInt()}$unit plano", paintSmall, 12f)
+                        text(context.getString(R.string.report_meal_day_line, date, total.toInt(), unit), paintSmall, 12f)
                     }
             }
             if (report.sporadicLogs.isNotEmpty()) {
-                text("Extras:", paintSmall)
+                text(context.getString(R.string.report_extras), paintSmall)
                 report.sporadicLogs
                     .sortedBy { it.registeredAt }
                     .groupBy { dateFmt.format(Date(it.registeredAt)) }
@@ -446,16 +439,17 @@ object ReportGenerator {
                             .groupBy { it.amountUnit }
                             .mapValues { (_, e) -> e.sumOf { it.amountGrams ?: 0.0 } }
                         val amounts = byUnit.entries.joinToString(" + ") { (u, v) -> "${v.toInt()}$u" }
-                        val extra = if (amounts.isNotBlank()) " ($amounts)" else ""
-                        text("$date - ${logs.size} extra(s)$extra", paintSmall, 12f)
+                        val extra = if (amounts.isNotBlank()) " " + context.getString(R.string.report_extra_amounts, amounts) else ""
+                        val count = context.resources.getQuantityString(R.plurals.report_extra_count, logs.size, logs.size)
+                        text(context.getString(R.string.report_extra_day_line, date, count, extra), paintSmall, 12f)
                     }
             }
         }
 
         // ── Hidratação ────────────────────────────────────────────────────────
-        section("Hidratação no período")
+        section(context.getString(R.string.report_section_water))
         if (report.waterLogs.isEmpty()) {
-            text("Nenhum registro de água.", paintBody)
+            text(context.getString(R.string.report_no_water), paintBody)
         } else {
             val byDay = report.waterLogs
                 .sortedBy { it.registeredAt }
@@ -464,54 +458,54 @@ object ReportGenerator {
                 text("$date — ${logs.sumOf { it.amountMl }.toInt()} ml", paintSmall, 12f)
             }
             val totalMl = report.waterLogs.sumOf { it.amountMl }
-            text("Total: ${totalMl.toInt()} ml", paintBody)
+            text(context.getString(R.string.report_water_total, totalMl.toInt()), paintBody)
         }
 
         // ── Diário de saúde ───────────────────────────────────────────────────
-        section("Diário de saúde (${report.healthEntries.size} registros)")
+        section(context.getString(R.string.report_section_health, report.healthEntries.size))
         if (report.healthEntries.isEmpty()) {
-            text("Nenhum registro no período.", paintBody)
+            text(context.getString(R.string.report_no_health), paintBody)
         } else {
             report.healthEntries.forEach { entry ->
                 text(dateFmt.format(Date(entry.registeredAt)), paintBody)
-                entry.behavior?.let    { text("Comportamento: ${behaviorLabel(it)}", paintSmall, 12f) }
-                entry.fecesStatus?.let { text("Fezes: ${fecesLabel(it)}", paintSmall, 12f) }
-                entry.urineStatus?.let { text("Urina: ${urineLabel(it)}", paintSmall, 12f) }
-                entry.vomitCount?.let  { if (it > 0) text("Vômitos: ${it}x", paintSmall, 12f) }
-                entry.painSigns?.let   { if (it != "NONE") text("Sinais de dor: ${painLabel(it)}", paintSmall, 12f) }
-                if (!entry.observations.isNullOrBlank()) text("Obs: ${entry.observations}", paintSmall, 12f)
+                entry.behavior?.let    { text(context.getString(R.string.report_behavior, behaviorLabel(context, it)), paintSmall, 12f) }
+                entry.fecesStatus?.let { text(context.getString(R.string.report_feces, fecesLabel(context, it)), paintSmall, 12f) }
+                entry.urineStatus?.let { text(context.getString(R.string.report_urine, urineLabel(context, it)), paintSmall, 12f) }
+                entry.vomitCount?.let  { if (it > 0) text(context.getString(R.string.report_vomits, it), paintSmall, 12f) }
+                entry.painSigns?.let   { if (it != "NONE") text(context.getString(R.string.report_pain_pdf, painLabel(context, it)), paintSmall, 12f) }
+                if (!entry.observations.isNullOrBlank()) text(context.getString(R.string.report_obs, entry.observations), paintSmall, 12f)
                 y += 3f
             }
         }
 
         // ── Vacinas e Vermífugos ──────────────────────────────────────────────
         if (report.lastVaccineDoses.isNotEmpty()) {
-            section("Vacinas e Vermífugos — última dose")
+            section(context.getString(R.string.report_section_vaccines))
             val vaccines  = report.lastVaccineDoses.filter { it.type == "VACCINE" }
             val dewormers = report.lastVaccineDoses.filter { it.type == "DEWORMER" }
             if (vaccines.isNotEmpty()) {
-                text("Vacinas:", paintBody)
+                text(context.getString(R.string.report_vaccines_label), paintBody)
                 vaccines.forEach { v ->
                     val date = v.administeredAt?.let { dateFmt.format(Date(it)) } ?: "—"
-                    val next = v.nextDueDate?.let { "   próxima: ${dateFmt.format(Date(it))}" } ?: ""
-                    text("• ${v.name} — $date$next", paintSmall, 12f)
-                    if (!v.notes.isNullOrBlank()) text("Obs: ${v.notes}", paintSmall, 24f)
+                    val next = v.nextDueDate?.let { "   " + context.getString(R.string.report_next_due, dateFmt.format(Date(it))) } ?: ""
+                    text("• " + context.getString(R.string.report_vaccine_line, v.name, date, next), paintSmall, 12f)
+                    if (!v.notes.isNullOrBlank()) text(context.getString(R.string.report_obs, v.notes), paintSmall, 24f)
                 }
             }
             if (dewormers.isNotEmpty()) {
-                text("Vermífugos:", paintBody)
+                text(context.getString(R.string.report_dewormers_label), paintBody)
                 dewormers.forEach { v ->
                     val date = v.administeredAt?.let { dateFmt.format(Date(it)) } ?: "—"
-                    val next = v.nextDueDate?.let { "   próxima: ${dateFmt.format(Date(it))}" } ?: ""
-                    text("• ${v.name} — $date$next", paintSmall, 12f)
-                    if (!v.notes.isNullOrBlank()) text("Obs: ${v.notes}", paintSmall, 24f)
+                    val next = v.nextDueDate?.let { "   " + context.getString(R.string.report_next_due, dateFmt.format(Date(it))) } ?: ""
+                    text("• " + context.getString(R.string.report_vaccine_line, v.name, date, next), paintSmall, 12f)
+                    if (!v.notes.isNullOrBlank()) text(context.getString(R.string.report_obs, v.notes), paintSmall, 24f)
                 }
             }
         }
 
         // ── Histórico de peso ─────────────────────────────────────────────────
         if (report.weightRecords.isNotEmpty()) {
-            section("Histórico de peso")
+            section(context.getString(R.string.report_section_weights))
             report.weightRecords.forEach { w ->
                 val note = if (!w.notes.isNullOrBlank()) "  (${w.notes})" else ""
                 text("• ${dateFmt.format(Date(w.date))}: ${w.weightKg} kg$note", paintBody)
@@ -521,11 +515,12 @@ object ReportGenerator {
         // ── Fotos ────────────────────────────────────────────────────────────
         if (report.photos.isNotEmpty()) {
             val timeFmtPdf = SimpleDateFormat("dd/MM/yyyy", Locale.forLanguageTag("pt-BR"))
-            section("Fotos registradas")
+            section(context.getString(R.string.report_section_photos))
             val photosByDay = report.photos.groupBy { timeFmtPdf.format(Date(it.entryDate)) }
             photosByDay.forEach { (date, photos) ->
                 val n = photos.size
-                text("• $date — $n ${if (n == 1) "foto" else "fotos"} (disponível no app)", paintBody)
+                val count = context.resources.getQuantityString(R.plurals.report_photo_count, n, n)
+                text("• " + context.getString(R.string.report_photo_line, date, count), paintBody)
             }
         }
 
@@ -534,9 +529,9 @@ object ReportGenerator {
         y += 14f
         canvas.drawLine(ml, y, pageW - mr, y, paintLine)
         y += 6f
-        text("Gerado pelo app CuidadoPet", paintSmall)
-        text("Este relatório é um registro de observações do tutor.", paintSmall)
-        text("Não substitui avaliação, diagnóstico ou prescrição veterinária.", paintSmall)
+        text(context.getString(R.string.report_pdf_footer_generated), paintSmall)
+        text(context.getString(R.string.report_pdf_footer_disclaimer), paintSmall)
+        text(context.getString(R.string.report_pdf_footer_not_substitute), paintSmall)
 
         doc.finishPage(page)
 
@@ -552,12 +547,24 @@ object ReportGenerator {
 
     // ─── Helpers de tradução ──────────────────────────────────────────────────
 
-    private fun appetiteLabel(status: String, pct: Int): String = when (status) {
-        "ALL"     -> "Comeu tudo"
-        "PARTIAL" -> "Parcial ($pct%)"
-        "REFUSED" -> "Recusou"
-        else      -> "$pct%"
+    private fun appetiteLabel(context: Context, status: String, pct: Int): String = when (status) {
+        "ALL"     -> context.getString(R.string.report_appetite_all)
+        "PARTIAL" -> context.getString(R.string.report_appetite_partial, pct)
+        "REFUSED" -> context.getString(R.string.report_appetite_refused)
+        else      -> context.getString(R.string.report_appetite_pct, pct)
     }
+
+    private fun sexLabel(context: Context, sex: String): String =
+        if (sex == "MALE") context.getString(R.string.report_male) else context.getString(R.string.report_female)
+
+    private fun medicationStatusLabel(context: Context, status: String): String = context.getString(
+        when (status) {
+            "TAKEN"     -> R.string.report_status_taken
+            "NOT_TAKEN" -> R.string.report_status_not_taken
+            "VOMITED"   -> R.string.report_status_vomited
+            else        -> R.string.report_status_pending
+        }
+    )
 
     // Intervalo real dos dados — evita exibir "01/01 a 26/04" quando só há dados de hoje
     private fun actualDataPeriod(report: PetReport): Pair<Long, Long> {
@@ -578,19 +585,19 @@ object ReportGenerator {
     private fun String.cleanJson() =
         removePrefix("[").removeSuffix("]").replace("\"", "").replace(",", ", ")
 
-    private fun speciesLabel(species: String, customSpecies: String?) = when (species) {
-        "DOG"     -> "Cão"
-        "CAT"     -> "Gato"
-        "RABBIT"  -> "Coelho"
-        "BIRD"    -> "Pássaro"
-        "HAMSTER" -> "Hamster"
-        "TURTLE"  -> "Tartaruga"
-        "FISH"    -> "Peixe"
-        "OTHER"   -> customSpecies?.takeIf { it.isNotBlank() } ?: "Outro"
+    private fun speciesLabel(context: Context, species: String, customSpecies: String?) = when (species) {
+        "DOG"     -> context.getString(R.string.report_species_dog)
+        "CAT"     -> context.getString(R.string.report_species_cat)
+        "RABBIT"  -> context.getString(R.string.report_species_rabbit)
+        "BIRD"    -> context.getString(R.string.report_species_bird)
+        "HAMSTER" -> context.getString(R.string.report_species_hamster)
+        "TURTLE"  -> context.getString(R.string.report_species_turtle)
+        "FISH"    -> context.getString(R.string.report_species_fish)
+        "OTHER"   -> customSpecies?.takeIf { it.isNotBlank() } ?: context.getString(R.string.report_other)
         else      -> species
     }
 
-    private fun calculateAge(birthDateMs: Long): String {
+    private fun calculateAge(context: Context, birthDateMs: Long): String {
         val birth = Calendar.getInstance().also { it.timeInMillis = birthDateMs }
         val today = Calendar.getInstance()
         var years  = today.get(Calendar.YEAR)  - birth.get(Calendar.YEAR)
@@ -599,52 +606,54 @@ object ReportGenerator {
         if (today.get(Calendar.DAY_OF_MONTH) < birth.get(Calendar.DAY_OF_MONTH)) {
             if (months == 0) { years--; months = 11 } else months--
         }
+        val yearsText  = context.resources.getQuantityString(R.plurals.report_age_years, years, years)
+        val monthsText = context.resources.getQuantityString(R.plurals.report_age_months, months, months)
         return when {
-            years > 0 && months > 0 -> "$years ${if (years == 1) "ano" else "anos"} e $months ${if (months == 1) "mês" else "meses"}"
-            years > 0               -> "$years ${if (years == 1) "ano" else "anos"}"
-            months > 0              -> "$months ${if (months == 1) "mês" else "meses"}"
-            else                    -> "menos de 1 mês"
+            years > 0 && months > 0 -> context.getString(R.string.report_age_years_months, yearsText, monthsText)
+            years > 0               -> yearsText
+            months > 0              -> monthsText
+            else                    -> context.getString(R.string.report_age_under_month)
         }
     }
 
-    private fun foodTypeLabel(code: String) = when (code) {
-        "DRY_KIBBLE"  -> "Ração seca"
-        "WET_FOOD"    -> "Ração úmida"
-        "NATURAL"     -> "Alimentação natural"
-        "THERAPEUTIC" -> "Dieta terapêutica"
-        else          -> "Outro"
+    private fun foodTypeLabel(context: Context, code: String) = when (code) {
+        "DRY_KIBBLE"  -> context.getString(R.string.report_food_dry)
+        "WET_FOOD"    -> context.getString(R.string.report_food_wet)
+        "NATURAL"     -> context.getString(R.string.report_food_natural)
+        "THERAPEUTIC" -> context.getString(R.string.report_food_therapeutic)
+        else          -> context.getString(R.string.report_other)
     }
 
-    private fun behaviorLabel(code: String) = when (code) {
-        "NORMAL"    -> "Normal"
-        "LETHARGIC" -> "Apático"
-        "AGITATED"  -> "Agitado"
-        "SLEEPY"    -> "Sonolento"
+    private fun behaviorLabel(context: Context, code: String) = when (code) {
+        "NORMAL"    -> context.getString(R.string.report_normal)
+        "LETHARGIC" -> context.getString(R.string.report_lethargic)
+        "AGITATED"  -> context.getString(R.string.report_agitated)
+        "SLEEPY"    -> context.getString(R.string.report_sleepy)
         else        -> code
     }
 
-    private fun fecesLabel(code: String) = when (code) {
-        "NORMAL"   -> "Normal"
-        "SOFT"     -> "Amolecidas"
-        "DIARRHEA" -> "Diarreia"
-        "ABSENT"   -> "Ausentes"
-        "BLOOD"    -> "Com sangue ⚠️"
+    private fun fecesLabel(context: Context, code: String) = when (code) {
+        "NORMAL"   -> context.getString(R.string.report_normal)
+        "SOFT"     -> context.getString(R.string.report_feces_soft)
+        "DIARRHEA" -> context.getString(R.string.report_feces_diarrhea)
+        "ABSENT"   -> context.getString(R.string.report_feces_absent)
+        "BLOOD"    -> context.getString(R.string.report_bloody)
         else       -> code
     }
 
-    private fun urineLabel(code: String) = when (code) {
-        "NORMAL"    -> "Normal"
-        "INCREASED" -> "Aumentada"
-        "REDUCED"   -> "Reduzida"
-        "ABSENT"    -> "Ausente"
-        "BLOOD"     -> "Com sangue ⚠️"
+    private fun urineLabel(context: Context, code: String) = when (code) {
+        "NORMAL"    -> context.getString(R.string.report_normal)
+        "INCREASED" -> context.getString(R.string.report_urine_increased)
+        "REDUCED"   -> context.getString(R.string.report_urine_reduced)
+        "ABSENT"    -> context.getString(R.string.report_urine_absent)
+        "BLOOD"     -> context.getString(R.string.report_bloody)
         else        -> code
     }
 
-    private fun painLabel(code: String) = when (code) {
-        "NONE"     -> "Sem sinais"
-        "APPARENT" -> "Aparente"
-        "EVIDENT"  -> "Evidente"
+    private fun painLabel(context: Context, code: String) = when (code) {
+        "NONE"     -> context.getString(R.string.report_pain_none)
+        "APPARENT" -> context.getString(R.string.report_pain_apparent)
+        "EVIDENT"  -> context.getString(R.string.report_pain_evident)
         else       -> code
     }
 }

@@ -134,28 +134,28 @@ class PetFormViewModel @Inject constructor(
         val state = _uiState.value
 
         if (state.name.isBlank()) {
-            _uiState.update { it.copy(errorMessage = "O nome do pet é obrigatório") }
+            _uiState.update { it.copy(errorMessage = context.getString(com.cuidadopet.R.string.form_pet_name_required)) }
             return
         }
         if (state.name.length > 100) {
-            _uiState.update { it.copy(errorMessage = "O nome deve ter no máximo 100 caracteres") }
+            _uiState.update { it.copy(errorMessage = context.getString(com.cuidadopet.R.string.form_name_max_100)) }
             return
         }
         if (state.breed.length > 100) {
-            _uiState.update { it.copy(errorMessage = "A raça deve ter no máximo 100 caracteres") }
+            _uiState.update { it.copy(errorMessage = context.getString(com.cuidadopet.R.string.form_pet_breed_too_long)) }
             return
         }
         val weight = state.weightKg.replace(",", ".").toDoubleOrNull()
         if (weight == null || weight < 0.1) {
-            _uiState.update { it.copy(errorMessage = "Informe um peso válido (mínimo 0,1 kg)") }
+            _uiState.update { it.copy(errorMessage = context.getString(com.cuidadopet.R.string.form_pet_weight_invalid)) }
             return
         }
         if (weight > 200) {
-            _uiState.update { it.copy(errorMessage = "Peso máximo permitido: 200 kg") }
+            _uiState.update { it.copy(errorMessage = context.getString(com.cuidadopet.R.string.form_pet_weight_max)) }
             return
         }
         if (state.clinicalStates.isEmpty()) {
-            _uiState.update { it.copy(errorMessage = "Selecione ao menos um estado clínico") }
+            _uiState.update { it.copy(errorMessage = context.getString(com.cuidadopet.R.string.form_pet_clinical_state_required)) }
             return
         }
 

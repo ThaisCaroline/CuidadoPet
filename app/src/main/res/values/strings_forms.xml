@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Plano alimentar -->
+    <string name="form_meal_plan_need_meal">Adicione ao menos uma refeição com horário.</string>
+    <string name="form_meal_plan_max_meals">Máximo de 12 refeições por plano.</string>
+    <string name="form_meal_plan_time_format">Horários devem estar no formato HH:mm.</string>
+    <string name="form_meal_plan_max_meal_qty">Quantidade máxima por refeição: 5.000 g.</string>
+    <string name="form_meal_plan_max_kcal">Meta calórica máxima: 10.000 kcal.</string>
+    <string name="form_meal_plan_max_daily_qty">Quantidade diária máxima: 10.000 g.</string>
+
+    <!-- Registro de saúde -->
+    <string name="form_health_fill_one">Preencha ao menos um campo antes de salvar.</string>
+    <string name="form_health_vomit_invalid">Número de vômitos inválido</string>
+    <string name="form_health_vomit_too_high">Número de vômitos muito alto — verifique o valor</string>
+    <string name="form_health_notes_too_long">Observações muito longas (máx. 2.000 caracteres)</string>
+
+    <!-- Premium -->
+    <string name="form_paywall_purchase_not_completed">Compra não concluída. Tente novamente.</string>
+
+    <!-- Medicamento -->
+    <string name="form_med_name_required">O nome do medicamento é obrigatório</string>
+    <string name="form_name_max_100">O nome deve ter no máximo 100 caracteres</string>
+    <string name="form_med_dose_required">Informe a dose</string>
+    <string name="form_med_dose_too_long">Descrição da dose muito longa (máx. 200 caracteres)</string>
+    <string name="form_med_interval_min">Intervalo mínimo: 1 hora</string>
+    <string name="form_med_interval_max">Intervalo máximo: 720 horas (30 dias)</string>
+    <string name="form_med_time_format">Horários devem estar no formato HH:mm</string>
+    <string name="form_med_max_fixed_times">Máximo de 10 horários fixos por medicamento</string>
+    <string name="form_med_duration_min">Duração mínima: 1 dia</string>
+    <string name="form_med_duration_max">Duração máxima: 3.650 dias (10 anos)</string>
+    <string name="form_med_default_pet_name">seu pet</string>
+
+    <!-- Pet -->
+    <string name="form_pet_name_required">O nome do pet é obrigatório</string>
+    <string name="form_pet_breed_too_long">A raça deve ter no máximo 100 caracteres</string>
+    <string name="form_pet_weight_invalid">Informe um peso válido (mínimo 0,1 kg)</string>
+    <string name="form_pet_weight_max">Peso máximo permitido: 200 kg</string>
+    <string name="form_pet_clinical_state_required">Selecione ao menos um estado clínico</string>
+
+    <!-- Vacina / vermífugo -->
+    <string name="form_vaccine_name_required">Informe o nome da vacina/vermífugo.</string>
+
+    <!-- Água -->
+    <string name="form_water_target_min">Meta mínima: 50 ml</string>
+    <string name="form_water_target_max">Meta máxima: 20.000 ml</string>
+    <string name="form_water_interval_min">Intervalo mínimo de lembrete: 1 hora</string>
+    <string name="form_water_interval_max">Intervalo máximo de lembrete: 24 horas</string>
+    <string name="form_water_end_after_start">Horário de fim deve ser depois do início</string>
+
+    <!-- Resumo energético (EnergyCalculator) -->
+    <string name="form_energy_sufficient">✅ Comeu o suficiente</string>
+    <string name="form_energy_below_min">⚠️ Abaixo do mínimo recomendado</string>
+    <string name="form_energy_above">⚠️ Acima do recomendado</string>
+    <string name="form_energy_did_not_eat">❌ Não comeu hoje</string>
+
+    <!-- Relatório (ReportScreen) -->
+    <string name="reportscreen_med_every_hours">A cada %1$sh</string>
+    <string name="reportscreen_med_fixed_times">Horários: %1$s</string>
+    <string name="reportscreen_med_since">desde %1$s</string>
+    <string name="reportscreen_date_range">%1$s a %2$s</string>
+    <string name="reportscreen_med_start">início: %1$s</string>
+    <string name="reportscreen_plan_daily_qty">" · %1$d%2$s/dia"</string>
+    <string name="reportscreen_next_due">"  •  Próxima: %1$s"</string>
+</resources>

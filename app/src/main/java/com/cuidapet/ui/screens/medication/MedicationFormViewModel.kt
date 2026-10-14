@@ -1,11 +1,13 @@
 package com.cuidadopet.ui.screens.medication
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cuidadopet.data.db.entity.MedicationEntity
 import com.cuidadopet.data.repository.MedicationRepository
 import com.cuidadopet.data.repository.PetRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -39,6 +41,7 @@ data class MedicationFormState(
 
 @HiltViewModel
 class MedicationFormViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val medicationRepository: MedicationRepository,
     private val petRepository: PetRepository
 ) : ViewModel() {
@@ -210,51 +213,51 @@ class MedicationFormViewModel @Inject constructor(
         val state = _uiState.value
 
         if (state.name.isBlank()) {
-            _uiState.update { it.copy(errorMessage = "O nome do medicamento é obrigatório") }
+            _uiState.update { it.copy(errorMessage = context.getString(com.cuidadopet.R.string.form_med_name_required)) }
             return
         }
         if (state.name.length > 100) {
-            _uiState.update { it.copy(errorMessage = "O nome deve ter no máximo 100 caracteres") }
+            _uiState.update { it.copy(errorMessage = context.getString(com.cuidadopet.R.string.form_name_max_100)) }
             return
         }
         if (state.dose.isBlank()) {
-            _uiState.update { it.copy(errorMessage = "Informe a dose") }
+            _uiState.update { it.copy(errorMessage = context.getString(com.cuidadopet.R.string.form_med_dose_required)) }
             return
         }
         if (state.dose.length > 200) {
-            _uiState.update { it.copy(errorMessage = "Descrição da dose muito longa (máx. 200 caracteres)") }
+            _uiState.update { it.copy(errorMessage = context.getString(com.cuidadopet.R.string.form_med_dose_too_long)) }
             return
         }
         if (state.frequencyType == "INTERVAL") {
             val hours = state.frequencyHours.toIntOrNull()
             if (hours == null || hours < 1) {
-                _uiState.update { it.copy(errorMessage = "Intervalo mínimo: 1 hora") }
+                _uiState.update { it.copy(errorMessage = context.getString(com.cuidadopet.R.string.form_med_interval_min)) }
                 return
             }
             if (hours > 720) {
-                _uiState.update { it.copy(errorMessage = "Intervalo máximo: 720 horas (30 dias)") }
+                _uiState.update { it.copy(errorMessage = context.getString(com.cuidadopet.R.string.form_med_interval_max)) }
                 return
             }
         }
         if (state.frequencyType == "FIXED_TIMES") {
             val timeRegex = Regex("""^\d{2}:\d{2}$""")
             if (state.fixedTimes.any { !it.matches(timeRegex) }) {
-                _uiState.update { it.copy(errorMessage = "Horários devem estar no formato HH:mm") }
+                _uiState.update { it.copy(errorMessage = context.getString(com.cuidadopet.R.string.form_med_time_format)) }
                 return
             }
             if (state.fixedTimes.size > 10) {
-                _uiState.update { it.copy(errorMessage = "Máximo de 10 horários fixos por medicamento") }
+                _uiState.update { it.copy(errorMessage = context.getString(com.cuidadopet.R.string.form_med_max_fixed_times)) }
                 return
             }
         }
         if (!state.isContinuous) {
             val days = state.durationDays.toIntOrNull()
             if (days == null || days < 1) {
-                _uiState.update { it.copy(errorMessage = "Duração mínima: 1 dia") }
+                _uiState.update { it.copy(errorMessage = context.getString(com.cuidadopet.R.string.form_med_duration_min)) }
                 return
             }
             if (days > 3650) {
-                _uiState.update { it.copy(errorMessage = "Duração máxima: 3.650 dias (10 anos)") }
+                _uiState.update { it.copy(errorMessage = context.getString(com.cuidadopet.R.string.form_med_duration_max)) }
                 return
             }
         }
@@ -263,7 +266,7 @@ class MedicationFormViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
             // Busca o nome do pet para personalizar a notificação
-            val petName = petRepository.getPetById(petId).first()?.name ?: "seu pet"
+            val petName = petRepository.getPetById(petId).first()?.name ?: context.getString(com.cuidadopet.R.string.form_med_default_pet_name)
 
             val startDate = if (state.frequencyType == "INTERVAL" && state.intervalStartTime.isNotBlank()) {
                 val parts = state.intervalStartTime.split(":")

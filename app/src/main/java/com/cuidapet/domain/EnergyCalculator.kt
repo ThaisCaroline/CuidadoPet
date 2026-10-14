@@ -1,5 +1,7 @@
 package com.cuidadopet.domain
 
+import android.content.Context
+import com.cuidadopet.R
 import kotlin.math.pow
 
 // Calculadora de necessidade energética diária
@@ -48,9 +50,9 @@ enum class FeedingStatus {
 }
 
 // Retorna o texto e emoji de cada status para exibir na tela
-fun FeedingStatus.toDisplayText(): String = when (this) {
-    FeedingStatus.SUFFICIENT         -> "✅ Comeu o suficiente"
-    FeedingStatus.BELOW_MINIMUM      -> "⚠️ Abaixo do mínimo recomendado"
-    FeedingStatus.ABOVE_RECOMMENDED  -> "⚠️ Acima do recomendado"
-    FeedingStatus.DID_NOT_EAT        -> "❌ Não comeu hoje"
+fun FeedingStatus.toDisplayText(context: Context): String = when (this) {
+    FeedingStatus.SUFFICIENT         -> context.getString(R.string.form_energy_sufficient)
+    FeedingStatus.BELOW_MINIMUM      -> context.getString(R.string.form_energy_below_min)
+    FeedingStatus.ABOVE_RECOMMENDED  -> context.getString(R.string.form_energy_above)
+    FeedingStatus.DID_NOT_EAT        -> context.getString(R.string.form_energy_did_not_eat)
 }

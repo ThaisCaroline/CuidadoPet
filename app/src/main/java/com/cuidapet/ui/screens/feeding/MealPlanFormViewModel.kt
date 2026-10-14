@@ -1,5 +1,7 @@
 package com.cuidadopet.ui.screens.feeding
 
+import android.content.Context
+import dagger.hilt.android.qualifiers.ApplicationContext
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cuidadopet.data.db.entity.MealEntity
@@ -48,6 +50,7 @@ data class MealTimeEntry(
 
 @HiltViewModel
 class MealPlanFormViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val feedingRepository: FeedingRepository,
     private val petRepository: PetRepository
 ) : ViewModel() {
@@ -175,33 +178,33 @@ class MealPlanFormViewModel @Inject constructor(
 
         val validMeals = s.meals.filter { it.time.isNotBlank() }
         if (validMeals.isEmpty()) {
-            _state.update { it.copy(error = "Adicione ao menos uma refeição com horário.") }
+            _state.update { it.copy(error = context.getString(com.cuidadopet.R.string.form_meal_plan_need_meal)) }
             return
         }
         if (validMeals.size > 12) {
-            _state.update { it.copy(error = "Máximo de 12 refeições por plano.") }
+            _state.update { it.copy(error = context.getString(com.cuidadopet.R.string.form_meal_plan_max_meals)) }
             return
         }
         val timeRegex = Regex("""^\d{2}:\d{2}$""")
         if (validMeals.any { !it.time.matches(timeRegex) }) {
-            _state.update { it.copy(error = "Horários devem estar no formato HH:mm.") }
+            _state.update { it.copy(error = context.getString(com.cuidadopet.R.string.form_meal_plan_time_format)) }
             return
         }
         validMeals.forEach { meal ->
             val qty = meal.quantityGrams.toDoubleOrNull()
             if (qty != null && qty > 5000) {
-                _state.update { it.copy(error = "Quantidade máxima por refeição: 5.000 g.") }
+                _state.update { it.copy(error = context.getString(com.cuidadopet.R.string.form_meal_plan_max_meal_qty)) }
                 return
             }
         }
         val kcal = s.dailyKcalTarget.toDoubleOrNull()
         if (kcal != null && kcal > 10_000) {
-            _state.update { it.copy(error = "Meta calórica máxima: 10.000 kcal.") }
+            _state.update { it.copy(error = context.getString(com.cuidadopet.R.string.form_meal_plan_max_kcal)) }
             return
         }
         val grams = s.dailyQuantityGrams.toDoubleOrNull()
         if (grams != null && grams > 10_000) {
-            _state.update { it.copy(error = "Quantidade diária máxima: 10.000 g.") }
+            _state.update { it.copy(error = context.getString(com.cuidadopet.R.string.form_meal_plan_max_daily_qty)) }
             return
         }
 
@@ -235,7 +238,7 @@ class MealPlanFormViewModel @Inject constructor(
                 feedingRepository.setMealPlan(plan, meals, petName, planIdToReplace = s.editingPlanId)
                 _state.update { it.copy(isSaving = false, isSaved = true) }
             } catch (e: Exception) {
-                _state.update { it.copy(isSaving = false, error = "Erro ao salvar: ${e.message}") }
+                _state.update { it.copy(isSaving = false, error = context.getString(com.cuidadopet.R.string.error_save_detail, e.message ?: "")) }
             }
         }
     }

@@ -1,4 +1,6 @@
 package com.cuidadopet.ui.screens.paywall
+// PAUSADO: cobrança desligada. Código comentado para voltar depois: remova as linhas /* e */ abaixo.
+/*
 
 import android.app.Activity
 import androidx.compose.foundation.layout.Arrangement
@@ -183,3 +185,4 @@ private fun PackageCard(rcPackage: Package, onClick: () -> Unit) {
         }
     }
 }
+*/

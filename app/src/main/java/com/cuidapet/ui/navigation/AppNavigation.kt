@@ -27,7 +27,8 @@ import com.cuidadopet.ui.screens.vaccine.VaccineFormScreen
 import com.cuidadopet.ui.screens.documents.PetDocumentsScreen
 import com.cuidadopet.ui.screens.vaccine.VaccineListScreen
 import com.cuidadopet.ui.screens.partners.PartnersScreen
-import com.cuidadopet.ui.screens.paywall.PaywallScreen
+// PAUSADO: import do paywall comentado junto com a tela (ver PaywallScreen.kt)
+// import com.cuidadopet.ui.screens.paywall.PaywallScreen
 import com.cuidadopet.ui.screens.water.WaterConfigFormScreen
 
 private const val PREFS_NAME       = "app_prefs"
@@ -115,7 +116,7 @@ fun AppNavigation(
                 onPetClick      = { petId -> navController.navigate(Routes.dashboard(petId)) },
                 onPrivacyPolicy = { navController.navigate(Routes.PRIVACY_POLICY) },
                 onSettings      = { navController.navigate(Routes.SETTINGS) },
-                onOpenPaywall   = { navController.navigate(Routes.PAYWALL) },
+                onOpenPaywall   = {},
                 onPartnersClick = { navController.navigate(Routes.PARTNERS) }
             )
         }
@@ -134,14 +135,17 @@ fun AppNavigation(
         composable(Routes.SETTINGS) {
             SettingsScreen(
                 onNavigateBack = { navController.popBackStack() },
-                onOpenPaywall  = { navController.navigate(Routes.PAYWALL) }
+                onOpenPaywall  = {}
             )
         }
 
         // ── Paywall — planos premium ──────────────────────────────────────
+        // PAUSADO: rota do paywall comentada enquanto a cobrança estiver desligada
+        /*
         composable(Routes.PAYWALL) {
             PaywallScreen(onNavigateBack = { navController.popBackStack() })
         }
+        */
 
         // ── Cadastro / Edição de pet ─────────────────────────────────────
         composable(
@@ -178,7 +182,7 @@ fun AppNavigation(
                 onReport             = { navController.navigate(Routes.report(petId)) },
                 onVaccines           = { navController.navigate(Routes.vaccineList(petId)) },
                 onDocuments          = { navController.navigate(Routes.petDocuments(petId)) },
-                onOpenPaywall        = { navController.navigate(Routes.PAYWALL) }
+                onOpenPaywall        = {}
             )
         }
 

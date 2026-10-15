@@ -1,4 +1,6 @@
 package com.cuidadopet.ui.screens.paywall
+// PAUSADO: cobrança desligada. Código comentado para voltar depois: remova as linhas /* e */ abaixo.
+/*
 
 import android.app.Activity
 import androidx.lifecycle.ViewModel
@@ -69,3 +71,4 @@ class PaywallViewModel @Inject constructor(
 
     fun clearError() = _uiState.update { it.copy(errorMessage = null) }
 }
+*/

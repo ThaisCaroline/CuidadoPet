@@ -162,8 +162,8 @@ dependencies {
     // AdMob — anúncios banner e intersticial
     implementation("com.google.android.gms:play-services-ads:23.6.0")
 
-    // RevenueCat — gerenciamento de assinaturas e compras in-app
-    implementation("com.revenuecat.purchases:purchases:8.3.0")
+    // RevenueCat — PAUSADO: cobrança desligada. Ao voltar, use 9.x ou mais recente (a 8.x traz Billing 7, que a Play bloqueia).
+    // implementation("com.revenuecat.purchases:purchases:9.0.0")
 
     // ML Kit — reconhecimento de texto no aparelho (leitura de receitas)
     implementation("com.google.mlkit:text-recognition:16.0.1")

@@ -287,7 +287,7 @@ private fun ReportContent(
         val periodLabel = if (dateFmt.format(Date(actualStart)) == dateFmt.format(Date(actualEnd)))
             dateFmt.format(Date(actualStart))
         else
-            "${dateFmt.format(Date(actualStart))} a ${dateFmt.format(Date(actualEnd))}"
+            stringResource(R.string.reportscreen_date_range, dateFmt.format(Date(actualStart)), dateFmt.format(Date(actualEnd)))
 
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -319,15 +319,15 @@ private fun ReportContent(
                         style = MaterialTheme.typography.bodySmall
                     )
                     val freqText = if (med.frequencyType == "INTERVAL")
-                        "A cada ${med.frequencyHours}h"
+                        stringResource(R.string.reportscreen_med_every_hours, med.frequencyHours.toString())
                     else
-                        "Horários: ${med.fixedTimes?.removeSurrounding("[", "]")?.replace("\"", "")?.replace(",", ", ") ?: ""}"
+                        stringResource(R.string.reportscreen_med_fixed_times, med.fixedTimes?.removeSurrounding("[", "]")?.replace("\"", "")?.replace(",", ", ") ?: "")
                     val periodLabel = if (med.isContinuous)
-                        "desde ${dateFmtLocal.format(Date(med.startDate))}"
+                        stringResource(R.string.reportscreen_med_since, dateFmtLocal.format(Date(med.startDate)))
                     else if (med.endDate != null)
-                        "${dateFmtLocal.format(Date(med.startDate))} a ${dateFmtLocal.format(Date(med.endDate))}"
+                        stringResource(R.string.reportscreen_date_range, dateFmtLocal.format(Date(med.startDate)), dateFmtLocal.format(Date(med.endDate)))
                     else
-                        "início: ${dateFmtLocal.format(Date(med.startDate))}"
+                        stringResource(R.string.reportscreen_med_start, dateFmtLocal.format(Date(med.startDate)))
                     Text(
                         "  $freqText · $periodLabel",
                         style = MaterialTheme.typography.bodySmall,
@@ -370,7 +370,7 @@ private fun ReportContent(
                     }
                     val unitForPlan = report.meals.firstOrNull { it.mealPlanId == plan.id }?.quantityUnit ?: "g"
                     Text(
-                        "• $foodLabel${if (plan.dailyQuantityGrams != null) " · ${plan.dailyQuantityGrams!!.toInt()}$unitForPlan/dia" else ""}",
+                        "• $foodLabel${if (plan.dailyQuantityGrams != null) stringResource(R.string.reportscreen_plan_daily_qty, plan.dailyQuantityGrams!!.toInt(), unitForPlan) else ""}",
                         style = MaterialTheme.typography.bodySmall
                     )
                     if (!plan.foodDetails.isNullOrBlank()) {
@@ -537,7 +537,7 @@ private fun ReportContent(
                     )
                     vaccines.forEach { v ->
                         val date = v.administeredAt?.let { dateFmt.format(Date(it)) } ?: "—"
-                        val next = v.nextDueDate?.let { "  •  Próxima: ${dateFmt.format(Date(it))}" } ?: ""
+                        val next = v.nextDueDate?.let { stringResource(R.string.reportscreen_next_due, dateFmt.format(Date(it))) } ?: ""
                         Text("${v.name} — $date$next", style = MaterialTheme.typography.bodySmall)
                         if (!v.notes.isNullOrBlank())
                             Text(v.notes, style = MaterialTheme.typography.bodySmall,
@@ -552,7 +552,7 @@ private fun ReportContent(
                     )
                     dewormers.forEach { v ->
                         val date = v.administeredAt?.let { dateFmt.format(Date(it)) } ?: "—"
-                        val next = v.nextDueDate?.let { "  •  Próxima: ${dateFmt.format(Date(it))}" } ?: ""
+                        val next = v.nextDueDate?.let { stringResource(R.string.reportscreen_next_due, dateFmt.format(Date(it))) } ?: ""
                         Text("${v.name} — $date$next", style = MaterialTheme.typography.bodySmall)
                         if (!v.notes.isNullOrBlank())
                             Text(v.notes, style = MaterialTheme.typography.bodySmall,

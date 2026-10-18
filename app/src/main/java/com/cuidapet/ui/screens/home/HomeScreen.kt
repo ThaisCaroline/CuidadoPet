@@ -28,10 +28,12 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Cake
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Store
 import androidx.compose.material3.AlertDialog
@@ -40,7 +42,11 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -54,6 +60,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import com.cuidadopet.domain.PetFilter
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -103,6 +110,30 @@ fun HomeScreen(
     }
     var dismissedBirthdays by remember { mutableStateOf(emptySet<Long>()) }
     var pendingDelete by remember { mutableStateOf<PetEntity?>(null) }
+
+    // Busca por nome ou raça e filtro por espécie. rememberSaveable mantém o filtro ao girar a tela.
+    val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
+    val selectedSpecies by viewModel.selectedSpecies.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val speciesOptions = remember(pets) {
+        val counts = pets.groupingBy { PetFilter.speciesKey(it) }.eachCount()
+        pets.distinctBy { PetFilter.speciesKey(it) }
+            .map { pet ->
+                val key = PetFilter.speciesKey(pet)
+                SpeciesOption(key, petSpeciesLabel(context, pet.species, pet.customSpecies), counts[key] ?: 0)
+            }
+    }
+    // Se a última espécie selecionada deixar de existir (pet excluído), volta para "Todos"
+    LaunchedEffect(speciesOptions) {
+        if (selectedSpecies != null && speciesOptions.none { it.key == selectedSpecies }) {
+            viewModel.setSelectedSpecies(null)
+        }
+    }
+    val filteredPets = remember(pets, searchQuery, selectedSpecies) {
+        pets.filter {
+            PetFilter.matches(it, searchQuery, selectedSpecies, petSpeciesLabel(context, it.species, it.customSpecies))
+        }
+    }
 
     // Marca banner como visto hoje na primeira vez que aparece
     LaunchedEffect(visibleBirthdayPets) {
@@ -258,12 +289,37 @@ fun HomeScreen(
             if (pets.isEmpty()) {
                 EmptyPetsContent(modifier = Modifier.weight(1f))
             } else {
-                PetList(
-                    pets       = pets,
-                    onPetClick = onPetClick,
-                    onDeletePet = { pendingDelete = it },
-                    modifier   = Modifier.weight(1f)
-                )
+                // Busca só faz sentido com mais de um pet
+                if (pets.size > 1) {
+                    PetSearchBar(
+                        query = searchQuery,
+                        onQueryChange = { viewModel.setSearchQuery(it) },
+                        speciesOptions = speciesOptions,
+                        selectedSpecies = selectedSpecies,
+                        onSpeciesSelected = { viewModel.setSelectedSpecies(it) },
+                        shownCount = filteredPets.size,
+                        totalCount = pets.size
+                    )
+                }
+                if (filteredPets.isEmpty()) {
+                    Column(
+                        modifier = Modifier.weight(1f).fillMaxWidth().padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(stringResource(R.string.home_no_results))
+                        TextButton(onClick = {
+                            viewModel.setSearchQuery("")
+                            viewModel.setSelectedSpecies(null)
+                        }) { Text(stringResource(R.string.home_clear_filters)) }
+                    }
+                } else {
+                    PetList(
+                        pets       = filteredPets,
+                        onPetClick = onPetClick,
+                        onDeletePet = { pendingDelete = it },
+                        modifier   = Modifier.weight(1f)
+                    )
+                }
             }
         }
     }
@@ -349,6 +405,111 @@ private fun EmptyPetsContent(modifier: Modifier = Modifier) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
             )
+        }
+    }
+}
+
+// Campo de busca e chips de espécie. Os chips só aparecem quando há mais de uma espécie.
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun PetSearchBar(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    speciesOptions: List<SpeciesOption>,
+    selectedSpecies: String?,
+    onSpeciesSelected: (String?) -> Unit,
+    shownCount: Int,
+    totalCount: Int
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        OutlinedTextField(
+            value = query,
+            onValueChange = onQueryChange,
+            singleLine = true,
+            placeholder = { Text(stringResource(R.string.home_search_hint)) },
+            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+            trailingIcon = {
+                if (query.isNotEmpty()) {
+                    IconButton(onClick = { onQueryChange("") }) {
+                        Icon(Icons.Default.Close, contentDescription = stringResource(R.string.action_cancel))
+                    }
+                }
+            },
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surface
+            ),
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        if (speciesOptions.size > 1) {
+            SpeciesDropdown(
+                options = speciesOptions,
+                selectedKey = selectedSpecies,
+                totalCount = totalCount,
+                onSelect = onSpeciesSelected
+            )
+        }
+
+        if (shownCount < totalCount) {
+            Text(
+                text = stringResource(R.string.home_results_count, shownCount, totalCount),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
+    }
+}
+
+// Um item da lista de espécies: chave para o filtro, nome exibido e quantos pets tem
+private data class SpeciesOption(val key: String, val label: String, val count: Int)
+
+// Menu de espécies: mostra a espécie escolhida (ou todas) e abre a lista completa com a contagem de cada uma
+@Composable
+private fun SpeciesDropdown(
+    options: List<SpeciesOption>,
+    selectedKey: String?,
+    totalCount: Int,
+    onSelect: (String?) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val selected = options.firstOrNull { it.key == selectedKey }
+
+    Box(modifier = Modifier.fillMaxWidth()) {
+        OutlinedButton(
+            onClick = { expanded = true },
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.outlinedButtonColors(containerColor = MaterialTheme.colorScheme.surface)
+        ) {
+            Text(
+                text = selected?.let { "${it.label} (${it.count})" }
+                    ?: stringResource(R.string.home_species_all, totalCount),
+                modifier = Modifier.weight(1f)
+            )
+            Icon(Icons.Default.ArrowDropDown, contentDescription = null)
+        }
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.home_species_all, totalCount)) },
+                onClick = {
+                    onSelect(null)
+                    expanded = false
+                }
+            )
+            options.forEach { option ->
+                DropdownMenuItem(
+                    text = { Text("${option.label} (${option.count})") },
+                    onClick = {
+                        onSelect(option.key)
+                        expanded = false
+                    }
+                )
+            }
         }
     }
 }

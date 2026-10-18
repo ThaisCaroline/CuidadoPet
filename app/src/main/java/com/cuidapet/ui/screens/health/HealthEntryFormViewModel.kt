@@ -1,5 +1,7 @@
 package com.cuidadopet.ui.screens.health
 
+import android.content.Context
+import dagger.hilt.android.qualifiers.ApplicationContext
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -34,6 +36,7 @@ data class HealthEntryFormState(
 
 @HiltViewModel
 class HealthEntryFormViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val healthRepository: HealthRepository,
     private val photoRepository: HealthPhotoRepository
 ) : ViewModel() {
@@ -84,7 +87,7 @@ class HealthEntryFormViewModel @Inject constructor(
             try {
                 photoRepository.savePhoto(currentPetId, currentEntryDate, uri)
             } catch (e: Exception) {
-                _state.update { it.copy(error = "Erro ao salvar foto: ${e.message}") }
+                _state.update { it.copy(error = context.getString(com.cuidadopet.R.string.error_save_photo_detail, e.message ?: "")) }
             }
         }
     }
@@ -94,7 +97,7 @@ class HealthEntryFormViewModel @Inject constructor(
             try {
                 photoRepository.deletePhoto(photo)
             } catch (e: Exception) {
-                _state.update { it.copy(error = "Erro ao excluir foto: ${e.message}") }
+                _state.update { it.copy(error = context.getString(com.cuidadopet.R.string.error_delete_photo_detail, e.message ?: "")) }
             }
         }
     }
@@ -116,22 +119,22 @@ class HealthEntryFormViewModel @Inject constructor(
             s.observations.isNotBlank() || s.photos.isNotEmpty()
 
         if (!hasAnyData) {
-            _state.update { it.copy(error = "Preencha ao menos um campo antes de salvar.") }
+            _state.update { it.copy(error = context.getString(com.cuidadopet.R.string.form_health_fill_one)) }
             return
         }
         if (s.vomitCount.isNotBlank()) {
             val count = s.vomitCount.toIntOrNull()
             if (count == null || count < 0) {
-                _state.update { it.copy(error = "Número de vômitos inválido") }
+                _state.update { it.copy(error = context.getString(com.cuidadopet.R.string.form_health_vomit_invalid)) }
                 return
             }
             if (count > 100) {
-                _state.update { it.copy(error = "Número de vômitos muito alto — verifique o valor") }
+                _state.update { it.copy(error = context.getString(com.cuidadopet.R.string.form_health_vomit_too_high)) }
                 return
             }
         }
         if (s.observations.length > 2000) {
-            _state.update { it.copy(error = "Observações muito longas (máx. 2.000 caracteres)") }
+            _state.update { it.copy(error = context.getString(com.cuidadopet.R.string.form_health_notes_too_long)) }
             return
         }
 
@@ -155,7 +158,7 @@ class HealthEntryFormViewModel @Inject constructor(
                 else healthRepository.updateEntry(entry)
                 _state.update { it.copy(isSaving = false, isSaved = true) }
             } catch (e: Exception) {
-                _state.update { it.copy(isSaving = false, error = "Erro ao salvar: ${e.message}") }
+                _state.update { it.copy(isSaving = false, error = context.getString(com.cuidadopet.R.string.error_save_detail, e.message ?: "")) }
             }
         }
     }

@@ -48,8 +48,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.cuidadopet.R
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
+// import com.google.gson.Gson
+// import com.google.gson.reflect.TypeToken
 
 data class Partner(
     val name: String = "",
@@ -66,15 +66,17 @@ data class Partner(
 fun PartnersScreen(onNavigateBack: () -> Unit) {
     val context = LocalContext.current
 
-    val partners = remember {
-        try {
-            val json = context.assets.open("partners.json").bufferedReader().readText()
-            val type = object : TypeToken<List<Partner>>() {}.type
-            Gson().fromJson<List<Partner>>(json, type) ?: emptyList()
-        } catch (_: Exception) {
-            emptyList()
-        }
-    }
+    // Lista de parceiros desativada: não carrega mais partners.json
+    // val partners = remember {
+    //     try {
+    //         val json = context.assets.open("partners.json").bufferedReader().readText()
+    //         val type = object : TypeToken<List<Partner>>() {}.type
+    //         Gson().fromJson<List<Partner>>(json, type) ?: emptyList()
+    //     } catch (_: Exception) {
+    //         emptyList()
+    //     }
+    // }
+    val partners = emptyList<Partner>()
 
     Scaffold(
         topBar = {

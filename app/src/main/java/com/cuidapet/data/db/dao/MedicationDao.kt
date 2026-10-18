@@ -33,6 +33,10 @@ interface MedicationDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertMedication(medication: MedicationEntity): Long
 
+    // Lista inserida numa única transação do Room: se uma linha falhar, nenhuma é gravada
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertMedications(medications: List<MedicationEntity>): List<Long>
+
     @Update
     suspend fun updateMedication(medication: MedicationEntity)
 

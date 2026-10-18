@@ -1,5 +1,24 @@
 package com.cuidadopet.data.repository
 
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import javax.inject.Inject
+import javax.inject.Singleton
+
+// PAUSADO: cobrança desligada, sem Billing/RevenueCat no build.
+// Enquanto não houver compras, isPremium fica sempre false.
+// Para voltar a cobrar, restaure a versão comentada abaixo e a dependência do RevenueCat.
+@Singleton
+class PurchaseRepository @Inject constructor() {
+
+    private val _isPremium = MutableStateFlow(false)
+    val isPremium: StateFlow<Boolean> = _isPremium.asStateFlow()
+}
+
+/*
+package com.cuidadopet.data.repository
+
 import android.app.Activity
 import com.revenuecat.purchases.CustomerInfo
 import com.revenuecat.purchases.Offerings
@@ -77,3 +96,4 @@ class PurchaseRepository @Inject constructor() {
     private val CustomerInfo.isPremium: Boolean
         get() = entitlements["premium"]?.isActive == true
 }
+*/

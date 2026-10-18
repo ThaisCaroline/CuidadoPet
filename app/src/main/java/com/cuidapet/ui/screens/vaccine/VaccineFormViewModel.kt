@@ -1,11 +1,13 @@
 package com.cuidadopet.ui.screens.vaccine
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cuidadopet.data.db.entity.VaccineEntity
 import com.cuidadopet.data.repository.PetRepository
 import com.cuidadopet.data.repository.VaccineRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -31,6 +33,7 @@ data class VaccineFormUiState(
 
 @HiltViewModel
 class VaccineFormViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val vaccineRepository: VaccineRepository,
     private val petRepository: PetRepository
 ) : ViewModel() {
@@ -83,7 +86,7 @@ class VaccineFormViewModel @Inject constructor(
     fun save(existingId: Long?) {
         val state = _uiState.value
         if (state.name.isBlank()) {
-            _uiState.update { it.copy(errorMessage = "Informe o nome da vacina/vermífugo.") }
+            _uiState.update { it.copy(errorMessage = context.getString(com.cuidadopet.R.string.form_vaccine_name_required)) }
             return
         }
 
@@ -109,7 +112,7 @@ class VaccineFormViewModel @Inject constructor(
                 }
                 _uiState.update { it.copy(isLoading = false, isSaved = true) }
             } catch (e: Exception) {
-                _uiState.update { it.copy(isLoading = false, errorMessage = "Erro ao salvar: ${e.message}") }
+                _uiState.update { it.copy(isLoading = false, errorMessage = context.getString(com.cuidadopet.R.string.error_save_detail, e.message)) }
             }
         }
     }

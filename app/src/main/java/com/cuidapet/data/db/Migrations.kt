@@ -3,6 +3,27 @@ package com.cuidadopet.data.db
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
+// Documentos em PDF do pet (exames). Só cria a tabela nova; os dados existentes não mudam.
+val MIGRATION_11_12 = object : Migration(11, 12) {
+    override fun migrate(database: SupportSQLiteDatabase) {
+        database.execSQL("""
+            CREATE TABLE IF NOT EXISTS pet_documents (
+                id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                petId INTEGER NOT NULL,
+                title TEXT NOT NULL,
+                documentDate INTEGER NOT NULL,
+                filePath TEXT NOT NULL,
+                fileSizeBytes INTEGER NOT NULL,
+                createdAt INTEGER NOT NULL,
+                FOREIGN KEY (petId) REFERENCES pets(id) ON DELETE CASCADE
+            )
+        """)
+        database.execSQL(
+            "CREATE INDEX IF NOT EXISTS index_pet_documents_petId ON pet_documents(petId)"
+        )
+    }
+}
+
 val MIGRATION_10_11 = object : Migration(10, 11) {
     override fun migrate(database: SupportSQLiteDatabase) {
         database.execSQL("ALTER TABLE medications ADD COLUMN is_super_reminder INTEGER NOT NULL DEFAULT 0")

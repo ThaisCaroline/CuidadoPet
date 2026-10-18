@@ -45,6 +45,11 @@ class VaccineRepository @Inject constructor(
         vaccineDao.delete(id)
     }
 
+    // Agenda os avisos de uma vacina (usado também na restauração de backup)
+    fun scheduleReminderFor(vaccine: VaccineEntity, petName: String) {
+        scheduleReminderIfNeeded(vaccine, petName)
+    }
+
     private fun scheduleReminderIfNeeded(vaccine: VaccineEntity, petName: String) {
         val nextDue = vaccine.nextDueDate ?: return
         if (!vaccine.reminderEnabled) return
@@ -78,7 +83,7 @@ class VaccineRepository @Inject constructor(
         }
     }
 
-    private fun cancelReminder(vaccineId: Long) {
+    fun cancelReminder(vaccineId: Long) {
         val wm = WorkManager.getInstance(context)
         listOf(7, 3, 0).forEach { daysBefore ->
             wm.cancelUniqueWork("vaccine_${daysBefore}d_$vaccineId")

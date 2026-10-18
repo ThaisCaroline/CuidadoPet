@@ -42,6 +42,7 @@ import android.content.Context
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.cuidadopet.R
+import com.cuidadopet.data.PremiumFlags
 import com.cuidadopet.data.db.entity.MealEntity
 import com.cuidadopet.data.db.entity.MealPlanEntity
 import com.cuidadopet.ui.components.AdBanner
@@ -84,10 +85,16 @@ fun FeedingTabContent(
             title = { Text(stringResource(R.string.dialog_med_limit_title)) },
             text  = { Text(stringResource(R.string.dialog_feeding_plan_limit_msg)) },
             confirmButton = {
-                Button(onClick = { showPlanLimitDialog = false; onOpenPaywall() }) { Text(stringResource(R.string.dialog_med_limit_premium)) }
+                if (PremiumFlags.SALES_ENABLED) {
+                    Button(onClick = { showPlanLimitDialog = false; onOpenPaywall() }) { Text(stringResource(R.string.dialog_med_limit_premium)) }
+                } else {
+                    TextButton(onClick = { showPlanLimitDialog = false }) { Text(stringResource(R.string.dialog_med_limit_later)) }
+                }
             },
             dismissButton = {
-                TextButton(onClick = { showPlanLimitDialog = false }) { Text(stringResource(R.string.dialog_med_limit_later)) }
+                if (PremiumFlags.SALES_ENABLED) {
+                    TextButton(onClick = { showPlanLimitDialog = false }) { Text(stringResource(R.string.dialog_med_limit_later)) }
+                }
             }
         )
     }

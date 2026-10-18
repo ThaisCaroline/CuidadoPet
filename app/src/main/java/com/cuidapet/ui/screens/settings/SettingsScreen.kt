@@ -44,6 +44,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -58,6 +59,7 @@ import androidx.core.content.FileProvider
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cuidadopet.R
+import com.cuidadopet.domain.PetDocumentRules
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -80,10 +82,30 @@ fun SettingsScreen(
         else -> stringResource(R.string.language_system)
     }
 
+    // Restaurar apaga os dados atuais: o tutor confirma o arquivo escolhido antes
+    var pendingRestoreUri by remember { mutableStateOf<Uri?>(null) }
+
     val importLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
-        uri?.let { viewModel.importBackup(it) }
+        pendingRestoreUri = uri
+    }
+
+    pendingRestoreUri?.let { uri ->
+        AlertDialog(
+            onDismissRequest = { pendingRestoreUri = null },
+            title = { Text(stringResource(R.string.settings_restore_confirm_title)) },
+            text = { Text(stringResource(R.string.settings_restore_confirm_msg)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.importBackup(uri)
+                    pendingRestoreUri = null
+                }) { Text(stringResource(R.string.settings_restore_confirm_btn), color = MaterialTheme.colorScheme.error) }
+            },
+            dismissButton = {
+                TextButton(onClick = { pendingRestoreUri = null }) { Text(stringResource(R.string.action_cancel)) }
+            }
+        )
     }
 
     LaunchedEffect(uiState.fileToShare) {
@@ -225,6 +247,25 @@ fun SettingsScreen(
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                    viewModel.backupSizeBytes?.let { size ->
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            text = stringResource(
+                                R.string.settings_backup_size,
+                                PetDocumentRules.formatMegabytes(size),
+                                PetDocumentRules.formatMegabytes(PetDocumentRules.BACKUP_LIMIT_BYTES)
+                            ),
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        if (size >= PetDocumentRules.BACKUP_WARNING_BYTES) {
+                            Text(
+                                text = stringResource(R.string.settings_backup_size_warning),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
                     Spacer(Modifier.height(16.dp))
 
                     if (uiState.isLoading) {

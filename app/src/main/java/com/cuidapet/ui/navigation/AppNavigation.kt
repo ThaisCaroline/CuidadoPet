@@ -15,6 +15,7 @@ import com.cuidadopet.ui.screens.dashboard.PetDashboardScreen
 import com.cuidadopet.ui.screens.feeding.MealPlanFormScreen
 import com.cuidadopet.ui.screens.home.HomeScreen
 import com.cuidadopet.ui.screens.medication.MedicationFormScreen
+import com.cuidadopet.ui.screens.medication.PrescriptionScanScreen
 import com.cuidadopet.ui.screens.onboarding.OnboardingScreen
 import com.cuidadopet.ui.screens.pet.PetFormScreen
 import com.cuidadopet.ui.screens.health.HealthEntryFormScreen
@@ -23,9 +24,11 @@ import com.cuidadopet.ui.screens.settings.SettingsScreen
 import com.cuidadopet.ui.screens.health.WeightHistoryScreen
 import com.cuidadopet.ui.screens.report.ReportScreen
 import com.cuidadopet.ui.screens.vaccine.VaccineFormScreen
+import com.cuidadopet.ui.screens.documents.PetDocumentsScreen
 import com.cuidadopet.ui.screens.vaccine.VaccineListScreen
 import com.cuidadopet.ui.screens.partners.PartnersScreen
-import com.cuidadopet.ui.screens.paywall.PaywallScreen
+// PAUSADO: import do paywall comentado junto com a tela (ver PaywallScreen.kt)
+// import com.cuidadopet.ui.screens.paywall.PaywallScreen
 import com.cuidadopet.ui.screens.water.WaterConfigFormScreen
 
 private const val PREFS_NAME       = "app_prefs"
@@ -37,6 +40,7 @@ object Routes {
     const val PET_FORM      = "pet_form?petId={petId}"
     const val DASHBOARD     = "dashboard/{petId}"
     const val MED_FORM      = "med_form/{petId}?medicationId={medicationId}"
+    const val PRESCRIPTION_SCAN = "prescription_scan/{petId}"   // leitura de receita (OCR)
     const val MEAL_PLAN     = "meal_plan/{petId}?planId={planId}"    // formulário de plano alimentar
     const val WATER_CONFIG   = "water_config/{petId}"   // configuração de hidratação
     const val HEALTH_ENTRY   = "health_entry/{petId}?entryId={entryId}" // diário saúde
@@ -48,6 +52,7 @@ object Routes {
     const val PARTNERS       = "partners"                  // parceiros
     const val VACCINE_LIST   = "vaccine_list/{petId}"
     const val VACCINE_FORM   = "vaccine_form/{petId}?vaccineId={vaccineId}"
+    const val PET_DOCUMENTS  = "pet_documents/{petId}"   // exames e documentos em PDF
 
     // Funções auxiliares para montar rotas com parâmetros reais
     fun petForm(petId: Long? = null)  = if (petId != null) "pet_form?petId=$petId" else "pet_form"
@@ -55,6 +60,8 @@ object Routes {
     fun medForm(petId: Long, medicationId: Long? = null) =
         if (medicationId != null) "med_form/$petId?medicationId=$medicationId"
         else "med_form/$petId"
+    fun prescriptionScan(petId: Long) = "prescription_scan/$petId"
+    fun petDocuments(petId: Long) = "pet_documents/$petId"
     fun mealPlan(petId: Long, planId: Long? = null) =
         if (planId != null) "meal_plan/$petId?planId=$planId" else "meal_plan/$petId"
     fun waterConfig(petId: Long)      = "water_config/$petId"
@@ -109,7 +116,7 @@ fun AppNavigation(
                 onPetClick      = { petId -> navController.navigate(Routes.dashboard(petId)) },
                 onPrivacyPolicy = { navController.navigate(Routes.PRIVACY_POLICY) },
                 onSettings      = { navController.navigate(Routes.SETTINGS) },
-                onOpenPaywall   = { navController.navigate(Routes.PAYWALL) },
+                onOpenPaywall   = {},
                 onPartnersClick = { navController.navigate(Routes.PARTNERS) }
             )
         }
@@ -128,14 +135,17 @@ fun AppNavigation(
         composable(Routes.SETTINGS) {
             SettingsScreen(
                 onNavigateBack = { navController.popBackStack() },
-                onOpenPaywall  = { navController.navigate(Routes.PAYWALL) }
+                onOpenPaywall  = {}
             )
         }
 
         // ── Paywall — planos premium ──────────────────────────────────────
+        // PAUSADO: rota do paywall comentada enquanto a cobrança estiver desligada
+        /*
         composable(Routes.PAYWALL) {
             PaywallScreen(onNavigateBack = { navController.popBackStack() })
         }
+        */
 
         // ── Cadastro / Edição de pet ─────────────────────────────────────
         composable(
@@ -162,6 +172,7 @@ fun AppNavigation(
                 onNavigateBack       = { navController.popBackStack() },
                 onEditPet            = { navController.navigate(Routes.petForm(it)) },
                 onAddMedication      = { navController.navigate(Routes.medForm(petId)) },
+                onScanPrescription   = { navController.navigate(Routes.prescriptionScan(petId)) },
                 onEditMedication     = { medId -> navController.navigate(Routes.medForm(petId, medId)) },
                 onConfigureMealPlan  = { planId -> navController.navigate(Routes.mealPlan(petId, planId)) },
                 onConfigureWater     = { navController.navigate(Routes.waterConfig(petId)) },
@@ -170,7 +181,8 @@ fun AppNavigation(
                 onWeightHistory      = { navController.navigate(Routes.weightHistory(petId)) },
                 onReport             = { navController.navigate(Routes.report(petId)) },
                 onVaccines           = { navController.navigate(Routes.vaccineList(petId)) },
-                onOpenPaywall        = { navController.navigate(Routes.PAYWALL) }
+                onDocuments          = { navController.navigate(Routes.petDocuments(petId)) },
+                onOpenPaywall        = {}
             )
         }
 
@@ -218,6 +230,28 @@ fun AppNavigation(
             MedicationFormScreen(
                 petId          = petId,
                 medicationId   = medicationId,
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        // ── Exames e documentos (PDF) ─────────────────────────────────────
+        composable(
+            route = Routes.PET_DOCUMENTS,
+            arguments = listOf(navArgument("petId") { type = NavType.LongType })
+        ) { entry ->
+            PetDocumentsScreen(
+                petId          = entry.arguments!!.getLong("petId"),
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        // ── Leitura de receita (OCR) ──────────────────────────────────────
+        composable(
+            route = Routes.PRESCRIPTION_SCAN,
+            arguments = listOf(navArgument("petId") { type = NavType.LongType })
+        ) { entry ->
+            PrescriptionScanScreen(
+                petId          = entry.arguments!!.getLong("petId"),
                 onNavigateBack = { navController.popBackStack() }
             )
         }

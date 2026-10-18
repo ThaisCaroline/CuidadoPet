@@ -1,11 +1,13 @@
 package com.cuidadopet.ui.screens.water
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cuidadopet.data.db.entity.WaterConfigEntity
 import com.cuidadopet.data.repository.PetRepository
 import com.cuidadopet.data.repository.WaterRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -30,6 +32,7 @@ data class WaterConfigFormState(
 
 @HiltViewModel
 class WaterConfigFormViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val waterRepository: WaterRepository,
     private val petRepository: PetRepository
 ) : ViewModel() {
@@ -70,20 +73,20 @@ class WaterConfigFormViewModel @Inject constructor(
 
         val targetMl = s.dailyTargetMl.toDoubleOrNull()
         if (targetMl == null || targetMl < 50) {
-            _state.update { it.copy(error = "Meta mínima: 50 ml") }
+            _state.update { it.copy(error = context.getString(com.cuidadopet.R.string.form_water_target_min)) }
             return
         }
         if (targetMl > 20_000) {
-            _state.update { it.copy(error = "Meta máxima: 20.000 ml") }
+            _state.update { it.copy(error = context.getString(com.cuidadopet.R.string.form_water_target_max)) }
             return
         }
         val interval = s.reminderIntervalHours.toIntOrNull()
         if (interval == null || interval < 1) {
-            _state.update { it.copy(error = "Intervalo mínimo de lembrete: 1 hora") }
+            _state.update { it.copy(error = context.getString(com.cuidadopet.R.string.form_water_interval_min)) }
             return
         }
         if (interval > 24) {
-            _state.update { it.copy(error = "Intervalo máximo de lembrete: 24 horas") }
+            _state.update { it.copy(error = context.getString(com.cuidadopet.R.string.form_water_interval_max)) }
             return
         }
 
@@ -92,7 +95,7 @@ class WaterConfigFormViewModel @Inject constructor(
         val startMin  = startTime.split(":").let { (it.getOrNull(0)?.toIntOrNull() ?: 0) * 60 + (it.getOrNull(1)?.toIntOrNull() ?: 0) }
         val endMin    = endTime.split(":").let { (it.getOrNull(0)?.toIntOrNull() ?: 0) * 60 + (it.getOrNull(1)?.toIntOrNull() ?: 0) }
         if (endMin <= startMin) {
-            _state.update { it.copy(error = "Horário de fim deve ser depois do início") }
+            _state.update { it.copy(error = context.getString(com.cuidadopet.R.string.form_water_end_after_start)) }
             return
         }
 
@@ -112,7 +115,7 @@ class WaterConfigFormViewModel @Inject constructor(
                 waterRepository.saveWaterConfig(config, s.petName)
                 _state.update { it.copy(isSaving = false, isSaved = true) }
             } catch (e: Exception) {
-                _state.update { it.copy(isSaving = false, error = "Erro ao salvar: ${e.message}") }
+                _state.update { it.copy(isSaving = false, error = context.getString(com.cuidadopet.R.string.error_save_detail, e.message)) }
             }
         }
     }

@@ -76,6 +76,7 @@ fun PetDashboardScreen(
     onNavigateBack: () -> Unit,
     onEditPet: (Long) -> Unit,
     onAddMedication: () -> Unit = {},
+    onScanPrescription: () -> Unit = {},
     onEditMedication: (Long) -> Unit = {},
     onConfigureMealPlan: (Long?) -> Unit = {},
     onConfigureWater: () -> Unit = {},
@@ -84,6 +85,7 @@ fun PetDashboardScreen(
     onWeightHistory: () -> Unit = {},
     onReport: () -> Unit = {},
     onVaccines: () -> Unit = {},
+    onDocuments: () -> Unit = {},
     onOpenPaywall: () -> Unit = {},
     viewModel: PetDashboardViewModel = hiltViewModel()
 ) {
@@ -179,12 +181,14 @@ fun PetDashboardScreen(
                         petId               = petId,
                         modifier            = Modifier.fillMaxSize(),
                         onAddMedication     = onAddMedication,
+                        onScanPrescription  = onScanPrescription,
                         onEditMedication    = onEditMedication,
                         onConfigureMealPlan = onConfigureMealPlan,
                         onConfigureWater    = onConfigureWater,
                         onNewHealthEntry    = onNewHealthEntry,
                         onEditHealthEntry   = onEditHealthEntry,
                         onWeightHistory     = onWeightHistory,
+                        onDocuments         = onDocuments,
                         onOpenPaywall       = onOpenPaywall
                     )
                 }
@@ -195,12 +199,14 @@ fun PetDashboardScreen(
                 petId               = petId,
                 modifier            = Modifier.padding(innerPadding),
                 onAddMedication     = onAddMedication,
+                onScanPrescription  = onScanPrescription,
                 onEditMedication    = onEditMedication,
                 onConfigureMealPlan = onConfigureMealPlan,
                 onConfigureWater    = onConfigureWater,
                 onNewHealthEntry    = onNewHealthEntry,
                 onEditHealthEntry   = onEditHealthEntry,
                 onWeightHistory     = onWeightHistory,
+                onDocuments         = onDocuments,
                 onOpenPaywall       = onOpenPaywall
             )
         }
@@ -213,12 +219,14 @@ private fun DashboardTabContent(
     petId: Long,
     modifier: Modifier = Modifier,
     onAddMedication: () -> Unit,
+    onScanPrescription: () -> Unit = {},
     onEditMedication: (Long) -> Unit,
     onConfigureMealPlan: (Long?) -> Unit,
     onConfigureWater: () -> Unit,
     onNewHealthEntry: () -> Unit,
     onEditHealthEntry: (Long) -> Unit,
     onWeightHistory: () -> Unit,
+    onDocuments: () -> Unit = {},
     onOpenPaywall: () -> Unit = {}
 ) {
     when (selectedTab) {
@@ -227,6 +235,7 @@ private fun DashboardTabContent(
             petId         = petId,
             modifier      = modifier,
             onAddClick    = onAddMedication,
+            onScanClick   = onScanPrescription,
             onEditClick   = onEditMedication,
             onOpenPaywall = onOpenPaywall
         )
@@ -246,6 +255,7 @@ private fun DashboardTabContent(
             onNewEntry      = onNewHealthEntry,
             onEditEntry     = onEditHealthEntry,
             onWeightHistory = onWeightHistory,
+            onDocuments     = onDocuments,
             modifier        = modifier
         )
     }

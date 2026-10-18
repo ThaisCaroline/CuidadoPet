@@ -18,8 +18,8 @@ android {
         applicationId = "com.cuidadopet"
         minSdk = 26
         targetSdk = 36
-        versionCode = 36
-        versionName = "1.0.36"
+        versionCode = 37
+        versionName = "1.0.37"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -162,8 +162,13 @@ dependencies {
     // AdMob — anúncios banner e intersticial
     implementation("com.google.android.gms:play-services-ads:23.6.0")
 
-    // RevenueCat — gerenciamento de assinaturas e compras in-app
-    implementation("com.revenuecat.purchases:purchases:8.3.0")
+    // RevenueCat — PAUSADO: cobrança desligada. Ao voltar, use 9.x ou mais recente (a 8.x traz Billing 7, que a Play bloqueia).
+    // implementation("com.revenuecat.purchases:purchases:9.0.0")
+
+    // ML Kit — reconhecimento de texto no aparelho (leitura de receitas)
+    implementation("com.google.mlkit:text-recognition:16.0.1")
+    // Scanner de documentos do Google: detecta as bordas da receita e corrige a perspectiva antes do OCR
+    implementation("com.google.android.gms:play-services-mlkit-document-scanner:16.0.0")
 
     // Testes
     testImplementation(libs.junit)

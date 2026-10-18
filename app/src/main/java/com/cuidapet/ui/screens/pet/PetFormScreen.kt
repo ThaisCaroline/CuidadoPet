@@ -291,7 +291,7 @@ fun PetFormScreen(
                 }
             }
 
-            if (uiState.species == "OTHER" && uiState.customSpecies.isBlank()) {
+            if (uiState.species == "OTHER") {
                 OutlinedTextField(
                     value         = uiState.customSpecies,
                     onValueChange = { if (it.length <= 50) viewModel.onCustomSpeciesChange(it) },

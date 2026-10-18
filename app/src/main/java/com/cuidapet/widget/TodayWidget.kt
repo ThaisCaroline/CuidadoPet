@@ -80,8 +80,12 @@ class TodayWidget : GlanceAppWidget() {
                 .filter { it.status == "TAKEN" }
 
             for (med in meds) {
+                // Tratamento já encerrado por data não deve aparecer, mesmo com isActive = 1
+                if (med.endDate != null && med.endDate < now) continue
                 val medTaken = takenLogs.filter { it.medicationId == med.id }.map { it.scheduledAt }.toSet()
                 val t = computeNextDoseTime(med, now, medTaken) ?: continue
+                // Dose calculada para depois do fim do tratamento não existe
+                if (med.endDate != null && t > med.endDate) continue
                 if (nextDose == null || t < nextDose.timeMs) {
                     nextDose = NextDose(t, med.name, pet.name, med.dose, med.doseUnit, pet.photoPath)
                 }

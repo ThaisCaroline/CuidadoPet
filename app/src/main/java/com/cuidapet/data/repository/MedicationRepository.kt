@@ -1,17 +1,25 @@
 package com.cuidadopet.data.repository
 
+import android.content.Context
 import com.cuidadopet.data.db.dao.MedicationDao
 import com.cuidadopet.data.db.entity.MedicationEntity
 import com.cuidadopet.data.db.entity.MedicationLogEntity
 import com.cuidadopet.notification.AlarmScheduler
+import androidx.glance.appwidget.updateAll
+import com.cuidadopet.widget.TodayWidget
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
+import android.util.Log
 import javax.inject.Singleton
+
+private const val TAG = "MedicationRepository"
 
 @Singleton
 class MedicationRepository @Inject constructor(
     private val medicationDao: MedicationDao,
-    private val alarmScheduler: AlarmScheduler
+    private val alarmScheduler: AlarmScheduler,
+    @ApplicationContext private val context: Context
 ) {
 
     // Busca medicamentos ativos de um pet
@@ -34,6 +42,24 @@ class MedicationRepository @Inject constructor(
         return id
     }
 
+    // Insere vários medicamentos de uma vez (ex.: leitura de receita).
+    // Grava tudo numa transação e só agenda os alarmes depois que todas as linhas estiverem salvas.
+    suspend fun insertMedications(medications: List<MedicationEntity>, petName: String): List<Long> {
+        val ids = medicationDao.insertMedications(medications)
+        // Os registros já estão salvos. Se um alarme falhar, não tratamos como erro de salvamento:
+        // o tutor tentaria de novo e duplicaria os medicamentos.
+        medications.zip(ids).forEach { (medication, id) ->
+            try {
+                alarmScheduler.scheduleMedication(medication.copy(id = id), petName, refreshWidget = false)
+            } catch (e: Exception) {
+                Log.w(TAG, "Falha ao agendar alarme do medicamento $id", e)
+            }
+        }
+        // Uma única atualização do widget para o lote inteiro
+        try { TodayWidget().updateAll(context) } catch (_: Exception) {}
+        return ids
+    }
+
     // Atualiza medicamento E reagenda o alarme
     suspend fun updateMedication(medication: MedicationEntity, petName: String) {
         medicationDao.updateMedication(medication)
@@ -46,6 +72,8 @@ class MedicationRepository @Inject constructor(
     suspend fun deactivateMedication(medicationId: Long) {
         medicationDao.deactivateMedication(medicationId)
         alarmScheduler.cancelMedication(medicationId)
+        // Atualiza o widget para não mostrar mais a dose deste medicamento
+        try { TodayWidget().updateAll(context) } catch (_: Exception) {}
     }
 
     // ── Logs ──────────────────────────────────────────────────────────

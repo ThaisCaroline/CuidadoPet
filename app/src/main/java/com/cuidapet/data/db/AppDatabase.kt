@@ -2,12 +2,15 @@ package com.cuidadopet.data.db
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
+import com.cuidadopet.data.db.dao.BackupRestoreDao
 import com.cuidadopet.data.db.dao.FeedingDao
 import com.cuidadopet.data.db.dao.HealthDao
 import com.cuidadopet.data.db.dao.HealthPhotoDao
 import com.cuidadopet.data.db.dao.MedicationDao
 import com.cuidadopet.data.db.dao.PetDao
+import com.cuidadopet.data.db.dao.PetDocumentDao
 import com.cuidadopet.data.db.dao.VaccineDao
+import com.cuidadopet.data.db.entity.PetDocumentEntity
 import com.cuidadopet.data.db.dao.WaterDao
 import com.cuidadopet.data.db.entity.HealthEntryEntity
 import com.cuidadopet.data.db.entity.MealEntity
@@ -47,9 +50,10 @@ import com.cuidadopet.data.db.entity.SporadicMealLogEntity
         SporadicMealLogEntity::class,
         WeightRecordEntity::class,
         HealthPhotoEntity::class,
-        VaccineEntity::class
+        VaccineEntity::class,
+        PetDocumentEntity::class
     ],
-    version = 11,
+    version = 12,
     exportSchema = true
 )
 // RoomDatabase é a classe base que o Room exige.
@@ -66,4 +70,6 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun healthDao(): HealthDao
     abstract fun healthPhotoDao(): HealthPhotoDao
     abstract fun vaccineDao(): VaccineDao
+    abstract fun petDocumentDao(): PetDocumentDao
+    abstract fun backupRestoreDao(): BackupRestoreDao
 }

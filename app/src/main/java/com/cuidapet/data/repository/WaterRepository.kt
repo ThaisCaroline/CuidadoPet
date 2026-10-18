@@ -48,6 +48,15 @@ class WaterRepository @Inject constructor(
         }
     }
 
+    // Reagenda ou cancela o lembrete de água de uma configuração já salva (usado na restauração de backup)
+    fun restoreReminder(config: WaterConfigEntity, petName: String) {
+        if (config.remindersEnabled) {
+            scheduleWaterReminder(config, petName)
+        } else {
+            cancelWaterReminder(config.petId)
+        }
+    }
+
     suspend fun deleteWaterConfig(petId: Long) {
         cancelWaterReminder(petId)
         waterDao.deleteWaterConfig(petId)

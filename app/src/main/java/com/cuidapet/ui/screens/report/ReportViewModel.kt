@@ -14,6 +14,7 @@ import com.cuidadopet.data.repository.MedicationRepository
 import com.cuidadopet.data.repository.PurchaseRepository
 import com.cuidadopet.data.repository.ReportRepository
 import com.cuidadopet.data.repository.WaterRepository
+import com.cuidadopet.R
 import com.cuidadopet.domain.PetReport
 import com.cuidadopet.domain.ReportGenerator
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -63,12 +64,12 @@ class ReportViewModel @Inject constructor(
             try {
                 val report = reportRepository.buildReport(petId, days)
                 if (report == null) {
-                    _state.update { it.copy(isLoading = false, error = "Pet não encontrado.") }
+                    _state.update { it.copy(isLoading = false, error = context.getString(R.string.report_error_pet_not_found)) }
                 } else {
                     _state.update { it.copy(isLoading = false, report = report) }
                 }
             } catch (e: Exception) {
-                _state.update { it.copy(isLoading = false, error = "Erro ao carregar dados: ${e.message}") }
+                _state.update { it.copy(isLoading = false, error = context.getString(R.string.report_error_load, e.message)) }
             }
         }
     }
@@ -134,7 +135,7 @@ class ReportViewModel @Inject constructor(
         val lastLog = logsForDay.maxByOrNull { it.registeredAt } ?: return
         val newAmount = lastLog.amountMl + diff
         if (newAmount < 0) {
-            _state.update { it.copy(error = "O total não pode ser menor que as outras entradas do dia.") }
+            _state.update { it.copy(error = context.getString(R.string.report_error_total_too_low)) }
             return
         }
         viewModelScope.launch {
@@ -162,7 +163,7 @@ class ReportViewModel @Inject constructor(
         if (lastSporadic != null) {
             val newAmount = (lastSporadic.amountGrams ?: 0.0) + diff
             if (newAmount < 0) {
-                _state.update { it.copy(error = "O total não pode ser menor que as outras entradas do dia.") }
+                _state.update { it.copy(error = context.getString(R.string.report_error_total_too_low)) }
                 return
             }
             viewModelScope.launch {
@@ -178,7 +179,7 @@ class ReportViewModel @Inject constructor(
             }
             val targetForLast = newTotalGrams - othersTotal
             if (targetForLast < 0) {
-                _state.update { it.copy(error = "O total não pode ser menor que as outras entradas do dia.") }
+                _state.update { it.copy(error = context.getString(R.string.report_error_total_too_low)) }
                 return
             }
             val newPct = ((targetForLast / meal.quantityGrams) * 100).toInt().coerceIn(0, 100)
@@ -190,7 +191,7 @@ class ReportViewModel @Inject constructor(
     }
 
     fun getShareText(): String? =
-        _state.value.report?.let { ReportGenerator.generateText(it) }
+        _state.value.report?.let { ReportGenerator.generateText(context, it) }
 
     fun generatePdf() {
         val report = _state.value.report ?: return
@@ -202,7 +203,7 @@ class ReportViewModel @Inject constructor(
                 }
                 _state.update { it.copy(isPdfGenerating = false, pdfFile = file) }
             } catch (e: Exception) {
-                _state.update { it.copy(isPdfGenerating = false, error = "Erro ao gerar PDF: ${e.message}") }
+                _state.update { it.copy(isPdfGenerating = false, error = context.getString(R.string.report_error_pdf, e.message)) }
             }
         }
     }
